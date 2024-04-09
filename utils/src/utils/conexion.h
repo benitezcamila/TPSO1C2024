@@ -1,6 +1,6 @@
 
-#ifndef UTILS_H_
-#define UTILS_H_
+#ifndef CONEXION_H_
+#define CONEXION_H_
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -12,7 +12,6 @@
 #include<string.h>
 #include<assert.h>
 
-#define PUERTO "4444"
 
 typedef enum
 {
@@ -30,4 +29,4 @@ t_list* recibir_paquete(int);
 void recibir_mensaje(int);
 int recibir_operacion(int);
 
-#endif /* UTILS_H_ */
+#endif /* CONEXION_H_ */

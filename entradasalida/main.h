@@ -10,5 +10,6 @@
 #include<readline/history.h>
 
 #include <utils/conexion.h>
-#define PUERTO_MEM_SERVER "55009"
+
+#define PUERTO_IO_SERVER "65009"
 #endif
