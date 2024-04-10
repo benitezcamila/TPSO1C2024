@@ -1,5 +1,5 @@
-#ifndef _KERNEL_CONFIG_
-#define _KERNEL_CONFIG_
+#ifndef _MEMORIA_CONFIG_
+#define _MEMORIA_CONFIG_
 
 #include <commons/config.h>
 #include <commons/collections/list.h>

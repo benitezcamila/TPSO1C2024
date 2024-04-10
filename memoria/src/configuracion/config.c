@@ -1,20 +1,15 @@
 #include "config.h"
 
 void obtener_config(){
-    config = config_create("cfg/kernel.config");
-    configuracion.IP_MEMORIA = config_get_string_value(config,"IP_MEMORIA");
-    configuracion.IP_CPU = config_get_string_value(config,"IP_CPU");
-    configuracion.PUERTO_MEMORIA = config_get_int_value(config,"IP_MEMORIA");
-    configuracion.PUERTO_ESCUCHA = config_get_int_value(config,"IP_ESCUCHA");
-    configuracion.PUERTO_CPU_DISPATCH = config_get_int_value(config,"IP_CPU_DISPATCH");
-    configuracion.PUERTO_INTERRUPT = config_get_int_value(config,"IP_INTERRUPT");
-    configuracion.ALGORITMO_PLANIFICACION = config_get_string_value(config,"ALGORITMO_PLANIFICACION");
-    configuracion.QUANTUM = config_get_int_value(config,"QUANTUM");
-    configuracion.RECURSOS =config_get_array_value(config,"RECURSOS");
-    configuracion.INSTANCIAS_RECURSOS = config_get_array_value(config,"INSTANCIAS_RECURSOS");
-    configuracion.GRADO_MULTIPROGRAMACION = config_get_int_value(config,"GRADO_MULTIPROGRAMACION");
+    config = config_create("cfg/memoria.config");
+    configuracion.PUERTO_ESCUCHA = config_get_int_value(config,"PUERTO_ESCUCHA");
+    configuracion.TAM_MEMORIA = config_get_int_value(config,"TAM_MEMORIA");
+    configuracion.TAM_PAGINA = config_get_int_value(config,"TAM_PAGINA");
+    configuracion.PATH_INSTRUCCIONES = config_get_string_value(config,"PATH_INSTRUCCIONES");
+    configuracion.RETARDO_RESPUESTA = config_get_int_value(config,"RETARDO_RESPUESTA");
+
 }
 
 void inciar_logger(){
-    logger_kernel = log_create("cfg/kernel.log","Kernel",0,LOG_LEVEL_INFO);
+    logger_memoria = log_create("cfg/memoria.log","Memoria",0,LOG_LEVEL_INFO);
 }
