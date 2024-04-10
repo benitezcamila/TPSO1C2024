@@ -8,6 +8,6 @@
 #include<commons/config.h>
 #include<readline/readline.h>
 #include<readline/history.h>
-
-#include <utils/conexion.h>
+#include<utils/conexion.h>
+#include"configuracion/config.h"
 #endif

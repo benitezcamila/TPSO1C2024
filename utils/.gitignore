@@ -7,6 +7,9 @@ obj/
 .settings/
 .cproject
 .project
+commons
+./commons
+
 
 # Visual Studio Code files
 .vscode/*
