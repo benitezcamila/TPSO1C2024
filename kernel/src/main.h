@@ -10,6 +10,4 @@
 #include<readline/history.h>
 
 #include <utils/conexion.h>
-
-#define PUERTO_KERNEL_SERVER "35009"
 #endif

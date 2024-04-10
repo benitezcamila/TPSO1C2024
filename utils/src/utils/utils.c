@@ -1,7 +1,3 @@
-#include <utl"":""utconexion.c
+include "conexion.h"
 
 
-
-void iniciarProceso(int cliente){
- 
-}

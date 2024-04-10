@@ -2,9 +2,9 @@
 
 #include "conexion.h"
 
-t_log* logger;
+t_log* logger_conexiones;
 
-int iniciar_servidor(int puerto)
+int iniciar_servidor(int puerto, char* receptor)
 {
 	int socket_servidor;
 
@@ -27,7 +27,9 @@ int iniciar_servidor(int puerto)
 	listen(socket_servidor, SOMAXCONN);
 
 	freeaddrinfo(servinfo);
-	log_trace(logger, "Listo para escuchar a mi cliente");
+
+	string_append(&receptor, " esta escuchando" );
+	log_trace(logger_conexiones,  receptor);
 
 	return socket_servidor;
 }

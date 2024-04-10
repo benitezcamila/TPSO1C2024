@@ -8,7 +8,6 @@
 #include<commons/config.h>
 #include<readline/readline.h>
 #include<readline/history.h>
-
 #include <utils/conexion.h>
-#define PUERTO_MEM_SERVER "55009"
+#define PUERTO_ESCUCHA 
 #endif

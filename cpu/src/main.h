@@ -11,5 +11,4 @@
 
 #include <utils/conexion.h>
 
-#define PUERTO_KERNEL_CPU "45009"
 #endif
