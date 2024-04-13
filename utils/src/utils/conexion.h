@@ -23,7 +23,12 @@ typedef enum
 	COD_OP_DESTRUCCION_TABLA,
 	COD_OP_ACCESO_TABLA,
 	COD_OP_AMPLIACION_PROCESO,
-	COD_OP_AMPLIACION_PROCESO
+	COD_OP_AMPLIACION_PROCESO,
+	COD_OP_REDUCION_PROCESO,
+	COD_OP_ACCESO_ESPACIO_USUARIO,
+	COD_OP_FETCH,
+	COD_OP_INSTRUCCION_EJECUTADA,
+	COD_OP_,
 
 }op_code;
 
@@ -58,4 +63,4 @@ void enviar_paquete(t_paquete* paquete, int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
 void liberar_conexion(int socket_cliente);
 
-#endif /* CONEXION_H_ */
+#endif

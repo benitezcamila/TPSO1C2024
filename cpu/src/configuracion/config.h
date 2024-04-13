@@ -4,6 +4,8 @@
 #include <commons/config.h>
 #include <commons/collections/list.h>
 #include <commons/log.h>
+#include <utils/conexion.h>
+
 
 
 typedef struct {

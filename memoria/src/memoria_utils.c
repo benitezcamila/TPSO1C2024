@@ -1,4 +1,5 @@
 #include "main.h"
+#include <bits/pthreadtypes.h>
 
 
 int inicializar_memoria(){
@@ -13,22 +14,21 @@ void escuchar_instrucciones(){
     pthread_t thread_ES;
     pthread_create(&thread_kernel,
                     NULL,
-
-                    (void*)escucha_kernel(),
+                    (void*)escucha_kernel,
                     NULL);
                     
     pthread_detach(thread_kernel);
     
     pthread_create(&thread_cpu,
                     NULL,
-                    (void*)escucha_cpu(),
+                    (void*)escucha_cpu,
                     NULL);
 
     pthread_detach(thread_cpu);
 
     pthread_create(&thread_ES,
                     NULL,
-                    (void*)escucha_E_S(),
+                    (void*)escucha_E_S,
                     NULL);
 
     pthread_detach(thread_ES);
