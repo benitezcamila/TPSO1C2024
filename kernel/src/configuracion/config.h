@@ -24,7 +24,7 @@ typedef struct {
 
 t_cfg configuracion;
 
-t_config* config;
+extern t_config* config;
 
 void obtener_config();
 

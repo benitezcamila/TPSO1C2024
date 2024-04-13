@@ -54,8 +54,9 @@ void escucha_kernel(){
     int socket_server = inicializar_memoria();
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = accept(socket_server, NULL, NULL);
+    int estado =0;
     while(estado != EXIT_FAILURE){
-        int estado = atender_cliente(fd_conexion_ptr);
+         estado = atender_cliente(fd_conexion_ptr);
     }   
 }
 
@@ -63,8 +64,9 @@ void escucha_cpu(){
     int socket_server = inicializar_memoria();
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = accept(socket_server, NULL, NULL);
+    int estado = 0;
     while(estado != EXIT_FAILURE){
-        int estado = atender_cliente(fd_conexion_ptr);
+        estado = atender_cliente(fd_conexion_ptr);
     }
 }
 
@@ -72,8 +74,9 @@ void escucha_E_S(){
     int socket_server = inicializar_memoria();
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = accept(socket_server, NULL, NULL);
+   int estado = 0;
     while(estado != EXIT_FAILURE){
-        int estado = atender_cliente(fd_conexion_ptr);
+        estado = atender_cliente(fd_conexion_ptr);
     }
 }
 
@@ -91,7 +94,7 @@ int enviar_log(int fd_conexion_ptr, int cod_op){
            
         case COD_OP_DESTRUCCION_TABLA:
                     //enviar_mensaje("PID: <PID> - Tamaño: <CANTIDAD_PAGINAS>", fd_conexion_ptr);
-                    log_info(logger_memoria, "PID: <PID> - Tamaño: <CANTIDAD_PAGINAS>")
+                    log_info(logger_memoria, "PID: <PID> - Tamaño: <CANTIDAD_PAGINAS>");
             break;
         
         case COD_OP_ACCESO_TABLA:
