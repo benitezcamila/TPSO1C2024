@@ -1,28 +1,20 @@
-#include "main.h"
-#include <configuracion/config.h>
-#include <bits/pthreadtypes.h>
-#include <config.h>
+#include "cpu_utils.h"
+#include <pthread.h>
 
 
-#define IP_MEMORIA 201291
 
-#define PUERTO_MEMORIA 012012
-
-#define PUERTO_ESCUCHA 1000402
-
-int inicializar_cpu(){
-    return inicializar_servidor(PUERTO_ESCUCHA, "CPU - inicio");//retorna fd
-}
 void procesos_cpu(){
     pthread_t hilo_memoria, hilo_kernel_dispatch, hilo_kernel_interrupcion;
 pthread_create(&hilo_memoria, NULL,(void *) establecer_conexion_memoria, NULL);
 pthread_create(&hilo_kernel_dispatch, NULL,(void*) escucha_KD, NULL); 
 pthread_create(&hilo_kernel_interrupcion, NULL,(void *) escucha_KI, NULL);
- 
+ pthread_detach(hilo_memoria);
+  pthread_detach(hilo_kernel_interrupcion);
+   pthread_detach(hilo_kernel_dispatch);
 }
 
 void establecer_conexion_memoria(){
-    int fd_memoria = crear_conexion(IP_MEMORIA,PUERTO_MEMORIA);
+    int fd_memoria = crear_conexion(configuracion.IP_MEMORIA,configuracion.PUERTO_MEMORIA);
     int cod_op;//Lectura/Escritura Memoria Obtener Marco TLB Hit y TLB Miss
     log_info(logger_cpu, "Conectado-CPU-memoria");
     send(fd_memoria, &cod_op, sizeof(int), MSG_WAITALL);
@@ -30,7 +22,7 @@ void establecer_conexion_memoria(){
 }
 
 void escucha_KI(){
-    int socket_server = inicializar_cpu();
+    int socket_server = inicializar_servidor(configuracion.PUERTO_ESCUCHA_INTERRUPT, "CPU - inicio");
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = accept(socket_server, NULL, NULL);
     int estado = 0;
@@ -39,7 +31,7 @@ void escucha_KI(){
     }  
 }
 void escucha_KD(){
-    int socket_server = inicializar_cpu();
+    int socket_server = inicializar_servidor(configuracion.PUERTO_ESCUCHA_DISPATCH, "CPU - inicio");
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = accept(socket_server, NULL, NULL);
     int estado = 0;

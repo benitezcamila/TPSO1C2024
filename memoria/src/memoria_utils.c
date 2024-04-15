@@ -1,9 +1,9 @@
 #include "main.h"
 #include <bits/pthreadtypes.h>
-
+#include <pthread.h>
 
 int inicializar_memoria(){
-    return iniciar_servidor( PUERTO_ESCUCHA , "MEMORIA");
+    return iniciar_servidor( configuracion.PUERTO_ESCUCHA , "MEMORIA");
 } 
 
 
@@ -34,17 +34,7 @@ void escuchar_instrucciones(){
     pthread_detach(thread_ES);
 
 
-    // int fd_escucha;
-    // while (1) {
-    // pthread_t thread;
-    // int *fd_conexion_ptr = malloc(sizeof(int));
-    // *fd_conexion_ptr = accept(fd_escucha, NULL, NULL);
-    // pthread_create(&thread,
-    //                 NULL,
-    //                 (void*) atender_cliente(fd_conexion_ptr),
-    //                 fd_conexion_ptr);
 
-    // pthread_detach(thread);
 
     return;
 

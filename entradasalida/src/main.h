@@ -9,5 +9,6 @@
 #include<readline/readline.h>
 #include<readline/history.h>
 #include <utils/conexion.h>
+#include <config/config.h>
 
 #endif

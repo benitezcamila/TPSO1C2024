@@ -5,9 +5,9 @@ void obtener_config(){
     configuracion.IP_MEMORIA = config_get_string_value(config,"IP_MEMORIA");
     configuracion.PUERTO_MEMORIA = config_get_int_value(config,"PUERTO_MEMORIA");
     configuracion.PUERTO_ESCUCHA_DISPATCH = config_get_int_value(config,"PUERTO_ESCUCHA_DISPATCH");
-    configuracion.PUERTO_ESCUCHA_INTERRUPT = config_get_int_value(string,"PUERTO_ESCUCHA_INTERRUPT");
-    configuracion.CANTIDAD_ENTRADAS_TLB = config_get_int_value(string,"CANTIDAD_ENTRADAS_TLB");
-    configuracion.ALGORITMO_TLB = config_get_string_value(string,"ALGORITMO_TLB");
+    configuracion.PUERTO_ESCUCHA_INTERRUPT = config_get_int_value(config,"PUERTO_ESCUCHA_INTERRUPT");
+    configuracion.CANTIDAD_ENTRADAS_TLB = config_get_int_value(config,"CANTIDAD_ENTRADAS_TLB");
+    configuracion.ALGORITMO_TLB = config_get_string_value(config,"ALGORITMO_TLB");
     
 }
 

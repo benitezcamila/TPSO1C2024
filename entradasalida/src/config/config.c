@@ -4,7 +4,7 @@ void obtener_config(){
     config = config_create("cfg/entrada_salida.config");
     configuracion.TIPO_INTERFAZ= config_get_string_value(config,"TIPO_INTERFAZ");
     configuracion.TIEMPO_UNIDAD_TRABAJO = config_get_int_value(config,"TIEMPO_UNIDAD_TRABAJO");
-    configuracion.IP_KERNEL config_get_string_value(config,"IP_KERNEL");
+    configuracion.IP_KERNEL = config_get_string_value(config,"IP_KERNEL");
     configuracion.PUERTO_KERNEL = config_get_int_value(config,"PUERTO_KERNEL");
     configuracion.IP_MEMORIA = config_get_string_value(config,"IP_MEMORIA");
     configuracion.PUERTO_MEMORIA = config_get_int_value(config,"PUERTO_MEMORIA");
