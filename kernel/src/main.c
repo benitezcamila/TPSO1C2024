@@ -4,7 +4,7 @@
 
 int main(int argc, char* argv[]) {
 
-    inciar_logger();
+    iniciar_logger();
     obtener_config();
 
     return 0;

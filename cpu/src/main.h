@@ -8,6 +8,7 @@
 #include<commons/config.h>
 #include<readline/readline.h>
 #include<readline/history.h>
+#include<cpu_utils.h>
 
 
 

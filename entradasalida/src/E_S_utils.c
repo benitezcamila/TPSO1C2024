@@ -1,4 +1,4 @@
-#include "E_S_utils.h"
+#include <E_S_utils.h>
 
 
 void proceso_E_S(){
@@ -11,12 +11,12 @@ void proceso_E_S(){
 }
 
 void levantar_conexiones_kernel(){
-    int fd_memoria = crear_conexion(configuracion.IP_KERNEL ,configuracion.PUERTO_KERNEL);
+    int fd_memoria = crear_conexion(configuracion.IP_KERNEL ,string_itoa(configuracion.PUERTO_KERNEL));
     int cod_op;//Lectura/Escritura Memoria Obtener Marco TLB Hit y TLB Miss
     log_info(logger_entrada_salida, "Interfaz I/O");
 }
-void levantar_conexiones_cpu(){
-    int fd_memoria = crear_conexion(configuracion.IP_MEMORIA ,configuracion.PUERTO_MEMORIA);
+void levantar_conexiones_memoria(){
+    int fd_memoria = crear_conexion(configuracion.IP_MEMORIA ,string_itoa(configuracion.PUERTO_MEMORIA));
     int cod_op;//Lectura/Escritura Memoria Obtener Marco TLB Hit y TLB Miss
     log_info(logger_entrada_salida, "Interfaz I/O");
     enviar_mensaje("Hola cpu-Interfaz", fd_memoria);

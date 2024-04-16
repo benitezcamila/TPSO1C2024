@@ -43,6 +43,12 @@ int esperar_cliente(int socket_servidor)
 	return socket_cliente;
 }
 
+ int atender_cliente(int* fd_conexion_ptr){
+        // recibo cod_op
+        int cod_op  = recibir_operacion(*fd_conexion_ptr);
+        return enviar_log(*fd_conexion_ptr, cod_op);     
+}
+
 int recibir_operacion(int socket_cliente)
 {
 	int cod_op;
