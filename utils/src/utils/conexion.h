@@ -43,7 +43,7 @@ typedef struct
 	t_buffer* buffer;
 } t_paquete;
 
-int iniciar_servidor(int,char*);
+int iniciar_servidor(char*,char*);
 int esperar_cliente(int);
 
 int recibir_operacion(int);

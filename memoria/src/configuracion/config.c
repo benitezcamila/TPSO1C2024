@@ -14,6 +14,6 @@ void obtener_config(){
 
 }
 
-void inciar_logger(){
+void iniciar_logger(){
     logger_memoria = log_create("cfg/memoria.log","Memoria",0,LOG_LEVEL_INFO);
 }

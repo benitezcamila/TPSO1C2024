@@ -41,7 +41,7 @@ void escuchar_instrucciones(){
 void escucha_kernel(){
     int socket_server = inicializar_memoria();
     int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = accept(socket_server, NULL, NULL);
+    *fd_conexion_ptr = esperar_cliente(socket_server);
     int estado =0;
     while(estado != EXIT_FAILURE){
          estado = atender_cliente(fd_conexion_ptr);
@@ -51,7 +51,7 @@ void escucha_kernel(){
 void escucha_cpu(){
     int socket_server = inicializar_memoria();
     int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = accept(socket_server, NULL, NULL);
+    *fd_conexion_ptr = esperar_cliente(socket_server);
     int estado = 0;
     while(estado != EXIT_FAILURE){
         estado = atender_cliente(fd_conexion_ptr);
@@ -61,7 +61,7 @@ void escucha_cpu(){
 void escucha_E_S(){
     int socket_server = inicializar_memoria();
     int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = accept(socket_server, NULL, NULL);
+    *fd_conexion_ptr = esperar_cliente(socket_server);
    int estado = 0;
     while(estado != EXIT_FAILURE){
         estado = atender_cliente(fd_conexion_ptr);

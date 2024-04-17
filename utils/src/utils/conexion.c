@@ -4,7 +4,7 @@
 
 t_log* logger_conexiones;
 
-int iniciar_servidor(int puerto, char* receptor)
+int iniciar_servidor(char* puerto, char* receptor)
 {
 	int socket_servidor;
 
@@ -27,8 +27,10 @@ int iniciar_servidor(int puerto, char* receptor)
 
 	freeaddrinfo(servinfo);
 
-	string_append(&receptor, " esta escuchando" );
-	log_trace(logger_conexiones,  receptor);
+	char* str_aux = string_new();
+	string_append(&str_aux, receptor );
+	string_append(&str_aux, " esta escuchando" );
+	log_trace(logger_conexiones,  str_aux);
 
 	return socket_servidor;
 }

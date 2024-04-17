@@ -18,6 +18,6 @@ void obtener_config(){
 
 }
 
-void inciar_logger(){
+void iniciar_logger(){
     logger_entrada_salida = log_create("cfg/entrada salida.log","Entrada Salida",0,LOG_LEVEL_INFO);
 }
