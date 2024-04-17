@@ -1,5 +1,9 @@
 #include "config.h"
 
+t_cfg configuracion;
+t_config* config;
+t_log* logger_cpu;
+
 void obtener_config(){
     config = config_create("cfg/cpu.config");    
     configuracion.IP_MEMORIA = config_get_string_value(config,"IP_MEMORIA");

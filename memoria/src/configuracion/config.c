@@ -1,5 +1,9 @@
 #include "config.h"
 
+t_cfg configuracion;
+t_config* config;
+t_log* logger_memoria;
+
 void obtener_config(){
     config = config_create("cfg/memoria.config");
     configuracion.PUERTO_ESCUCHA = config_get_int_value(config,"PUERTO_ESCUCHA");

@@ -5,10 +5,10 @@
 #include <bits/pthreadtypes.h>
 #include <pthread.h>
 #include <utils/utils.h>
-#include "configuracion/config.h"
-#include<commons/log.h>
-#include<commons/string.h>
-#include<commons/config.h>
+#include <configuracion/config.h>
+#include <commons/log.h>
+#include <commons/string.h>
+#include <commons/config.h>
 
 
 void conexion_cpu_D();

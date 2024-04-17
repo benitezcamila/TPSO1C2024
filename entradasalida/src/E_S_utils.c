@@ -1,13 +1,12 @@
 #include <E_S_utils.h>
 
-
 void proceso_E_S(){
-    pthread_t hilo_kernel, hilo_cpu;
-    pthread_create(&hilo_cpu, NULL,(void *) levantar_conexiones_cpu, NULL);
+    pthread_t hilo_kernel, hilo_memoria;
+    pthread_create(&hilo_memoria, NULL,(void *) levantar_conexiones_memoria, NULL);
     pthread_create(&hilo_kernel, NULL,(void*) levantar_conexiones_kernel, NULL); 
     
+    pthread_detach(hilo_memoria);
     pthread_detach(hilo_kernel);
-    pthread_detach(hilo_cpu);
 }
 
 void levantar_conexiones_kernel(){

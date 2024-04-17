@@ -3,6 +3,7 @@
 #include <main.h>
 
 int main(int argc, char* argv[]) {
-    decir_hola("Memoria");
+
+    printf("QUe obna");
     return 0;
 }

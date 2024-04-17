@@ -1,5 +1,9 @@
 #include "config.h"
 
+t_cfg configuracion;
+t_config* config;
+t_log* logger_entrada_salida;
+
 void obtener_config(){
     config = config_create("cfg/entrada_salida.config");
     configuracion.TIPO_INTERFAZ= config_get_string_value(config,"TIPO_INTERFAZ");

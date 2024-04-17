@@ -1,5 +1,5 @@
-#ifndef _CPU_CONFIG_
-#define _CPU_CONFIG_
+#ifndef _CPU_CONFIG_H
+#define _CPU_CONFIG_H
 
 #include <commons/config.h>
 #include <commons/collections/list.h>
@@ -18,13 +18,13 @@ typedef struct {
 
 }t_cfg;
 
-t_cfg configuracion;
+extern t_cfg configuracion;
 
-t_config* config;
+extern t_config* config;
 
 void obtener_config();
 
-t_log* logger_cpu;
+extern t_log* logger_cpu;
 
 
 void iniciar_logger();

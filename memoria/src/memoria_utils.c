@@ -68,6 +68,12 @@ void escucha_E_S(){
     }
 }
 
+ int atender_cliente(int* fd_conexion_ptr){
+        // recibo cod_op
+        int cod_op  = recibir_operacion(*fd_conexion_ptr);
+        return enviar_log(*fd_conexion_ptr, cod_op);     
+}
+
 int enviar_log(int fd_conexion_ptr, int cod_op){
     switch (cod_op) {
         
@@ -102,7 +108,7 @@ int enviar_log(int fd_conexion_ptr, int cod_op){
             break;
         
         case -1:
-        	log_error(logger, "el cliente se desconecto. Terminando servidor");
+        	log_error(logger_memoria, "el cliente se desconecto. Terminando servidor");
 			return EXIT_FAILURE; 
 
         default:

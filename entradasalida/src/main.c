@@ -3,6 +3,7 @@
 #include <main.h>
 
 int main(int argc, char* argv[]) {
-    decir_hola("una Interfaz de Entrada/Salida");
+    proceso_E_S();
+    printf("hola");
     return 0;
 }

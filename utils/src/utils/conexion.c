@@ -9,7 +9,6 @@ int iniciar_servidor(int puerto, char* receptor)
 	int socket_servidor;
 
 	struct addrinfo hints, *servinfo;
-
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
@@ -38,16 +37,11 @@ int esperar_cliente(int socket_servidor)
 {
 
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
-	log_info(logger, "Se conecto un cliente!");
+	log_info(logger_conexiones, "Se conecto un cliente!");
 
 	return socket_cliente;
 }
 
- int atender_cliente(int* fd_conexion_ptr){
-        // recibo cod_op
-        int cod_op  = recibir_operacion(*fd_conexion_ptr);
-        return enviar_log(*fd_conexion_ptr, cod_op);     
-}
 
 int recibir_operacion(int socket_cliente)
 {
@@ -76,7 +70,7 @@ void recibir_mensaje(int socket_cliente)
 {
 	int size;
 	char* buffer = recibir_buffer(&size, socket_cliente);
-	log_info(logger, "Me llego el mensaje %s", buffer);
+	log_info(logger_conexiones, "Me llego el mensaje %s", buffer);
 	free(buffer);
 }
 

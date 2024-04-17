@@ -15,13 +15,13 @@ typedef struct {
 
 }t_cfg;
 
-t_cfg configuracion;
+extern t_cfg configuracion;
 
-t_config* config;
+extern t_config* config;
 
 void obtener_config();
 
-t_log* logger_memoria;
+extern t_log* logger_memoria;
 
 
 void iniciar_logger();
