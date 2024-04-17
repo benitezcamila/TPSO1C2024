@@ -29,6 +29,8 @@ extern t_config* config;
 void obtener_config();
 
 extern t_log* logger_kernel;
+extern t_log* logger_conexiones;
+
 
 void iniciar_logger();
 

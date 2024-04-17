@@ -3,6 +3,7 @@
 t_cfg configuracion;
 t_config* config;
 t_log* logger_memoria;
+t_log* logger_conexiones;
 
 void obtener_config(){
     config = config_create("cfg/memoria.config");
@@ -15,5 +16,6 @@ void obtener_config(){
 }
 
 void iniciar_logger(){
-    logger_memoria = log_create("cfg/memoria.log","Memoria",0,LOG_LEVEL_INFO);
+    logger_memoria = log_create("logs/memoria.log","Memoria",0,LOG_LEVEL_INFO);
+    logger_conexiones = log_create("logs/conexiones.log","Conexion",0,LOG_LEVEL_INFO);
 }

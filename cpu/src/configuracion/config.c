@@ -3,6 +3,7 @@
 t_cfg configuracion;
 t_config* config;
 t_log* logger_cpu;
+t_log* logger_conexiones;
 
 void obtener_config(){
     config = config_create("cfg/cpu.config");    
@@ -16,5 +17,6 @@ void obtener_config(){
 }
 
 void iniciar_logger(){
-    logger_cpu = log_create("cfg/cpu.log","cpu",0,LOG_LEVEL_INFO);
+    logger_cpu = log_create("logs/cpu.log","cpu",0,LOG_LEVEL_INFO);
+    logger_conexiones = log_create("logs/conexiones.log","Conexion",0,LOG_LEVEL_INFO);
 }

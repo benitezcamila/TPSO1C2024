@@ -13,12 +13,13 @@ pthread_detach(hilo_kernel_dispatch);
 void establecer_conexion_memoria(){
     int fd_memoria = crear_conexion(configuracion.IP_MEMORIA,string_itoa(configuracion.PUERTO_MEMORIA));
     int cod_op;//Lectura/Escritura Memoria Obtener Marco TLB Hit y TLB Miss
-    log_info(logger_cpu, "Conectado-CPU-memoria");
+    log_info(logger_conexiones, "Conectado-CPU-memoria");
     send(fd_memoria, &cod_op, sizeof(int), MSG_WAITALL);
 }
 
 void escucha_KI(){
-    int socket_server = iniciar_servidor(string_itoa(configuracion.PUERTO_ESCUCHA_INTERRUPT), "CPU - inicio");
+    int socket_server = iniciar_servidor(string_itoa(configuracion.PUERTO_ESCUCHA_INTERRUPT));
+    log_info(logger_conexiones, "Interrupt esta escuchando");
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = accept(socket_server, NULL, NULL);
     int estado = 0;
@@ -29,6 +30,7 @@ void escucha_KI(){
 
 void escucha_KD(){
     int socket_server = iniciar_servidor(string_itoa(configuracion.PUERTO_ESCUCHA_DISPATCH), "CPU - inicio");
+    log_info(logger_conexiones, "Dispatch esta escuchando");
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = accept(socket_server, NULL, NULL);
     int estado = 0;

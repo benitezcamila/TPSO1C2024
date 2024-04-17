@@ -43,7 +43,7 @@ typedef struct
 	t_buffer* buffer;
 } t_paquete;
 
-int iniciar_servidor(char*,char*);
+int iniciar_servidor(char*);
 int esperar_cliente(int);
 
 int recibir_operacion(int);
@@ -59,5 +59,6 @@ void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void enviar_paquete(t_paquete* paquete, int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
 void liberar_conexion(int socket_cliente);
+
 
 #endif

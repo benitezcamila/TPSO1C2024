@@ -3,6 +3,7 @@
 t_cfg configuracion;
 t_config* config;
 t_log* logger_kernel;
+t_log* logger_conexiones;
 
 void obtener_config(){
     config = config_create("cfg/kernel.config");
@@ -21,5 +22,6 @@ void obtener_config(){
 }
 
 void iniciar_logger(){
-    logger_kernel = log_create("cfg/kernel.log","Kernel",0,LOG_LEVEL_INFO);
+    logger_kernel = log_create("logs/kernel.log","Kernel",0,LOG_LEVEL_INFO);
+    logger_conexiones = log_create("logs/conexiones.log","Conexion",0,LOG_LEVEL_INFO);
 }

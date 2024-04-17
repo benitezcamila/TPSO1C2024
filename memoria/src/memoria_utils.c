@@ -1,7 +1,10 @@
 #include <memoria_utils.h>
 
 int inicializar_memoria(){
-    return iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA) , "MEMORIA");
+    int socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
+    log_info(logger_conexiones, "Memoria esta escuchando");
+    return socket_server;
+    
 } 
 
 
@@ -42,6 +45,7 @@ void escucha_kernel(){
     int socket_server = inicializar_memoria();
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = esperar_cliente(socket_server);
+    log_info(logger_conexiones, "Se conecto un cliente");
     int estado =0;
     while(estado != EXIT_FAILURE){
          estado = atender_cliente(fd_conexion_ptr);
@@ -52,6 +56,7 @@ void escucha_cpu(){
     int socket_server = inicializar_memoria();
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = esperar_cliente(socket_server);
+    log_info(logger_conexiones, "Se conecto un cliente");
     int estado = 0;
     while(estado != EXIT_FAILURE){
         estado = atender_cliente(fd_conexion_ptr);
@@ -62,7 +67,8 @@ void escucha_E_S(){
     int socket_server = inicializar_memoria();
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = esperar_cliente(socket_server);
-   int estado = 0;
+    log_info(logger_conexiones, "Se conecto un cliente");
+    int estado = 0;
     while(estado != EXIT_FAILURE){
         estado = atender_cliente(fd_conexion_ptr);
     }

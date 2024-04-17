@@ -7,4 +7,6 @@
 #include <readline/history.h>
 #include <E_S_utils.h>
 
+t_log* logger_conexiones;
+
 #endif

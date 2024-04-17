@@ -1,10 +1,7 @@
-
-
 #include "conexion.h"
 
-t_log* logger_conexiones;
 
-int iniciar_servidor(char* puerto, char* receptor)
+int iniciar_servidor(char* puerto)
 {
 	int socket_servidor;
 
@@ -26,12 +23,6 @@ int iniciar_servidor(char* puerto, char* receptor)
 	listen(socket_servidor, SOMAXCONN);
 
 	freeaddrinfo(servinfo);
-
-	char* str_aux = string_new();
-	string_append(&str_aux, receptor );
-	string_append(&str_aux, " esta escuchando" );
-	log_trace(logger_conexiones,  str_aux);
-
 	return socket_servidor;
 }
 
@@ -39,7 +30,6 @@ int esperar_cliente(int socket_servidor)
 {
 
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
-	log_info(logger_conexiones, "Se conecto un cliente!");
 
 	return socket_cliente;
 }
@@ -72,7 +62,6 @@ void recibir_mensaje(int socket_cliente)
 {
 	int size;
 	char* buffer = recibir_buffer(&size, socket_cliente);
-	log_info(logger_conexiones, "Me llego el mensaje %s", buffer);
 	free(buffer);
 }
 

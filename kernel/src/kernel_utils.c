@@ -32,13 +32,13 @@ void conexion_memoria()
 {
     int fd_memoria = crear_conexion(configuracion.IP_MEMORIA, string_itoa(configuracion.PUERTO_MEMORIA));
     int cod_op;
-    log_info(logger_kernel, "Conectado-Kernel-memoria");
+    log_info(logger_conexiones, "Conectado-Kernel-memoria");
     send(fd_memoria, &cod_op, sizeof(int), MSG_WAITALL);
 }
 void conexion_cpu_I()
 {
     int fd_cpu_distpach = crear_conexion(configuracion.IP_CPU, string_itoa(configuracion.PUERTO_CPU_DISPATCH));
-    log_info(logger_kernel, "CONEXION CPU-distpach ");
+    log_info(logger_conexiones, "CONEXION CPU-distpach ");
     int cod_op;
     send(fd_cpu_distpach, &cod_op, sizeof(int), MSG_WAITALL);
 }
@@ -46,7 +46,7 @@ void conexion_cpu_I()
 void conexion_cpu_D()
 {
     int fd_cpu_interrupt = crear_conexion(configuracion.IP_CPU, string_itoa(configuracion.PUERTO_CPU_INTERRUPT));
-    log_info(logger_kernel, "CONEXION CPU-interrupt ");
+    log_info(logger_conexiones, "CONEXION CPU-interrupt ");
     int cod_op;
     send(fd_cpu_interrupt, &cod_op, sizeof(int), MSG_WAITALL);
 }

@@ -3,6 +3,7 @@
 t_cfg configuracion;
 t_config* config;
 t_log* logger_entrada_salida;
+t_log* logger_conexiones;
 
 void obtener_config(){
     config = config_create("cfg/entrada_salida.config");
@@ -19,5 +20,6 @@ void obtener_config(){
 }
 
 void iniciar_logger(){
-    logger_entrada_salida = log_create("cfg/entrada salida.log","Entrada Salida",0,LOG_LEVEL_INFO);
+    logger_entrada_salida = log_create("logs/entrada salida.log","Entrada Salida",0,LOG_LEVEL_INFO);
+    logger_conexiones = log_create("logs/conexiones.log","Conexion",0,LOG_LEVEL_INFO);
 }
