@@ -6,6 +6,7 @@ int main(int argc, char* argv[]) {
      
     iniciar_logger();
     obtener_config();
-    escucha_kernel();
+    inicializar_memoria();
+    escuchar_instrucciones();
     return 0;
 }

@@ -1,12 +1,12 @@
 #include <memoria_utils.h>
 
-int inicializar_memoria(){
-    int socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
-    log_info(logger_conexiones, "Memoria esta escuchando");
-    return socket_server;
-    
-} 
+int socket_server;
 
+int inicializar_memoria(){
+    socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
+    log_info(logger_conexiones, "Memoria esta escuchando");
+    return socket_server;//eventualmente innecesario veremos xd
+} 
 
 void escuchar_instrucciones(){
 
@@ -35,43 +35,41 @@ void escuchar_instrucciones(){
     pthread_detach(thread_ES);
 
 
-
-
     return;
 
 }
 
 void escucha_kernel(){
-    int socket_server = inicializar_memoria();
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = esperar_cliente(socket_server);
-    log_info(logger_conexiones, "Se conecto un cliente");
+    log_info(logger_conexiones, "Se conecto un cliente kernel");
     int estado =0;
-    while(estado != EXIT_FAILURE){
+    /*while(estado != EXIT_FAILURE){
          estado = atender_cliente(fd_conexion_ptr);
-    }   
+    }   */
+    free(fd_conexion_ptr);
 }
 
 void escucha_cpu(){
-    int socket_server = inicializar_memoria();
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = esperar_cliente(socket_server);
-    log_info(logger_conexiones, "Se conecto un cliente");
+    log_info(logger_conexiones, "Se conecto un cliente cpu");
     int estado = 0;
-    while(estado != EXIT_FAILURE){
+    /*while(estado != EXIT_FAILURE){
         estado = atender_cliente(fd_conexion_ptr);
-    }
+    }*/
+    free(fd_conexion_ptr);
 }
 
 void escucha_E_S(){
-    int socket_server = inicializar_memoria();
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = esperar_cliente(socket_server);
-    log_info(logger_conexiones, "Se conecto un cliente");
+    log_info(logger_conexiones, "Se conecto un cliente entrada/salida");
     int estado = 0;
-    while(estado != EXIT_FAILURE){
+    /*while(estado != EXIT_FAILURE){
         estado = atender_cliente(fd_conexion_ptr);
-    }
+    }*/
+    free(fd_conexion_ptr);
 }
 
  int atender_cliente(int* fd_conexion_ptr){
@@ -84,27 +82,27 @@ int enviar_log(int fd_conexion_ptr, int cod_op){
     switch (cod_op) {
         
         case COD_OP_CREACION_TABLA:
-            // Log de creación de tabla de páginas y destruccion de pagina
+            // Log de creacion de tabla de paginas y destruccion de pagina
            
         case COD_OP_DESTRUCCION_TABLA:
-                    //enviar_mensaje("PID: <PID> - Tamaño: <CANTIDAD_PAGINAS>", fd_conexion_ptr);
+                    //enviar_mensaje("PID: <PID> - Tamanio: <CANTIDAD_PAGINAS>", fd_conexion_ptr);
                     log_info(logger_memoria, "PID: <PID> - Tamaño: <CANTIDAD_PAGINAS>");
             break;
         
         case COD_OP_ACCESO_TABLA:
-            // Log de acceso a tabla de páginas
+            // Log de acceso a tabla de paginas
                     //enviar_mensaje("PID: <PID> - Pagina: <PAGINA> - Marco: <MARCO>",fd_conexion_ptr);
                     log_info(logger_memoria, "PID: <PID> - Pagina: <PAGINA> - Marco: <MARCO>");
             break;
         case COD_OP_AMPLIACION_PROCESO:
-            // Log de ampliación de proceso
-                  //  enviar_mensaje("PID: <PID> - Tamaño Actual: <TAMAÑO_ACTUAL> - Tamaño a Ampliar: <TAMAÑO_A_AMPLIAR>" ,fd_conexion_ptr);
+            // Log de ampliacion de proceso
+                  //  enviar_mensaje("PID: <PID> - Tamanio Actual: <TAMANIO_ACTUAL> - Tamanio a Ampliar: <TAMANIO_A_AMPLIAR>" ,fd_conexion_ptr);
                     log_info(logger_memoria, "PID: <PID> - Tamaño Actual: <TAMAÑO_ACTUAL> - Tamaño a Ampliar: <TAMAÑO_A_AMPLIAR>");
                     
             break;
         case COD_OP_REDUCION_PROCESO:
-            // Log de reducción de proceso
-                    // enviar_mensaje("PID: <PID> - Tamaño Actual: <TAMAÑO_ACTUAL> - Tamaño a Reducir: <TAMAÑO_A_REDUCIR>",fd_conexion_ptr);
+            // Log de reducciOn de proceso
+                    // enviar_mensaje("PID: <PID> - Tamanio Actual: <TAMANIO_ACTUAL> - Tamanio a Reducir: <TAMANIO_A_REDUCIR>",fd_conexion_ptr);
                     log_info(logger_memoria, "PID: <PID> - Tamaño Actual: <TAMAÑO_ACTUAL> - Tamaño a Reducir: <TAMAÑO_A_REDUCIR>");
             break;
         case COD_OP_ACCESO_ESPACIO_USUARIO:
@@ -118,7 +116,7 @@ int enviar_log(int fd_conexion_ptr, int cod_op){
 			return EXIT_FAILURE; 
 
         default:
-            // Log para código de operación desconocido
+            // Log para codigo de operacion desconocido
                  //   enviar_mensaje("codigo desconocido", fd_conexion_ptr);
                     log_info(logger_memoria, "codigo desconocido");
             break;

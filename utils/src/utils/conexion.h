@@ -48,7 +48,7 @@ int esperar_cliente(int);
 
 int recibir_operacion(int);
 void* recibir_buffer(int*, int);
-void recibir_mensaje(int);
+void recibir_mensaje(int,t_log*);
 t_list* recibir_paquete(int);
 void* serializar_paquete(t_paquete* paquete, int bytes);
 int crear_conexion(char *ip, char* puerto);

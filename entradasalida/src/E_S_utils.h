@@ -10,7 +10,7 @@
 #include <pthread.h>
 
 void proceso_E_S();
-void levantar_conexiones_memoria();
-void levantar_conexiones_kernel();
+void establecer_conexion_memoria();
+void establecer_conexion_kernel();
 
 #endif

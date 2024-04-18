@@ -10,11 +10,17 @@
 #include <commons/string.h>
 #include <commons/config.h>
 
+extern int socket_server;
 
-void conexion_cpu_D();
+void establecer_conexion_cpu_D();
 
-void conexion_memoria();
+void establecer_conexion_memoria();
 
-void conexion_cpu_I();
+void establecer_conexion_cpu_I();
+
+int inicializar_kernel();
+
+void escucha_E_S();
+
 
 #endif

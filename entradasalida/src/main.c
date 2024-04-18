@@ -3,7 +3,8 @@
 #include <main.h>
 
 int main(int argc, char* argv[]) {
+    iniciar_logger();
+    obtener_config();
     proceso_E_S();
-    printf("hola");
     return 0;
 }

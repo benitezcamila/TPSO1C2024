@@ -3,6 +3,10 @@
 #include <main.h>
 
 int main(int argc, char* argv[]) {
-    printf("ando joya");
+    iniciar_logger();
+    obtener_config();
+    inicializar_cpu_dispatch();
+    inicializar_cpu_interrupt();
+    procesos_cpu();
     return 0;
 }
