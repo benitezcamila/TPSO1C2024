@@ -1,6 +1,5 @@
 #include "conexion.h"
 
-
 int iniciar_servidor(char* puerto)
 {
 	int socket_servidor;

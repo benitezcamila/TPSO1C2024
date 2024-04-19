@@ -2,6 +2,7 @@
 
 int socket_server;
 
+
 void procesos_kernel()
 {
 
@@ -11,7 +12,7 @@ void procesos_kernel()
                 NULL,
                 (void *)escucha_E_S,
                 NULL);
-
+    
     pthread_create(&thread_memoria,
                    NULL,
                    (void *)establecer_conexion_memoria,
@@ -44,16 +45,16 @@ void establecer_conexion_memoria()
     //enviar_mensaje("Hola soy el kernel", fd_memoria);
     //send(fd_memoria, &cod_op, sizeof(int), MSG_WAITALL);
 }
-void establecer_conexion_cpu_I()
+void establecer_conexion_cpu_D()
 {
     int fd_cpu_distpach = crear_conexion(configuracion.IP_CPU, string_itoa(configuracion.PUERTO_CPU_DISPATCH));
-    log_info(logger_conexiones, "Conectado Kernel Cpu_I");
+    log_info(logger_conexiones, "Conectado Kernel Cpu_Dispatch");
    // int cod_op;
     //enviar_mensaje("Hola soy el kernel", fd_cpu_distpach);
     //send(fd_cpu_distpach, &cod_op, sizeof(int), MSG_WAITALL);
 }
 
-void establecer_conexion_cpu_D()
+void establecer_conexion_cpu_I()
 {
     int fd_cpu_interrupt = crear_conexion(configuracion.IP_CPU, string_itoa(configuracion.PUERTO_CPU_INTERRUPT));
     log_info(logger_conexiones, "Concetado Kernel CPU-interrupt ");

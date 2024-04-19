@@ -14,7 +14,6 @@
 #include<assert.h>
 
 
-
 typedef enum
 {
 	MENSAJE,
