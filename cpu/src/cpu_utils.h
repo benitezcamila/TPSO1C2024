@@ -9,12 +9,21 @@
 #include <commons/string.h>
 #include <commons/config.h>
 
-extern int socket_server_dispatch;
-extern int socket_server_interrupt;
+struct sockets{
 
-int inicializar_cpu_dispatch();
-int inicializar_cpu_interrupt();
+    int socket_server_I;
+    int socket_server_D;
+    int socket_memoria;
+    int socker_cliente_KI;
+    int socker_cliente_KD;
+};
+
+extern struct sockets sockets;
+void iniciar_server_kernel();
+void inicializar_cpu_dispatch();
+void inicializar_cpu_interrupt();
 void establecer_conexion_memoria();
+void escuchar_conexiones();
 void escucha_KD();
 void escucha_KI();
 int enviar_log_D();

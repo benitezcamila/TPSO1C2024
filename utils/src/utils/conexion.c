@@ -117,6 +117,18 @@ int crear_conexion(char *ip, char* puerto)
 	// Ahora vamos a crear el socket.
 	int socket_cliente = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
 
+	// Configurar el temporizador de tiempo de espera para la conexión
+    struct timeval timeout;
+    timeout.tv_sec = 30;  // 30 segundos
+    timeout.tv_usec = 0;
+    if (setsockopt(socket_cliente, SOL_SOCKET, SO_SNDTIMEO, (char*) &timeout, sizeof(timeout)) < 0) {
+        perror("Error al configurar el tiempo de espera de conexión");
+        close(socket_cliente);
+        freeaddrinfo(server_info);
+        return -1;
+    };
+	setsockopt(socket_cliente, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof(timeout));
+
 	// Ahora que tenemos el socket, vamos a conectarlo
 	connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen);
 

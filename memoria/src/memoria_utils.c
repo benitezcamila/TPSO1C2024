@@ -18,22 +18,23 @@ void escuchar_instrucciones(){
                     (void*)escucha_kernel,
                     NULL);
                     
-    pthread_detach(thread_kernel);
+
     
     pthread_create(&thread_cpu,
                     NULL,
                     (void*) escucha_cpu,
                     NULL);
 
-    pthread_detach(thread_cpu);
+
 
     pthread_create(&thread_ES,
                     NULL,
                     (void*) escucha_E_S,
                     NULL);
-
-    pthread_detach(thread_ES);
-
+                    
+    pthread_join(thread_cpu,NULL);
+    pthread_join(thread_ES,NULL);
+    pthread_join(thread_kernel,NULL);
 
     return;
 

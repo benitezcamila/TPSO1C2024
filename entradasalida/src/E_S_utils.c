@@ -5,8 +5,8 @@ void proceso_E_S(){
     pthread_create(&hilo_memoria, NULL,(void *) establecer_conexion_memoria, NULL);
     pthread_create(&hilo_kernel, NULL,(void*) establecer_conexion_kernel, NULL); 
     
-    pthread_detach(hilo_memoria);
-    pthread_detach(hilo_kernel);
+    pthread_join(hilo_memoria);
+    pthread_join(hilo_kernel);
 }
 
 void establecer_conexion_kernel(){

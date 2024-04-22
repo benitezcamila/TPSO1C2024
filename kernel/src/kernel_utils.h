@@ -10,7 +10,18 @@
 #include <commons/string.h>
 #include <commons/config.h>
 
-extern int socket_server;
+struct return_sockets{
+
+    int socket_server;
+    int socket_CPU_I;
+    int socket_CPU_D;
+    int socket_memoria;
+    int socket_cliente_E_S;
+};
+
+extern struct return_sockets sockets;
+
+extern pthread_t conexion_CPU_I,conexion_CPU_D, conexion_memoria;
 
 void establecer_conexion_cpu_D();
 
@@ -18,9 +29,11 @@ void establecer_conexion_memoria();
 
 void establecer_conexion_cpu_I();
 
-int inicializar_kernel();
+void inicializar_kernel();
 
 void escucha_E_S();
+
+void establecer_conexiones();
 
 
 #endif
