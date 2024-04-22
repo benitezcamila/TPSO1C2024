@@ -10,9 +10,17 @@
 #include <commons/string.h>
 #include <commons/config.h>
 
+struct sockets{
+    int socket_server;
+    int socket_cliente_CPU;
+    int socket_cliente_kernel;
+    int socket_cliente_E_S;
+};
+
+extern struct sockets sockets;
 
 extern int socket_server;
-int inicializar_memoria();
+void inicializar_memoria();
 void escuchar_instrucciones();
 void escucha_kernel();
 void escucha_cpu();

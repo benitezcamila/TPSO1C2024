@@ -9,6 +9,13 @@
 #include <configuracion/config.h>
 #include <pthread.h>
 
+struct sockets{
+    int socket_memoria;
+    int socket_kernel;
+};
+
+extern struct sockets sockets;
+
 void proceso_E_S();
 void establecer_conexion_memoria();
 void establecer_conexion_kernel();

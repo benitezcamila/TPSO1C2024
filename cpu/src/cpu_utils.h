@@ -14,8 +14,8 @@ struct sockets{
     int socket_server_I;
     int socket_server_D;
     int socket_memoria;
-    int socker_cliente_KI;
-    int socker_cliente_KD;
+    int socket_cliente_KI;
+    int socket_cliente_KD;
 };
 
 extern struct sockets sockets;

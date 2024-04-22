@@ -10,7 +10,7 @@
 #include <commons/string.h>
 #include <commons/config.h>
 
-struct return_sockets{
+struct sockets{
 
     int socket_server;
     int socket_CPU_I;
@@ -19,7 +19,7 @@ struct return_sockets{
     int socket_cliente_E_S;
 };
 
-extern struct return_sockets sockets;
+extern struct sockets sockets;
 
 extern pthread_t conexion_CPU_I,conexion_CPU_D, conexion_memoria;
 

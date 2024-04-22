@@ -1,49 +1,17 @@
 #include <memoria_utils.h>
 
-int socket_server;
+struct sockets sockets;
 
-int inicializar_memoria(){
-    socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
+void inicializar_memoria(){
+    sockets.socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
     log_info(logger_conexiones, "Memoria esta escuchando");
-    return socket_server;//eventualmente innecesario veremos xd
 } 
-
-void escuchar_instrucciones(){
-
-    pthread_t thread_kernel;
-    pthread_t thread_cpu;
-    pthread_t thread_ES;
-    pthread_create(&thread_kernel,
-                    NULL,
-                    (void*)escucha_kernel,
-                    NULL);
-                    
-
-    
-    pthread_create(&thread_cpu,
-                    NULL,
-                    (void*) escucha_cpu,
-                    NULL);
-
-
-
-    pthread_create(&thread_ES,
-                    NULL,
-                    (void*) escucha_E_S,
-                    NULL);
-                    
-    pthread_join(thread_cpu,NULL);
-    pthread_join(thread_ES,NULL);
-    pthread_join(thread_kernel,NULL);
-
-    return;
-
-}
 
 void escucha_kernel(){
     int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = esperar_cliente(socket_server);
+    *fd_conexion_ptr = esperar_cliente(sockets.socket_server);
     log_info(logger_conexiones, "Se conecto un cliente kernel");
+    sockets.socket_cliente_kernel = *fd_conexion_ptr;
     int estado =0;
     /*while(estado != EXIT_FAILURE){
          estado = atender_cliente(fd_conexion_ptr);
@@ -53,8 +21,9 @@ void escucha_kernel(){
 
 void escucha_cpu(){
     int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = esperar_cliente(socket_server);
+    *fd_conexion_ptr = esperar_cliente(sockets.socket_server);
     log_info(logger_conexiones, "Se conecto un cliente cpu");
+    sockets.socket_cliente_CPU = *fd_conexion_ptr;
     int estado = 0;
     /*while(estado != EXIT_FAILURE){
         estado = atender_cliente(fd_conexion_ptr);
@@ -64,8 +33,9 @@ void escucha_cpu(){
 
 void escucha_E_S(){
     int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = esperar_cliente(socket_server);
+    *fd_conexion_ptr = esperar_cliente(sockets.socket_server);
     log_info(logger_conexiones, "Se conecto un cliente entrada/salida");
+    sockets.socket_cliente_E_S = *fd_conexion_ptr;
     int estado = 0;
     /*while(estado != EXIT_FAILURE){
         estado = atender_cliente(fd_conexion_ptr);
@@ -124,3 +94,37 @@ int enviar_log(int fd_conexion_ptr, int cod_op){
     }
         return EXIT_SUCCESS;
 }
+
+/*
+void escuchar_instrucciones(){
+
+    pthread_t thread_kernel;
+    pthread_t thread_cpu;
+    pthread_t thread_ES;
+    pthread_create(&thread_kernel,
+                    NULL,
+                    (void*)escucha_kernel,
+                    NULL);
+                    
+
+    
+    pthread_create(&thread_cpu,
+                    NULL,
+                    (void*) escucha_cpu,
+                    NULL);
+
+
+
+    pthread_create(&thread_ES,
+                    NULL,
+                    (void*) escucha_E_S,
+                    NULL);
+                    
+    pthread_join(thread_cpu,NULL);
+    pthread_join(thread_ES,NULL);
+    pthread_join(thread_kernel,NULL);
+
+    return;
+
+}
+*/

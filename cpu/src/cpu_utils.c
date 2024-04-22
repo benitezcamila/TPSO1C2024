@@ -42,7 +42,7 @@ void escucha_KI(){
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = esperar_cliente(sockets.socket_server_I);
     log_info(logger_conexiones, "Se conecto un cliente KI");
-    sockets.socker_cliente_KI = *fd_conexion_ptr;
+    sockets.socket_cliente_KI = *fd_conexion_ptr;
     /*int estado = 0;
     while(estado != EXIT_FAILURE){
         estado = enviar_log_I(fd_conexion_ptr);
@@ -54,7 +54,7 @@ void escucha_KD(){
     int *fd_conexion_ptr = malloc(sizeof(int));
     *fd_conexion_ptr = esperar_cliente(sockets.socket_server_D);
     log_info(logger_conexiones, "Se conecto un cliente KD");
-    sockets.socker_cliente_KD = *fd_conexion_ptr;
+    sockets.socket_cliente_KD = *fd_conexion_ptr;
     int estado = 0;
     /*while(estado != EXIT_FAILURE){
     estado = enviar_log_D(fd_conexion_ptr);
