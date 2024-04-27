@@ -5,7 +5,10 @@
 #include <commons/string.h>
 #include <stdint.h>
 #include <stdlib.h>
-
+#include <configuracion/config.h>
+#include <utils/conexion.h>
+#include <utils/utils.h>
+#include "kernel_utils.h"
 
 typedef struct {
     uint32_t PC; // Program Counter
@@ -18,18 +21,20 @@ typedef struct {
 
     int pid;
     int quantum;
-    registros_CPU registros;
+    registros_CPU* registros;
+    char estado;
 
-} pcb;
+} t_pcb;
 
 
 extern t_dictionary* dicc_pcb;
-extern int* current_pid;
-extern registros_CPU registros;
+extern int current_pid;
+extern registros_CPU* registros;
 
-pcb* crear_pcb();
-
+t_pcb* crear_pcb();
+registros_CPU* crear_registros();
 int siguiente_PID();
+t_buffer* crear_buffer_pcb();
 
 
 #endif

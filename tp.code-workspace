@@ -10,7 +10,8 @@
 			"utility": "c",
 			"limits": "c",
 			"cstdlib": "c",
-			"random": "c"
+			"random": "c",
+			"*.tcc": "c"
 		},
 		"C_Cpp.errorSquiggles": "disabled",
 	},

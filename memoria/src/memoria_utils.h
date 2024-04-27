@@ -17,7 +17,16 @@ struct sockets{
     int socket_cliente_E_S;
 };
 
+extern char* path_kernel;
+
+
+
+
+
 extern struct sockets sockets;
+
+
+
 
 extern int socket_server;
 void inicializar_memoria();

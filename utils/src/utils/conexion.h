@@ -14,50 +14,25 @@
 #include<assert.h>
 
 
-typedef enum
-{
-	MENSAJE,
-	PAQUETE,
-	COD_OP_CREACION_TABLA,
-	COD_OP_DESTRUCCION_TABLA,
-	COD_OP_ACCESO_TABLA,
-	COD_OP_AMPLIACION_PROCESO,
-	COD_OP_REDUCION_PROCESO,
-	COD_OP_ACCESO_ESPACIO_USUARIO,
-	COD_OP_FETCH,
-	COD_OP_INSTRUCCION_EJECUTADA,
-	COD_OP_,
-
-}op_code;
-
-typedef struct
-{
-	int size;
-	void* stream;
-} t_buffer;
-
-typedef struct
-{
-	op_code codigo_operacion;
-	t_buffer* buffer;
-} t_paquete;
 
 int iniciar_servidor(char*);
 int esperar_cliente(int);
 
 int recibir_operacion(int);
-void* recibir_buffer(int*, int);
 void recibir_mensaje(int,t_log*);
-t_list* recibir_paquete(int);
 void* serializar_paquete(t_paquete* paquete, int bytes);
 int crear_conexion(char *ip, char* puerto);
+void liberar_conexion(int socket_cliente);
+/*
+t_list* recibir_paquete(int);
+void* recibir_buffer(int*, int);
 void enviar_mensaje(char* mensaje, int socket_cliente);
 void crear_buffer(t_paquete* paquete);
 t_paquete* crear_paquete(void);
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void enviar_paquete(t_paquete* paquete, int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
-void liberar_conexion(int socket_cliente);
+*/
 
 
 #endif

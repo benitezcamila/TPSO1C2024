@@ -22,6 +22,6 @@ void obtener_config(){
 }
 
 void iniciar_logger(){
-    logger_kernel = log_create("logs/kernel.log","Kernel",0,LOG_LEVEL_INFO);
-    logger_conexiones = log_create("logs/conexiones.log","Conexion",0,LOG_LEVEL_INFO);
+    logger_kernel = log_create("logs/kernel.log","Kernel",1,LOG_LEVEL_INFO);
+    logger_conexiones = log_create("logs/conexiones.log","Conexion",1,LOG_LEVEL_INFO);
 }

@@ -5,6 +5,7 @@ struct sockets sockets;
 void inicializar_memoria(){
     sockets.socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
     log_info(logger_conexiones, "Memoria esta escuchando");
+    
 } 
 
 void escucha_kernel(){
@@ -12,7 +13,8 @@ void escucha_kernel(){
     *fd_conexion_ptr = esperar_cliente(sockets.socket_server);
     log_info(logger_conexiones, "Se conecto un cliente kernel");
     sockets.socket_cliente_kernel = *fd_conexion_ptr;
-    int estado =0;
+    recibir_mensaje(sokets.socket_cliente_kernel, logger_conexiones);   
+
     /*while(estado != EXIT_FAILURE){
          estado = atender_cliente(fd_conexion_ptr);
     }   */
@@ -43,57 +45,93 @@ void escucha_E_S(){
     free(fd_conexion_ptr);
 }
 
- int atender_cliente(int* fd_conexion_ptr){
-        // recibo cod_op
-        int cod_op  = recibir_operacion(*fd_conexion_ptr);
-        return enviar_log(*fd_conexion_ptr, cod_op);     
+
+
+// checkpoint 2, capaz de leer las instrucciones y enviarlas al cpu
+
+// leer las instrucciones del path
+void leer_instrucciones_del_path(){
+    
 }
 
-int enviar_log(int fd_conexion_ptr, int cod_op){
-    switch (cod_op) {
+
+
+// envia la instruccion siguiente
+void enviar_instrucciones_cpu(){
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//  int atender_cliente(int* fd_conexion_ptr){
+      // recibo cod_op
+//         int cod_op  = recibir_operacion(*fd_conexion_ptr);
+//         return enviar_log(*fd_conexion_ptr, cod_op);     
+// }
+
+// int enviar_log(int fd_conexion_ptr, int cod_op){
+//     switch (cod_op) {
         
-        case COD_OP_CREACION_TABLA:
-            // Log de creacion de tabla de paginas y destruccion de pagina
+//         case COD_OP_CREACION_TABLA:
+// Log de creacion de tabla de paginas y destruccion de pagina
            
-        case COD_OP_DESTRUCCION_TABLA:
-                    //enviar_mensaje("PID: <PID> - Tamanio: <CANTIDAD_PAGINAS>", fd_conexion_ptr);
-                    log_info(logger_memoria, "PID: <PID> - Tamaño: <CANTIDAD_PAGINAS>");
-            break;
+//         case COD_OP_DESTRUCCION_TABLA:
+//enviar_mensaje("PID: <PID> - Tamanio: <CANTIDAD_PAGINAS>", fd_conexion_ptr);
+//                     log_info(logger_memoria, "PID: <PID> - Tamaño: <CANTIDAD_PAGINAS>");
+//             break;
         
-        case COD_OP_ACCESO_TABLA:
-            // Log de acceso a tabla de paginas
-                    //enviar_mensaje("PID: <PID> - Pagina: <PAGINA> - Marco: <MARCO>",fd_conexion_ptr);
-                    log_info(logger_memoria, "PID: <PID> - Pagina: <PAGINA> - Marco: <MARCO>");
-            break;
-        case COD_OP_AMPLIACION_PROCESO:
-            // Log de ampliacion de proceso
-                  //  enviar_mensaje("PID: <PID> - Tamanio Actual: <TAMANIO_ACTUAL> - Tamanio a Ampliar: <TAMANIO_A_AMPLIAR>" ,fd_conexion_ptr);
-                    log_info(logger_memoria, "PID: <PID> - Tamaño Actual: <TAMAÑO_ACTUAL> - Tamaño a Ampliar: <TAMAÑO_A_AMPLIAR>");
+//         case COD_OP_ACCESO_TABLA:
+        // Log de acceso a tabla de paginas
+         //enviar_mensaje("PID: <PID> - Pagina: <PAGINA> - Marco: <MARCO>",fd_conexion_ptr);
+        //log_info(logger_memoria, "PID: <PID> - Pagina: <PAGINA> - Marco: <MARCO>");
+        //             break;
+//         case COD_OP_AMPLIACION_PROCESO:
+        // Log de ampliacion de proceso
+        //  enviar_mensaje("PID: <PID> - Tamanio Actual: <TAMANIO_ACTUAL> - Tamanio a Ampliar: <TAMANIO_A_AMPLIAR>" ,fd_conexion_ptr);
+        //  log_info(logger_memoria, "PID: <PID> - Tamaño Actual: <TAMAÑO_ACTUAL> - Tamaño a Ampliar: <TAMAÑO_A_AMPLIAR>");
                     
-            break;
-        case COD_OP_REDUCION_PROCESO:
+//             break;
+//         case COD_OP_REDUCION_PROCESO:
             // Log de reducciOn de proceso
-                    // enviar_mensaje("PID: <PID> - Tamanio Actual: <TAMANIO_ACTUAL> - Tamanio a Reducir: <TAMANIO_A_REDUCIR>",fd_conexion_ptr);
-                    log_info(logger_memoria, "PID: <PID> - Tamaño Actual: <TAMAÑO_ACTUAL> - Tamaño a Reducir: <TAMAÑO_A_REDUCIR>");
-            break;
-        case COD_OP_ACCESO_ESPACIO_USUARIO:
-            // Log de acceso a espacio de usuario
-                   // enviar_mensaje("PID: <PID> - Accion: <LEER / ESCRIBIR> - Direccion fisica: <DIRECCION_FISICA>", fd_conexion_ptr);
-                    log_info(logger_memoria, "PID: <PID> - Accion: <LEER / ESCRIBIR> - Direccion fisica: <DIRECCION_FISICA>");
-            break;
+            // enviar_mensaje("PID: <PID> - Tamanio Actual: <TAMANIO_ACTUAL> - Tamanio a Reducir: <TAMANIO_A_REDUCIR>",fd_conexion_ptr);
+            //log_info(logger_memoria, "PID: <PID> - Tamaño Actual: <TAMAÑO_ACTUAL> - Tamaño a Reducir: <TAMAÑO_A_REDUCIR>");
+            //             break;
+            //         case COD_OP_ACCESO_ESPACIO_USUARIO:
+           // Log de acceso a espacio de usuario
+            // enviar_mensaje("PID: <PID> - Accion: <LEER / ESCRIBIR> - Direccion fisica: <DIRECCION_FISICA>", fd_conexion_ptr);
+            // log_info(logger_memoria, "PID: <PID> - Accion: <LEER / ESCRIBIR> - Direccion fisica: <DIRECCION_FISICA>");
+            //break;
         
-        case -1:
-        	log_error(logger_memoria, "el cliente se desconecto. Terminando servidor");
-			return EXIT_FAILURE; 
+            //         case -1:
+            //         	log_error(logger_memoria, "el cliente se desconecto. Terminando servidor");
+            // 			return EXIT_FAILURE; 
 
-        default:
-            // Log para codigo de operacion desconocido
-                 //   enviar_mensaje("codigo desconocido", fd_conexion_ptr);
-                    log_info(logger_memoria, "codigo desconocido");
-            break;
-    }
-        return EXIT_SUCCESS;
-}
+            //         default:
+            //             // Log para codigo de operacion desconocido
+            //                  //   enviar_mensaje("codigo desconocido", fd_conexion_ptr);
+            //                     log_info(logger_memoria, "codigo desconocido");
+            //             break;
+            //     }
+            //         return EXIT_SUCCESS;
+            // }
 
 /*
 void escuchar_instrucciones(){
