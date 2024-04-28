@@ -1,14 +1,15 @@
 #ifndef KERNEL_UTILS_H
 #define KERNEL_UTILS_H
 
-#include <utils/conexion.h>
 #include <bits/pthreadtypes.h>
 #include <pthread.h>
 #include <configuracion/config.h>
 #include <commons/log.h>
 #include <commons/string.h>
 #include <commons/config.h>
-#include <pcb.h>
+#include "utils/conexion.h"
+#include "utils/serializacion.h"
+
 
 typedef struct {
 
@@ -19,7 +20,7 @@ typedef struct {
     int socket_cliente_E_S;
 }str_sockets;
 
-extern struct str_sockets sockets;
+extern str_sockets sockets;
 
 extern pthread_t conexion_CPU_I,conexion_CPU_D, conexion_memoria;
 

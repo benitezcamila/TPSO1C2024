@@ -1,7 +1,6 @@
-#include <kernel_utils.h>
+#include "kernel_utils.h"
 
-struct str_sockets sockets;
-
+str_sockets sockets;
 
 pthread_t conexion_CPU_I,conexion_CPU_D, conexion_memoria;
 

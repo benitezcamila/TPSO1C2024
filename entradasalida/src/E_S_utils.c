@@ -1,6 +1,6 @@
 #include <E_S_utils.h>
 
-struct sockets sockets;
+str_sockets sockets;
 
 void establecer_conexion_kernel(){
     int fd_kernel = crear_conexion(configuracion.IP_KERNEL ,string_itoa(configuracion.PUERTO_KERNEL));
@@ -17,7 +17,25 @@ void establecer_conexion_memoria(){
     //enviar_mensaje("Hola soy Entrada Salida", fd_memoria);
 }
 
-
+/*
+void iniciar_interfaz(){
+    SWITCH (configuracion.tipo_interfaz){
+        CASE GENERICA:
+            pthread_create(&kernel,NULL,(void*)establecer_conexion_kernel,NULL);
+            
+            break;
+        CASE STDIN:
+            break;
+        CASE STDOUT:
+            break;
+        CASE DIALFS:
+            break;
+        default:
+            log_info(logger_entrada_salida,"ERROR - NO RECONOCE INTERFAZ")
+            break;
+    }
+}
+*/
 /*void proceso_E_S(){
     pthread_t hilo_kernel, hilo_memoria;
     pthread_create(&hilo_memoria, NULL,(void *) establecer_conexion_memoria, NULL);

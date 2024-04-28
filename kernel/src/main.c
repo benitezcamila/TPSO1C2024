@@ -6,7 +6,7 @@ int main(int argc, char* argv[]) {
 
     pthread_t levantar_kernel, escuchar_conexiones, establecer_conexion;
     dicc_pcb = dictionary_create();
-
+    
 
     iniciar_logger();
     obtener_config();

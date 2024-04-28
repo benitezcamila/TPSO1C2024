@@ -8,15 +8,17 @@
 #include <configuracion/config.h>
 #include <pthread.h>
 
-struct sockets{
+typedef struct {
     int socket_memoria;
     int socket_kernel;
-};
+}str_sockets;
 
-extern struct sockets sockets;
+ 
 
-void proceso_E_S();
+extern str_sockets sockets;
+
+//void proceso_E_S();
 void establecer_conexion_memoria();
 void establecer_conexion_kernel();
-
+//void iniciar_interfaz();
 #endif

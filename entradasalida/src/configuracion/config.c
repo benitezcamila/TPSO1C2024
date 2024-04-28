@@ -1,13 +1,29 @@
 #include "config.h"
 
-t_cfg configuracion;
 t_config* config;
 t_log* logger_entrada_salida;
 t_log* logger_conexiones;
 
-void obtener_config(){
+tipo_interfaz config_string_a_enum(char* str){
+    if (strcmp(str,"GENERICA")== 0 ){
+        reutrn GENERICA;
+    }
+    else if (strcmp(str,"STDIN")== 0 ){
+        reutrn STDIN;
+    }
+    else if (strcmp(str,"STDOUT")== 0 ){
+        reutrn STDOUT;
+    }
+    else if (strcmp(str,"DIALFS")== 0 ){
+        reutrn DIALFS;
+    }
+}
+
+obtener_config(){
+    char* str_tipo_interfaz;
     config = config_create("cfg/entradasalida.config");
-    configuracion.TIPO_INTERFAZ= config_get_string_value(config,"TIPO_INTERFAZ");
+    str_tipo_interfaz = config_get_string_value(config,"TIPO_INTERFAZ");
+    configuracion.TIPO_INTERFAZ = config_string_a_enum(str_tipo_interfaz);
     configuracion.TIEMPO_UNIDAD_TRABAJO = config_get_int_value(config,"TIEMPO_UNIDAD_TRABAJO");
     configuracion.IP_KERNEL = config_get_string_value(config,"IP_KERNEL");
     configuracion.PUERTO_KERNEL = config_get_int_value(config,"PUERTO_KERNEL");

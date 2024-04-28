@@ -73,6 +73,6 @@ void buffer_add_string(t_buffer *buffer, uint32_t length, char *string);
 // Lee un string y su longitud del buffer y avanza el offset
 char *buffer_read_string(t_buffer *buffer, uint32_t *lengwhath);
 
-extern desempaquetar_pcb(t_buffer*,t_pcb*);
+void desempaquetar_pcb(t_buffer*,t_pcb*);
 
 #endif /* UTILS_H_ */

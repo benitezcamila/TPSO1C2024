@@ -8,6 +8,7 @@
 #include<commons/config.h>
 #include<readline/readline.h>
 #include<readline/history.h>
-#include<kernel_utils.h>
+#include "kernel_utils.h"
+#include "pcb.h"
 
 #endif

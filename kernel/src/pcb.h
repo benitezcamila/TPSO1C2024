@@ -11,7 +11,6 @@
 #include "kernel_utils.h"
 
 
-
 extern t_dictionary* dicc_pcb;
 extern int current_pid;
 extern registros_CPU* registros;
@@ -20,6 +19,6 @@ t_pcb* crear_pcb();
 registros_CPU* crear_registros();
 int siguiente_PID();
 t_buffer* crear_buffer_pcb();
-
+void crear_paquete_pcb(t_pcb*);
 
 #endif

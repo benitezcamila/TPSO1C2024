@@ -6,8 +6,15 @@
 #include <commons/log.h>
 #include <stdint.h>
 
+
+typedef enum {
+    GENERICA,
+    STDIN,
+    STDOUT,
+    DIALFS
+} tipo_interfaz;
 typedef struct {
-    char* TIPO_INTERFAZ;
+    tipo_interfaz TIPO_INTERFAZ;
     uint16_t TIEMPO_UNIDAD_TRABAJO;
     char* IP_KERNEL;
     uint16_t PUERTO_KERNEL;
@@ -25,7 +32,7 @@ extern t_cfg configuracion;
 
 extern t_config* config;
 
-void obtener_config();
+t_cfg obtener_config();
 
 extern t_log* logger_entrada_salida;
 extern t_log* logger_conexiones;

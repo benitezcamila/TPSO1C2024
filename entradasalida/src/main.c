@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
     
     iniciar_logger();
     obtener_config();
-
+    //iniciar_interfaz();
     pthread_create(&memoria,NULL,(void*)establecer_conexion_memoria,NULL);
     pthread_create(&kernel,NULL,(void*)establecer_conexion_kernel,NULL);
 
