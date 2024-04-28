@@ -46,13 +46,6 @@ int recibir_operacion(int socket_cliente)
 	}
 }
 
-void recibir_mensaje(int socket_cliente,t_log* logger)
-{
-	int size;
-	char* buffer = recibir_buffer(&size, socket_cliente);
-	log_info(logger, "Me llego el mensaje %s", buffer);
-	free(buffer);
-}
 
 
 
@@ -92,6 +85,18 @@ void liberar_conexion(int socket_cliente)
 	close(socket_cliente);
 }
 
+
+
+
+/*
+void recibir_mensaje(int socket_cliente,t_log* logger)
+{
+	int size;
+	char* buffer = recibir_buffer(&size, socket_cliente);
+	log_info(logger, "Me llego el mensaje %s", buffer);
+	free(buffer);
+}
+
 void enviar_mensaje(char* mensaje, int socket_cliente)
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
@@ -111,10 +116,6 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 	free(a_enviar);
 	eliminar_paquete(paquete);
 }
-
-
-
-/*
 
 void* recibir_buffer(int* size, int socket_cliente)
 {

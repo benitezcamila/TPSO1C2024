@@ -19,12 +19,12 @@ int iniciar_servidor(char*);
 int esperar_cliente(int);
 
 int recibir_operacion(int);
-void recibir_mensaje(int,t_log*);
-void* serializar_paquete(t_paquete* paquete, int bytes);
 int crear_conexion(char *ip, char* puerto);
 void liberar_conexion(int socket_cliente);
 
 /*
+void recibir_mensaje(int,t_log*);
+void* serializar_paquete(t_paquete* paquete, int bytes);
 t_list* recibir_paquete(int);
 void* recibir_buffer(int*, int);
 void enviar_mensaje(char* mensaje, int socket_cliente);

@@ -2,7 +2,6 @@
 #define E_S_UTILS_H
 
 #include <utils/conexion.h>
-#include <utils/utils.h>
 #include <commons/log.h>
 #include <commons/string.h>
 #include <commons/config.h>
