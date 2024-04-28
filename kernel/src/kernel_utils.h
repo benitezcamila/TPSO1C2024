@@ -4,23 +4,22 @@
 #include <utils/conexion.h>
 #include <bits/pthreadtypes.h>
 #include <pthread.h>
-#include <utils/utils.h>
 #include <configuracion/config.h>
 #include <commons/log.h>
 #include <commons/string.h>
 #include <commons/config.h>
 #include <pcb.h>
 
-struct sockets{
+typedef struct {
 
     int socket_server;
     int socket_CPU_I;
     int socket_CPU_D;
     int socket_memoria;
     int socket_cliente_E_S;
-};
+}str_sockets;
 
-extern struct sockets sockets;
+extern struct str_sockets sockets;
 
 extern pthread_t conexion_CPU_I,conexion_CPU_D, conexion_memoria;
 
