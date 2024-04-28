@@ -88,13 +88,13 @@ void crear_paquete_pcb(t_pcb* pcb) {
 
     void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
     int offset = 0;
-    memcpy(a_enviar + offset, &PCB, sizeof(int));
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(int));
     offset += sizeof(int);
     memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
     offset += sizeof(uint32_t);
     memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
 
-    send(socket_CPU_D, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0); //TODO
+    send(socket_CPU_D, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
 
     free(a_enviar);
     free(paquete->buffer->stream);

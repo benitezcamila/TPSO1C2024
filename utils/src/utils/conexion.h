@@ -23,6 +23,7 @@ void recibir_mensaje(int,t_log*);
 void* serializar_paquete(t_paquete* paquete, int bytes);
 int crear_conexion(char *ip, char* puerto);
 void liberar_conexion(int socket_cliente);
+
 /*
 t_list* recibir_paquete(int);
 void* recibir_buffer(int*, int);
