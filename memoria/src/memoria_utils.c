@@ -13,7 +13,7 @@ void escucha_kernel(){
     *fd_conexion_ptr = esperar_cliente(sockets.socket_server);
     log_info(logger_conexiones, "Se conecto un cliente kernel");
     sockets.socket_cliente_kernel = *fd_conexion_ptr;
-    recibir_mensaje(sokets.socket_cliente_kernel, logger_conexiones);   
+    recibir_mensaje(sockets.socket_cliente_kernel, logger_conexiones);   
 
     /*while(estado != EXIT_FAILURE){
          estado = atender_cliente(fd_conexion_ptr);

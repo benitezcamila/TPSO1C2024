@@ -12,15 +12,18 @@
 #include<commons/collections/list.h>
 #include<string.h>
 #include<assert.h>
-
+#include "serializacion.h"
 
 
 int iniciar_servidor(char*);
 int esperar_cliente(int);
-
 int recibir_operacion(int);
 int crear_conexion(char *ip, char* puerto);
 void liberar_conexion(int socket_cliente);
+int enviar_hanshake(int);
+char* recibir_handshake(int,t_buffer*);
+void hacer_handshake(int,t_buffer*);
+
 
 /*
 void recibir_mensaje(int,t_log*);

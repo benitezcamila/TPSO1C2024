@@ -2,7 +2,6 @@
 #define MEMORIA_UTILS_H
 
 #include <utils/conexion.h>
-#include <utils/utils.h>
 #include "configuracion/config.h"
 #include <bits/pthreadtypes.h>
 #include <pthread.h>

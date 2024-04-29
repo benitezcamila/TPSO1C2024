@@ -85,7 +85,35 @@ void liberar_conexion(int socket_cliente)
 	close(socket_cliente);
 }
 
+int enviar_hanshake(int socket){
 
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+	char* codigo= "Codigo";
+	uint32_t len_codigo = 7;
+    paquete->codigo_operacion = HANDSHAKE;
+    paquete->buffer = buffer_create(sizeof(uint32_t));
+
+	buffer_add_uint32(paquete->buffer,paquete->codigo_operacion);
+	buffer_add_string(paquete->buffer,len_codigo,codigo);
+
+	int bytes = send(socket,paquete->buffer->stream,paquete->buffer->size + sizeof(uint32_t)*2,0);
+
+	free(codigo);
+	free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+	
+	return bytes;
+}
+
+char* recibir_handshake(int socket,t_buffer* buffer){
+
+	uint32_t* len_msg_handshake = malloc(sizeof(uint32_t));
+	char* msg_handshake = buffer_read_string(buffer,len_msg_handshake);
+	free(len_msg_handshake);
+
+	return msg_handshake;
+}
 
 
 /*

@@ -9,6 +9,10 @@ typedef enum{
     EXIT
 }estados_proceso;
 
+typedef enum {
+    HANDSHAKE,
+    PCB
+}op_code;
 typedef struct {
     uint32_t PC; // Program Counter
     uint8_t AX, BX, CX, DX; // Registros de 1 byte
@@ -24,5 +28,21 @@ typedef struct {
     uint32_t estado;
 
 } t_pcb;
+
+typedef struct {
+	
+    uint32_t size; // Tamaño del payload
+    uint32_t offset; // Desplazamiento dentro del payload
+    void* stream; // Payload
+} t_buffer;
+
+typedef struct
+{
+	uint32_t codigo_operacion;
+	t_buffer* buffer;
+} t_paquete;
+
+
+
 
 #endif

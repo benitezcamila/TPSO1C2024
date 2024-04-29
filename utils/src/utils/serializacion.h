@@ -25,22 +25,6 @@ typedef enum
 }op_code;
 */
 
-typedef enum {
-    PCB
-}op_code;
-
-typedef struct {
-	
-    uint32_t size; // Tamaño del payload
-    uint32_t offset; // Desplazamiento dentro del payload
-    void* stream; // Payload
-} t_buffer;
-
-typedef struct
-{
-	uint32_t codigo_operacion;
-	t_buffer* buffer;
-} t_paquete;
 
 
 // Crea un buffer vacío de tamaño size y offset 0

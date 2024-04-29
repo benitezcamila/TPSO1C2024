@@ -43,15 +43,6 @@ int siguiente_PID(){
     return current_pid;
 }
 
-t_buffer* crear_buffer_pcb(){
-	t_buffer* buffer_pcb = malloc(sizeof(t_buffer));
-	buffer_pcb->size = sizeof(registros_CPU)
-                            + sizeof(uint32_t)*3;
-
-    buffer_pcb->offset = 0;
-	buffer_pcb->stream = malloc(buffer_pcb->size);
-    return buffer_pcb;
-}
 
 void eliminar_pcb(char* pid){
     t_pcb* pcb = dictionary_remove(dicc_pcb,pid);
@@ -63,26 +54,19 @@ void crear_paquete_pcb(t_pcb* pcb) {
 
     t_paquete* paquete = malloc(sizeof(t_paquete));
     paquete->codigo_operacion = PCB;
-    paquete->buffer = crear_buffer_pcb();
+    paquete->buffer = buffer_create(sizeof(t_pcb));
 
+
+    buffer_add_uint32(paquete->buffer,paquete->codigo_operacion);
+    buffer_add_uint32(paquete->buffer,paquete->buffer->size);
     buffer_add_uint32(paquete->buffer,pcb->pid);
     buffer_add_uint32(paquete->buffer,pcb->quantum);
     buffer_add_uint32(paquete->buffer,sizeof(pcb->registros));
     buffer_add(paquete->buffer,pcb->registros,sizeof(pcb->registros));
     buffer_add_uint32(paquete->buffer,pcb->estado);
 
-    void* a_enviar = malloc(paquete->buffer->size + sizeof(uint32_t) + sizeof(uint32_t));
-    int offset = 0;
-    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(uint32_t));
-    offset += sizeof(uint32_t);
-    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
-    offset += sizeof(uint32_t);
-    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
-
-    send(sockets.socket_CPU_D, a_enviar, paquete->buffer->size + sizeof(int) + sizeof(uint32_t), 0);
+    send(sockets.socket_CPU_D, paquete->buffer->stream, paquete->buffer->size + sizeof(uint32_t)*2, 0);
     
-
-    free(a_enviar);
     free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
