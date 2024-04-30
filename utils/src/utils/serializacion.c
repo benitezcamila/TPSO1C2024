@@ -35,7 +35,7 @@ void buffer_add_uint32(t_buffer *buffer, uint32_t data){
 
 // Lee un uint32_t del buffer y avanza el offset
 uint32_t buffer_read_uint32(t_buffer *buffer){
-	uint32_t data = 0;
+	uint32_t data = -1;
 
 	buffer_read(buffer, &data, sizeof(uint32_t));
 
@@ -75,6 +75,8 @@ void* a_enviar_create(t_paquete* paquete){
 	void* a_enviar = malloc(paquete->buffer->size + sizeof(uint32_t)*2);
 	int offset = 0;
 	memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+	memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
 	offset += sizeof(uint32_t);
 	memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
 	return a_enviar;

@@ -34,6 +34,7 @@ int esperar_cliente(int socket_servidor,t_log* log_conexiones)
 	paquete->buffer = malloc(sizeof(t_buffer));
 	uint32_t msg_recibido;
 	recv(socket_cliente, &(paquete->codigo_operacion),sizeof(uint32_t),MSG_WAITALL);
+	
 	if(paquete->codigo_operacion == HANDSHAKE){
 	recv(socket_cliente,&(paquete->buffer->size),sizeof(uint32_t),MSG_WAITALL);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
@@ -45,13 +46,21 @@ int esperar_cliente(int socket_servidor,t_log* log_conexiones)
 	}
 
 	if(msg_recibido ==  CODIGO){
-		send(socket_cliente,OK,sizeof(uint32_t),0);
+
+		uint32_t* codigo = malloc(sizeof(uint32_t));
+		*codigo = OK;
+		send(socket_cliente,codigo,sizeof(uint32_t),0);
 		log_info(log_conexiones,"El codigo del Handshake es correcto");
+		free(codigo);
 		
 	}
 	else{
-		send(socket_cliente,FALLO,sizeof(uint32_t),0);
+
+		uint32_t* codigo = malloc(sizeof(uint32_t));;
+		*codigo = FALLO;
+		send(socket_cliente,codigo,sizeof(uint32_t),0);
 		log_info(log_conexiones,"El codigo del Handshake es incorrecto");
+		free(codigo);
 	}
 
 	free(paquete->buffer->stream);
@@ -107,10 +116,10 @@ int crear_conexion(char *ip, char* puerto,t_log* log_conexiones)
 	recv(socket_cliente,msg_recibido,sizeof(uint32_t),MSG_WAITALL);
 	
 	
-	if(msg_recibido == OK && bytes_enviados == sizeof(uint32_t)*2+7){
+	if(*msg_recibido == OK && bytes_enviados == sizeof(uint32_t)*3){
 		log_info(log_conexiones,"El handshake fue exitoso");
 	}
-	else if (msg_recibido == FALLO && bytes_enviados == sizeof(uint32_t)*2+7){
+	else if (*msg_recibido == FALLO && bytes_enviados == sizeof(uint32_t)*3){
 		log_info(log_conexiones,"El handshake fallo del lado del servidor");
 	}
 	else{
