@@ -25,10 +25,38 @@ int iniciar_servidor(char* puerto)
 	return socket_servidor;
 }
 
-int esperar_cliente(int socket_servidor)
+int esperar_cliente(int socket_servidor,t_log* log_conexiones)
 {
 
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
+
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+	paquete->buffer = malloc(sizeof(t_buffer));
+	uint32_t msg_recibido;
+	recv(socket_cliente, &(paquete->codigo_operacion),sizeof(uint32_t),MSG_WAITALL);
+	if(paquete->codigo_operacion == HANDSHAKE){
+	recv(socket_cliente,&(paquete->buffer->size),sizeof(uint32_t),MSG_WAITALL);
+	paquete->buffer->stream = malloc(paquete->buffer->size);
+	recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
+	msg_recibido = buffer_read_uint32(paquete->buffer);
+	}
+	else{
+		log_info(log_conexiones,"Codigo de operacion incorrecto en el Handshake");
+	}
+
+	if(msg_recibido ==  CODIGO){
+		send(socket_cliente,OK,sizeof(uint32_t),0);
+		log_info(log_conexiones,"El codigo del Handshake es correcto");
+		
+	}
+	else{
+		send(socket_cliente,FALLO,sizeof(uint32_t),0);
+		log_info(log_conexiones,"El codigo del Handshake es incorrecto");
+	}
+
+	free(paquete->buffer->stream);
+	free(paquete->buffer);
+	free(paquete);
 
 	return socket_cliente;
 }
@@ -49,7 +77,7 @@ int recibir_operacion(int socket_cliente)
 
 
 
-int crear_conexion(char *ip, char* puerto)
+int crear_conexion(char *ip, char* puerto,t_log* log_conexiones)
 {
 	struct addrinfo hints;
 	struct addrinfo *server_info;
@@ -74,7 +102,23 @@ int crear_conexion(char *ip, char* puerto)
 	}
 	}
 
+	int bytes_enviados = enviar_hanshake(socket_cliente);
+	uint32_t* msg_recibido = malloc(sizeof(uint32_t));
+	recv(socket_cliente,msg_recibido,sizeof(uint32_t),MSG_WAITALL);
+	
+	
+	if(msg_recibido == OK && bytes_enviados == sizeof(uint32_t)*2+7){
+		log_info(log_conexiones,"El handshake fue exitoso");
+	}
+	else if (msg_recibido == FALLO && bytes_enviados == sizeof(uint32_t)*2+7){
+		log_info(log_conexiones,"El handshake fallo del lado del servidor");
+	}
+	else{
+		log_info(log_conexiones,"El handshake fallo por alguna razon");
+	}
+
 	freeaddrinfo(server_info);
+	free(msg_recibido);
 
 	return socket_cliente;
 }
@@ -88,31 +132,21 @@ void liberar_conexion(int socket_cliente)
 int enviar_hanshake(int socket){
 
     t_paquete* paquete = malloc(sizeof(t_paquete));
-	char* codigo= "Codigo";
-	uint32_t len_codigo = 7;
+	uint32_t codigo = CODIGO;
     paquete->codigo_operacion = HANDSHAKE;
     paquete->buffer = buffer_create(sizeof(uint32_t));
 
-	buffer_add_uint32(paquete->buffer,paquete->codigo_operacion);
-	buffer_add_string(paquete->buffer,len_codigo,codigo);
+	buffer_add_uint32(paquete->buffer,codigo);
+	void* a_enviar = a_enviar_create(paquete);
 
 	int bytes = send(socket,paquete->buffer->stream,paquete->buffer->size + sizeof(uint32_t)*2,0);
 
-	free(codigo);
 	free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
+	free(a_enviar);
 	
 	return bytes;
-}
-
-char* recibir_handshake(int socket,t_buffer* buffer){
-
-	uint32_t* len_msg_handshake = malloc(sizeof(uint32_t));
-	char* msg_handshake = buffer_read_string(buffer,len_msg_handshake);
-	free(len_msg_handshake);
-
-	return msg_handshake;
 }
 
 

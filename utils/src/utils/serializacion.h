@@ -59,4 +59,6 @@ char *buffer_read_string(t_buffer *buffer, uint32_t *lengwhath);
 
 void desempaquetar_pcb(t_buffer*,t_pcb*);
 
+void* a_enviar_create(t_paquete*);
+
 #endif /* UTILS_H_ */

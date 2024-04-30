@@ -5,7 +5,7 @@ t_buffer *buffer_create(uint32_t size){
 	t_buffer* buffer = malloc(sizeof(t_buffer));
 	buffer->size = size;
 	buffer->offset = 0;
-	buffer->stream = NULL;
+	buffer->stream = malloc(size);
 
 	return buffer;
 }
@@ -69,4 +69,14 @@ char *buffer_read_string(t_buffer *buffer, uint32_t *length){
 	buffer_read(buffer, data, *length);
 
 	return data;
+}
+
+void* a_enviar_create(t_paquete* paquete){
+	void* a_enviar = malloc(paquete->buffer->size + sizeof(uint32_t)*2);
+	int offset = 0;
+	memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+	memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+	return a_enviar;
+
 }

@@ -22,7 +22,7 @@ void inicializar_cpu_interrupt(){
 }
 
 void establecer_conexion_memoria(){
-    int fd_memoria = crear_conexion(configuracion.IP_MEMORIA,string_itoa(configuracion.PUERTO_MEMORIA));
+    int fd_memoria = crear_conexion(configuracion.IP_MEMORIA,string_itoa(configuracion.PUERTO_MEMORIA),logger_conexiones);
     int cod_op;//Lectura/Escritura Memoria Obtener Marco TLB Hit y TLB Miss
     log_info(logger_conexiones, "Conectado-CPU-memoria");
     sockets.socket_memoria = fd_memoria;
@@ -40,7 +40,7 @@ void escuchar_conexiones(){
 
 void escucha_KI(){
     int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = esperar_cliente(sockets.socket_server_I);
+    *fd_conexion_ptr = esperar_cliente(sockets.socket_server_I,logger_conexiones);
     log_info(logger_conexiones, "Se conecto un cliente KI");
     sockets.socket_cliente_KI = *fd_conexion_ptr;
     /*int estado = 0;
@@ -52,7 +52,7 @@ void escucha_KI(){
 
 void escucha_KD(){
     int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = esperar_cliente(sockets.socket_server_D);
+    *fd_conexion_ptr = esperar_cliente(sockets.socket_server_D,logger_conexiones);
     log_info(logger_conexiones, "Se conecto un cliente KD");
     sockets.socket_cliente_KD = *fd_conexion_ptr;
     int estado = 0;
@@ -63,7 +63,7 @@ void escucha_KD(){
 }
 
 
-
+/*
 int enviar_log_D( int fd_conexion_ptr){
     int cod_op = recibir_operacion(fd_conexion_ptr);
     if(cod_op == COD_OP_FETCH ) log_info(logger_cpu, "PID: <PID> - FETCH - Program Counter: <PROGRAM_COUNTER>");
@@ -77,6 +77,8 @@ int enviar_log_I( int fd_conexion_ptr){
     else return EXIT_FAILURE;
     return 0;
 }
+
+*/
 
 /*
 void procesos_cpu(){

@@ -10,10 +10,10 @@ void inicializar_memoria(){
 
 void escucha_kernel(){
     int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = esperar_cliente(sockets.socket_server);
+    *fd_conexion_ptr = esperar_cliente(sockets.socket_server,logger_conexiones);
     log_info(logger_conexiones, "Se conecto un cliente kernel");
     sockets.socket_cliente_kernel = *fd_conexion_ptr;
-    recibir_mensaje(sockets.socket_cliente_kernel, logger_conexiones);   
+    //recibir_mensaje(sockets.socket_cliente_kernel, logger_conexiones);   
 
     /*while(estado != EXIT_FAILURE){
          estado = atender_cliente(fd_conexion_ptr);
@@ -23,7 +23,7 @@ void escucha_kernel(){
 
 void escucha_cpu(){
     int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = esperar_cliente(sockets.socket_server);
+    *fd_conexion_ptr = esperar_cliente(sockets.socket_server,logger_conexiones);
     log_info(logger_conexiones, "Se conecto un cliente cpu");
     sockets.socket_cliente_CPU = *fd_conexion_ptr;
     int estado = 0;
@@ -35,7 +35,7 @@ void escucha_cpu(){
 
 void escucha_E_S(){
     int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = esperar_cliente(sockets.socket_server);
+    *fd_conexion_ptr = esperar_cliente(sockets.socket_server,logger_conexiones);
     log_info(logger_conexiones, "Se conecto un cliente entrada/salida");
     sockets.socket_cliente_E_S = *fd_conexion_ptr;
     int estado = 0;

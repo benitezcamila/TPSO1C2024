@@ -6,7 +6,7 @@ pthread_t conexion_CPU_I,conexion_CPU_D, conexion_memoria;
 
 void establecer_conexion_memoria()
 {
-    int fd_memoria = crear_conexion(configuracion.IP_MEMORIA, string_itoa(configuracion.PUERTO_MEMORIA));
+    int fd_memoria = crear_conexion(configuracion.IP_MEMORIA, string_itoa(configuracion.PUERTO_MEMORIA),logger_conexiones);
    // int cod_op;
     log_info(logger_conexiones, "Conectado Kernel memoria");
     sockets.socket_memoria = fd_memoria;
@@ -15,7 +15,7 @@ void establecer_conexion_memoria()
 }
 void establecer_conexion_cpu_D()
 {
-    int fd_cpu_distpach = crear_conexion(configuracion.IP_CPU, string_itoa(configuracion.PUERTO_CPU_DISPATCH));
+    int fd_cpu_distpach = crear_conexion(configuracion.IP_CPU, string_itoa(configuracion.PUERTO_CPU_DISPATCH),logger_conexiones);
     log_info(logger_conexiones, "Conectado Kernel Cpu_Dispatch");
     sockets.socket_CPU_D = fd_cpu_distpach;
    // int cod_op;
@@ -25,7 +25,7 @@ void establecer_conexion_cpu_D()
 
 void establecer_conexion_cpu_I()
 {
-    int fd_cpu_interrupt = crear_conexion(configuracion.IP_CPU, string_itoa(configuracion.PUERTO_CPU_INTERRUPT));
+    int fd_cpu_interrupt = crear_conexion(configuracion.IP_CPU, string_itoa(configuracion.PUERTO_CPU_INTERRUPT),logger_conexiones);
     log_info(logger_conexiones, "Concetado Kernel CPU-interrupt ");
     sockets.socket_CPU_I = fd_cpu_interrupt;
     //int cod_op;
@@ -40,7 +40,7 @@ void inicializar_kernel(){
 
 void escucha_E_S(){
     int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = esperar_cliente(sockets.socket_server);
+    *fd_conexion_ptr = esperar_cliente(sockets.socket_server,logger_conexiones);
     sockets.socket_cliente_E_S = *fd_conexion_ptr;
     log_info(logger_conexiones, "Se conecto un cliente Entrada/SAlida");
     int estado =0;

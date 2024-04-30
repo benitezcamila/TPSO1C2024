@@ -14,14 +14,19 @@
 #include<assert.h>
 #include "serializacion.h"
 
+typedef enum {
+    CODIGO,
+    OK,
+    FALLO
+}cod_handshake;
+
 
 int iniciar_servidor(char*);
-int esperar_cliente(int);
+int esperar_cliente(int,t_log*);
 int recibir_operacion(int);
-int crear_conexion(char *ip, char* puerto);
-void liberar_conexion(int socket_cliente);
+int crear_conexion(char *, char* ,t_log*);
+void liberar_conexion(int);
 int enviar_hanshake(int);
-char* recibir_handshake(int,t_buffer*);
 void hacer_handshake(int,t_buffer*);
 
 

@@ -5,6 +5,7 @@
 #include <commons/collections/list.h>
 #include <commons/log.h>
 #include <stdint.h>
+#include <string.h>
 
 
 typedef enum {
@@ -32,7 +33,7 @@ extern t_cfg configuracion;
 
 extern t_config* config;
 
-t_cfg obtener_config();
+void obtener_config();
 
 extern t_log* logger_entrada_salida;
 extern t_log* logger_conexiones;
