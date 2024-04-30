@@ -10,7 +10,7 @@ typedef enum{
 }estados_proceso;
 
 typedef enum {
-    HANDSHAKE,
+    HANDSHAKE = 1,
     PCB
 }op_code;
 typedef struct {
@@ -25,7 +25,7 @@ typedef struct {
     uint32_t pid;
     uint32_t quantum;
     registros_CPU* registros;
-    uint32_t estado;
+    estados_proceso estado;
 
 } t_pcb;
 
@@ -38,7 +38,7 @@ typedef struct {
 
 typedef struct
 {
-	uint32_t codigo_operacion;
+	op_code codigo_operacion;
 	t_buffer* buffer;
 } t_paquete;
 

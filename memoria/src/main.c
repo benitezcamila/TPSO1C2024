@@ -10,9 +10,9 @@ int main(int argc, char* argv[]) {
     obtener_config();
 
     pthread_create(&levantar_server,NULL,(void*)inicializar_memoria,NULL);
+    pthread_create(&kernel,NULL,(void*)escucha_kernel,NULL);
     pthread_create(&cpu,NULL,(void*)escucha_cpu,NULL);
     pthread_create(&e_s,NULL,(void*)escucha_E_S,NULL);
-    pthread_create(&kernel,NULL,(void*)escucha_kernel,NULL);
 
     pthread_join(levantar_server,NULL);
     pthread_join(e_s,NULL);
