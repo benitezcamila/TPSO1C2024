@@ -22,7 +22,7 @@ void inicializar_cpu_interrupt(){
 }
 
 void establecer_conexion_memoria(){
-    int fd_memoria = crear_conexion(configuracion.IP_MEMORIA,string_itoa(configuracion.PUERTO_MEMORIA),logger_conexiones);
+    int fd_memoria = crear_conexion(configuracion.IP_MEMORIA,string_itoa(configuracion.PUERTO_MEMORIA),logger_conexiones,CPU);
     int cod_op;//Lectura/Escritura Memoria Obtener Marco TLB Hit y TLB Miss
     log_info(logger_conexiones, "Conectado-CPU-memoria");
     sockets.socket_memoria = fd_memoria;

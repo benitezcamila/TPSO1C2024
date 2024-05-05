@@ -25,7 +25,7 @@ int iniciar_servidor(char* puerto)
 	return socket_servidor;
 }
 
-int esperar_cliente(int socket_servidor,t_log* log_conexiones)
+int esperar_cliente(int socket_servidor,t_log* log_conexiones,codigo_cliente* cod_cliente)
 {
 
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
@@ -39,6 +39,7 @@ int esperar_cliente(int socket_servidor,t_log* log_conexiones)
 	recv(socket_cliente,&(paquete->buffer->size),sizeof(uint32_t),MSG_WAITALL);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
 	recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
+	buffer_read(paquete->buffer,cod_cliente,sizeof(codigo_cliente));
 	buffer_read(paquete->buffer,msg_recibido,sizeof(cod_handshake));
 	}
 	else{
@@ -86,7 +87,7 @@ int recibir_operacion(int socket_cliente)
 
 
 
-int crear_conexion(char *ip, char* puerto,t_log* log_conexiones)
+int crear_conexion(char *ip, char* puerto,t_log* log_conexiones,codigo_cliente cod_cliente)
 {
 	struct addrinfo hints;
 	struct addrinfo *server_info;
@@ -111,7 +112,7 @@ int crear_conexion(char *ip, char* puerto,t_log* log_conexiones)
 	}
 	}
 
-	int bytes_enviados = enviar_hanshake(socket_cliente);
+	int bytes_enviados = enviar_hanshake(socket_cliente,cod_cliente);
 	cod_handshake* msg_recibido = malloc(sizeof(cod_handshake));
 	recv(socket_cliente,msg_recibido,sizeof(cod_handshake),MSG_WAITALL);
 	
@@ -138,14 +139,16 @@ void liberar_conexion(int socket_cliente)
 	close(socket_cliente);
 }
 
-int enviar_hanshake(int socket){
+int enviar_hanshake(int socket,codigo_cliente cod_cliente){
 
     t_paquete* paquete = malloc(sizeof(t_paquete));
 	cod_handshake* codigo = malloc(sizeof(cod_handshake));
 	*codigo = CODIGO;
+	
     paquete->codigo_operacion = HANDSHAKE;
-    paquete->buffer = buffer_create(sizeof(cod_handshake));
+    paquete->buffer = buffer_create(sizeof(cod_handshake)+sizeof(codigo_cliente));
 
+	buffer_add(paquete->buffer,&cod_cliente,sizeof(codigo_cliente));
 	buffer_add(paquete->buffer,codigo,sizeof(cod_handshake));
 	void* a_enviar = a_enviar_create(paquete);
 

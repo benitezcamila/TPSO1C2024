@@ -13,6 +13,13 @@ typedef enum {
     HANDSHAKE = 1,
     PCB
 }op_code;
+
+typedef enum{
+    KERNEL = 5,
+    CPU,
+    MEMORIA,
+    E_S
+}codigo_cliente
 typedef struct {
     uint32_t PC; // Program Counter
     uint8_t AX, BX, CX, DX; // Registros de 1 byte
@@ -42,6 +49,12 @@ typedef struct
 	t_buffer* buffer;
 } t_paquete;
 
+
+typedef struct {
+    t_log* log;
+    int fd;
+    char* server_name;
+} t_procesar_conexion_args;
 
 
 
