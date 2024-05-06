@@ -3,19 +3,15 @@
 str_sockets sockets;
 
 void establecer_conexion_kernel(){
-    int fd_kernel = crear_conexion(configuracion.IP_KERNEL ,string_itoa(configuracion.PUERTO_KERNEL),logger_conexiones,E_S);
-    int cod_op;//Lectura/Escritura Memoria Obtener Marco TLB Hit y TLB Miss
+    int fd_kernel = crear_conexion(configuracion.IP_KERNEL ,string_itoa(configuracion.PUERTO_KERNEL),logger_conexiones,"Entrada Salida");
     sockets.socket_kernel = fd_kernel;
     log_info(logger_conexiones, "Conectado Entrada/Salida-Kernel");
-    //enviar_mensaje("Hola soy Entrada Salida", fd_memoria);
 }
 void establecer_conexion_memoria(){
-    int fd_memoria = crear_conexion(configuracion.IP_MEMORIA ,string_itoa(configuracion.PUERTO_MEMORIA),logger_conexiones,E_S);
-    int cod_op;//Lectura/Escritura Memoria Obtener Marco TLB Hit y TLB Miss
+    int fd_memoria = crear_conexion(configuracion.IP_MEMORIA ,string_itoa(configuracion.PUERTO_MEMORIA),logger_conexiones,"Entrada Salida");
     sockets.socket_memoria = fd_memoria;
     log_info(logger_conexiones, "Conectado Entrada/Salida-Memoria");
-    //enviar_mensaje("Hola soy Entrada Salida", fd_memoria);
-}
+    
 
 /*
 void iniciar_interfaz(){

@@ -21,6 +21,7 @@ void iniciar_colas()
     lista_ejecutando = list_create();
 }
 
+/*
 void planificar_a_corto_plazo_segun_algoritmo(){
     char *algoritmo_planificador = configuracion.algoritmo_planificador;
 
@@ -34,6 +35,7 @@ void planificar_a_corto_plazo_segun_algoritmo(){
 //Escuchar por el contexto actualizado luego de la ejecución
 
 }
+*/
 /*Una vez seleccionado el siguiente proceso a ejecutar, se lo transicionara al estado EXEC y se enviara
 su Contexto de Ejecucion al CPU a traves del puerto de dispatch, quedando a la espera de recibir 
 dicho contexto actualizado despues de la ejecucion, junto con un motivo de desalojo por el cual fue 

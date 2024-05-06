@@ -1,6 +1,8 @@
 #ifndef ESTRUCTURAS_H_
 #define ESTRUCTURAS_H_
 
+#include <commons/log.h>
+
 typedef enum{
     NEW,
     READY,
@@ -13,13 +15,6 @@ typedef enum {
     HANDSHAKE = 1,
     PCB
 }op_code;
-
-typedef enum{
-    KERNEL = 5,
-    CPU,
-    MEMORIA,
-    E_S
-}codigo_cliente
 typedef struct {
     uint32_t PC; // Program Counter
     uint8_t AX, BX, CX, DX; // Registros de 1 byte
@@ -51,9 +46,8 @@ typedef struct
 
 
 typedef struct {
-    t_log* log;
     int fd;
-    char* server_name;
+    char* cliente_name;
 } t_procesar_conexion_args;
 
 

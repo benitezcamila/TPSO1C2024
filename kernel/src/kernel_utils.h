@@ -1,7 +1,6 @@
 #ifndef KERNEL_UTILS_H
 #define KERNEL_UTILS_H
 
-#include <bits/pthreadtypes.h>
 #include <pthread.h>
 #include <configuracion/config.h>
 #include <commons/log.h>
@@ -32,9 +31,7 @@ void establecer_conexion_cpu_I();
 
 void inicializar_kernel();
 
-void escucha_E_S();
-
 void establecer_conexiones();
-
-
+int server_escuchar(int);
+void procesar_conexion(void*);
 #endif

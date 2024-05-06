@@ -22,9 +22,9 @@ void iniciar_server_kernel();
 void inicializar_cpu_dispatch();
 void inicializar_cpu_interrupt();
 void establecer_conexion_memoria();
-void escuchar_conexiones();
-void escucha_KD();
-void escucha_KI();
+void atender_conexiones();
+void procesar_conexion(void*);
+int server_escuchar(int);
 int enviar_log_D();
 int enviar_log_I();
 
