@@ -13,7 +13,7 @@ void establecer_conexion_memoria()
 }
 void establecer_conexion_cpu_D()
 {
-    int fd_cpu_distpach = crear_conexion(configuracion.IP_CPU, string_itoa(configuracion.PUERTO_CPU_DISPATCH),logger_conexiones,"KERNEL");
+    int fd_cpu_distpach = crear_conexion(configuracion.IP_CPU, string_itoa(configuracion.PUERTO_CPU_DISPATCH),logger_conexiones,"KERNEL_D");
     log_info(logger_conexiones, "Conectado Kernel Cpu_Dispatch");
     sockets.socket_CPU_D = fd_cpu_distpach;
  
@@ -21,7 +21,7 @@ void establecer_conexion_cpu_D()
 
 void establecer_conexion_cpu_I()
 {
-    int fd_cpu_interrupt = crear_conexion(configuracion.IP_CPU, string_itoa(configuracion.PUERTO_CPU_INTERRUPT),logger_conexiones,"KERNEL");
+    int fd_cpu_interrupt = crear_conexion(configuracion.IP_CPU, string_itoa(configuracion.PUERTO_CPU_INTERRUPT),logger_conexiones,"KERNEL_I");
     log_info(logger_conexiones, "Concetado Kernel CPU-interrupt ");
     sockets.socket_CPU_I = fd_cpu_interrupt;
    

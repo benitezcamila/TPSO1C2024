@@ -32,6 +32,7 @@ int esperar_cliente(int socket_servidor,t_log* log_conexiones,char* nom_cliente)
 
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer->offset = 0;
 	cod_handshake* msg_recibido = malloc(sizeof(cod_handshake));
 	uint32_t* len_cliente = malloc(sizeof(uint32_t));
 	recv(socket_cliente, &(paquete->codigo_operacion),sizeof(op_code),MSG_WAITALL);
@@ -41,7 +42,6 @@ int esperar_cliente(int socket_servidor,t_log* log_conexiones,char* nom_cliente)
 	paquete->buffer->stream = malloc(paquete->buffer->size);
 	recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
 	nom_cliente = buffer_read_string(paquete->buffer,len_cliente);
-	buffer_read(paquete->buffer,nom_cliente,*len_cliente);
 	buffer_read(paquete->buffer,msg_recibido,sizeof(cod_handshake));
 	}
 	else{
@@ -146,7 +146,7 @@ void liberar_conexion(int socket_cliente)
 
 int enviar_hanshake(int socket,char* nom_cliente){
 
-	char* a = "abcd" ;
+	
     t_paquete* paquete = malloc(sizeof(t_paquete));
 	cod_handshake* codigo = malloc(sizeof(cod_handshake));
 	*codigo = CODIGO;
