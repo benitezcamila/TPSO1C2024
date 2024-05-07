@@ -1,6 +1,7 @@
 #include "cpu_utils.h"
 
-struct sockets sockets;
+str_sockets sockets;
+
 
 void iniciar_server_kernel(){
     pthread_t dispatch, interrupt;
@@ -36,7 +37,7 @@ void atender_conexiones(){
 }
 
 int server_escuchar(int server_socket) {
-    char* nom_cliente = malloc(7);
+    char* nom_cliente = malloc(20);
     int cliente_socket = esperar_cliente(server_socket,logger_conexiones,nom_cliente);
 
     if (cliente_socket != -1) {
@@ -49,24 +50,37 @@ int server_escuchar(int server_socket) {
         return 1;
 
     }
-    free(nom_cliente);
     return 0;
 }
 
-void procesar_conexion(void* void_args){
+void procesar_conexion(void* void_args) {
     t_procesar_conexion_args* args = (t_procesar_conexion_args*) void_args;
     int cliente_socket = args->fd;
-    char* nom_cliente = args->cliente_name;
+    char* nombre_cliente = args->cliente_name;
     free(args);
 
      op_code cop;
     while (cliente_socket != -1) {
 
         if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
-            log_info(logger_conexiones, "%s DISCONNECT!", nom_cliente);
+            log_info(logger_conexiones, "%s DISCONNECT!", nombre_cliente);
+            free(nombre_cliente);
+            
             return;
         }
+
+        switch (cop)
+        {
+        case 1:
+            /* code */
+            break;
+        
+        default:
+            break;
+        }
+        
     }
+    free(nombre_cliente);
 }
 
 

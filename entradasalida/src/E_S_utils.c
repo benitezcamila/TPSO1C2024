@@ -11,6 +11,7 @@ void establecer_conexion_memoria(){
     int fd_memoria = crear_conexion(configuracion.IP_MEMORIA ,string_itoa(configuracion.PUERTO_MEMORIA),logger_conexiones,"Entrada Salida");
     sockets.socket_memoria = fd_memoria;
     log_info(logger_conexiones, "Conectado Entrada/Salida-Memoria");
+}
     
 
 /*

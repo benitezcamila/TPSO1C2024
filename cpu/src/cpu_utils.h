@@ -8,16 +8,16 @@
 #include <commons/string.h>
 #include <commons/config.h>
 
-struct sockets{
+typedef struct{
 
     int socket_server_I;
     int socket_server_D;
     int socket_memoria;
     int socket_cliente_KI;
     int socket_cliente_KD;
-};
+}str_sockets;
 
-extern struct sockets sockets;
+extern str_sockets sockets;
 void iniciar_server_kernel();
 void inicializar_cpu_dispatch();
 void inicializar_cpu_interrupt();

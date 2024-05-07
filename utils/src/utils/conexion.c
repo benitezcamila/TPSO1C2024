@@ -41,7 +41,9 @@ int esperar_cliente(int socket_servidor,t_log* log_conexiones,char* nom_cliente)
 	recv(socket_cliente,&(paquete->buffer->size),sizeof(uint32_t),MSG_WAITALL);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
 	recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
-	nom_cliente = buffer_read_string(paquete->buffer,len_cliente);
+	char* string_aux = buffer_read_string(paquete->buffer,len_cliente);
+	strcpy(nom_cliente,string_aux);
+	free(string_aux);
 	buffer_read(paquete->buffer,msg_recibido,sizeof(cod_handshake));
 	}
 	else{
@@ -122,10 +124,10 @@ int crear_conexion(char *ip, char* puerto,t_log* log_conexiones,char* nom_client
 	recv(socket_cliente,msg_recibido,sizeof(cod_handshake),MSG_WAITALL);
 	
 	
-	if(*msg_recibido == OK && bytes_enviados == sizeof(uint32_t) + sizeof(cod_handshake) + sizeof(op_code)){
+	if(*msg_recibido == OK){
 		log_info(log_conexiones,"El handshake fue exitoso");
 	}
-	else if (*msg_recibido == FALLO && bytes_enviados == sizeof(uint32_t) + sizeof(cod_handshake) + sizeof(op_code)){
+	else if (*msg_recibido == FALLO){
 		log_info(log_conexiones,"El handshake fallo del lado del servidor");
 	}
 	else{
