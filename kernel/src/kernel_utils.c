@@ -32,9 +32,9 @@ void inicializar_kernel(){
     log_info(logger_conexiones, "Kernel esta escuchando");
 } 
 
-int server_escuchar(int server_socket) {
+int server_escuchar() {
     char* nom_cliente = malloc(20);
-    int cliente_socket = esperar_cliente(server_socket,logger_conexiones,nom_cliente);
+    int cliente_socket = esperar_cliente(sockets.socket_server,logger_conexiones,nom_cliente);
 
     if (cliente_socket != -1) {
         pthread_t hilo;

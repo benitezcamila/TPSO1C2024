@@ -32,6 +32,6 @@ void establecer_conexion_cpu_I();
 void inicializar_kernel();
 
 void establecer_conexiones();
-int server_escuchar(int);
+int server_escuchar();
 void procesar_conexion(void*);
 #endif

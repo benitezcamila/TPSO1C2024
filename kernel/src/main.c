@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
     obtener_config();
     pthread_create(&levantar_kernel,NULL,(void*)inicializar_kernel,NULL);
     pthread_create(&establecer_conexion,NULL,(void*)establecer_conexiones,NULL);
-    pthread_create(&escuchar_conexiones,NULL,(void*)server_escuchar,(void*)sockets.socket_server);
+    pthread_create(&escuchar_conexiones,NULL,(void*)server_escuchar,NULL);
 
     pthread_join(levantar_kernel,NULL);
     pthread_join(establecer_conexion,NULL);

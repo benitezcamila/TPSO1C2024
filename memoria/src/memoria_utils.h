@@ -23,7 +23,7 @@ extern str_sockets sockets;
 extern int socket_server;
 void inicializar_memoria();
 void escuchar_instrucciones();
-int server_escuchar(int);
+int server_escuchar();
 void procesar_conexion(void*);
 int enviar_log(int, int);
 #endif
