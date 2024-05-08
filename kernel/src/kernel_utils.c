@@ -1,6 +1,7 @@
 #include "kernel_utils.h"
 
 str_sockets sockets;
+sem_t sem_escuchar;
 
 pthread_t conexion_CPU_I,conexion_CPU_D, conexion_memoria;
 
@@ -11,6 +12,16 @@ void establecer_conexion_memoria()
     sockets.socket_memoria = fd_memoria;
  
 }
+
+void atender_escuchas(){
+    while(1){
+    sem_wait(&sem_escuchar);
+    pthread_t escuchar;
+    pthread_create(&escuchar,NULL,(void*)server_escuchar,NULL);
+    pthread_join(escuchar,NULL);
+    }
+}
+
 void establecer_conexion_cpu_D()
 {
     int fd_cpu_distpach = crear_conexion(configuracion.IP_CPU, string_itoa(configuracion.PUERTO_CPU_DISPATCH),logger_conexiones,"KERNEL_D");
@@ -35,7 +46,7 @@ void inicializar_kernel(){
 int server_escuchar() {
     char* nom_cliente = malloc(20);
     int cliente_socket = esperar_cliente(sockets.socket_server,logger_conexiones,nom_cliente);
-
+    sem_wait(&sem_escuchar);
     if (cliente_socket != -1) {
         pthread_t hilo;
         t_procesar_conexion_args* args = malloc(sizeof(t_procesar_conexion_args));

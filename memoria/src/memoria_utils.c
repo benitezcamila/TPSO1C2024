@@ -1,6 +1,7 @@
 #include <memoria_utils.h>
 
 str_sockets sockets;
+sem_t sem_escuchar;
 
 void inicializar_memoria(){
     sockets.socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
@@ -8,10 +9,19 @@ void inicializar_memoria(){
     
 } 
 
+void atender_escuchas(){
+    while(1){
+    sem_wait(&sem_escuchar);
+    pthread_t escuchar;
+    pthread_create(&escuchar,NULL,(void*)server_escuchar,NULL);
+    pthread_join(escuchar,NULL);
+    }
+}
+
 int server_escuchar() {
     char* nom_cliente = malloc(20);
     int cliente_socket = esperar_cliente(sockets.socket_server,logger_conexiones,nom_cliente);
-
+    sem_post(&sem_escuchar);
     if (cliente_socket != -1) {
         pthread_t hilo;
         t_procesar_conexion_args* args = malloc(sizeof(t_procesar_conexion_args));

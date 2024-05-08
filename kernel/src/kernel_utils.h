@@ -8,6 +8,7 @@
 #include <commons/config.h>
 #include "utils/conexion.h"
 #include "utils/serializacion.h"
+#include <semaphore.h>
 
 
 typedef struct {
@@ -20,6 +21,7 @@ typedef struct {
 }str_sockets;
 
 extern str_sockets sockets;
+extern sem_t sem_escuchar;
 
 extern pthread_t conexion_CPU_I,conexion_CPU_D, conexion_memoria;
 
@@ -30,6 +32,7 @@ void establecer_conexion_memoria();
 void establecer_conexion_cpu_I();
 
 void inicializar_kernel();
+void atender_escuchas();
 
 void establecer_conexiones();
 int server_escuchar();

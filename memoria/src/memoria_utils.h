@@ -8,6 +8,8 @@
 #include <commons/log.h>
 #include <commons/string.h>
 #include <commons/config.h>
+#include <semaphore.h>
+
 
 typedef struct {
     int socket_server;
@@ -19,9 +21,11 @@ typedef struct {
 extern char* path_kernel;
 
 extern str_sockets sockets;
+extern sem_t sem_escuchar;
 
 extern int socket_server;
 void inicializar_memoria();
+void atender_escuchas();
 void escuchar_instrucciones();
 int server_escuchar();
 void procesar_conexion(void*);
