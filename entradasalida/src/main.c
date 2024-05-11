@@ -5,10 +5,9 @@
 int main(int argc, char* argv[]) {
 
     pthread_t memoria, kernel;
-    
     iniciar_logger();
-    obtener_config();
-
+    obtener_config(argv[1]);
+    log_info(logger_entrada_salida, "Conexion funciona");
     pthread_create(&memoria,NULL,(void*)establecer_conexion_memoria,NULL);
     pthread_create(&kernel,NULL,(void*)establecer_conexion_kernel,NULL);
 

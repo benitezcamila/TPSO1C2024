@@ -25,7 +25,7 @@ extern t_cfg configuracion;
 
 extern t_config* config;
 
-void obtener_config();
+void obtener_config(char* path_config);
 
 extern t_log* logger_entrada_salida;
 extern t_log* logger_conexiones;

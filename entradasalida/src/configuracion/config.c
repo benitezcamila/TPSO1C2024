@@ -5,8 +5,8 @@ t_config* config;
 t_log* logger_entrada_salida;
 t_log* logger_conexiones;
 
-void obtener_config(){
-    config = config_create("cfg/entradasalida.config");
+void obtener_config(char* path_config){
+    config = config_create(path_config);
     configuracion.TIPO_INTERFAZ= config_get_string_value(config,"TIPO_INTERFAZ");
     configuracion.TIEMPO_UNIDAD_TRABAJO = config_get_int_value(config,"TIEMPO_UNIDAD_TRABAJO");
     configuracion.IP_KERNEL = config_get_string_value(config,"IP_KERNEL");
