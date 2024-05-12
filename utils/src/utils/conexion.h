@@ -12,15 +12,21 @@
 #include<commons/collections/list.h>
 #include<string.h>
 #include<assert.h>
+#include "serializacion.h"
 
+typedef enum {
+    CODIGO,
+    OK,
+    FALLO
+}cod_handshake;
 
 
 int iniciar_servidor(char*);
-int esperar_cliente(int);
-
+int esperar_cliente(int,t_log*,char*);
 int recibir_operacion(int);
-int crear_conexion(char *ip, char* puerto);
-void liberar_conexion(int socket_cliente);
+int crear_conexion(char *, char* ,t_log*,char*);
+void liberar_conexion(int);
+int enviar_hanshake(int,char*);
 
 /*
 void recibir_mensaje(int,t_log*);

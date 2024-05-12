@@ -5,6 +5,7 @@
 #include <commons/collections/list.h>
 #include <commons/log.h>
 #include <stdint.h>
+#include <string.h>
 
 typedef enum {
     GENERICA,

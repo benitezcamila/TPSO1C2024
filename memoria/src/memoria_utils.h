@@ -2,37 +2,32 @@
 #define MEMORIA_UTILS_H
 
 #include <utils/conexion.h>
-#include <utils/utils.h>
 #include "configuracion/config.h"
 #include <bits/pthreadtypes.h>
 #include <pthread.h>
 #include <commons/log.h>
 #include <commons/string.h>
 #include <commons/config.h>
+#include <semaphore.h>
 
-struct sockets{
+
+typedef struct {
     int socket_server;
     int socket_cliente_CPU;
     int socket_cliente_kernel;
     int socket_cliente_E_S;
-};
+}str_sockets;
 
 extern char* path_kernel;
 
-
-
-
-
-extern struct sockets sockets;
-
-
-
+extern str_sockets sockets;
+extern sem_t sem_escuchar;
 
 extern int socket_server;
 void inicializar_memoria();
+void atender_escuchas();
 void escuchar_instrucciones();
-void escucha_kernel();
-void escucha_cpu();
-void escucha_E_S();
+int server_escuchar();
+void procesar_conexion(void*);
 int enviar_log(int, int);
 #endif

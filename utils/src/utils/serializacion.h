@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include "estructuras.h"
 
 /*
 typedef enum
@@ -24,22 +25,7 @@ typedef enum
 }op_code;
 */
 
-typedef enum {
-    PCB
-}op_code;
 
-typedef struct {
-	
-    uint32_t size; // Tamaño del payload
-    uint32_t offset; // Desplazamiento dentro del payload
-    void* stream; // Payload
-} t_buffer;
-
-typedef struct
-{
-	int codigo_operacion;
-	t_buffer* buffer;
-} t_paquete;
 
 // Crea un buffer vacío de tamaño size y offset 0
 t_buffer *buffer_create(uint32_t size);
@@ -69,6 +55,10 @@ uint8_t buffer_read_uint8(t_buffer *buffer);
 void buffer_add_string(t_buffer *buffer, uint32_t length, char *string);
 
 // Lee un string y su longitud del buffer y avanza el offset
-char *buffer_read_string(t_buffer *buffer, uint32_t *length);
+char *buffer_read_string(t_buffer *buffer, uint32_t *lengwhath);
+
+void desempaquetar_pcb(t_buffer*,t_pcb*);
+
+void* a_enviar_create(t_paquete*);
 
 #endif /* UTILS_H_ */

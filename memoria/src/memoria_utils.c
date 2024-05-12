@@ -1,6 +1,7 @@
 #include <memoria_utils.h>
 
-struct sockets sockets;
+str_sockets sockets;
+sem_t sem_escuchar;
 
 void inicializar_memoria(){
     sockets.socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
@@ -8,41 +9,58 @@ void inicializar_memoria(){
     
 } 
 
-void escucha_kernel(){
-    int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = esperar_cliente(sockets.socket_server);
-    log_info(logger_conexiones, "Se conecto un cliente kernel");
-    sockets.socket_cliente_kernel = *fd_conexion_ptr;
-    recibir_mensaje(sokets.socket_cliente_kernel, logger_conexiones);   
-
-    /*while(estado != EXIT_FAILURE){
-         estado = atender_cliente(fd_conexion_ptr);
-    }   */
-    free(fd_conexion_ptr);
+void atender_escuchas(){
+    while(1){
+    sem_wait(&sem_escuchar);
+    pthread_t escuchar;
+    pthread_create(&escuchar,NULL,(void*)server_escuchar,NULL);
+    pthread_join(escuchar,NULL);
+    }
 }
 
-void escucha_cpu(){
-    int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = esperar_cliente(sockets.socket_server);
-    log_info(logger_conexiones, "Se conecto un cliente cpu");
-    sockets.socket_cliente_CPU = *fd_conexion_ptr;
-    int estado = 0;
-    /*while(estado != EXIT_FAILURE){
-        estado = atender_cliente(fd_conexion_ptr);
-    }*/
-    free(fd_conexion_ptr);
+int server_escuchar() {
+    char* nom_cliente = malloc(20);
+    int cliente_socket = esperar_cliente(sockets.socket_server,logger_conexiones,nom_cliente);
+    sem_post(&sem_escuchar);
+    if (cliente_socket != -1) {
+        pthread_t hilo;
+        t_procesar_conexion_args* args = malloc(sizeof(t_procesar_conexion_args));
+        args->fd = cliente_socket;
+        args->cliente_name = nom_cliente;
+        pthread_create(&hilo, NULL, (void*) procesar_conexion, (void*) args);
+        pthread_detach(hilo);
+        return 1;
+
+    }
+    return 0;
 }
 
-void escucha_E_S(){
-    int *fd_conexion_ptr = malloc(sizeof(int));
-    *fd_conexion_ptr = esperar_cliente(sockets.socket_server);
-    log_info(logger_conexiones, "Se conecto un cliente entrada/salida");
-    sockets.socket_cliente_E_S = *fd_conexion_ptr;
-    int estado = 0;
-    /*while(estado != EXIT_FAILURE){
-        estado = atender_cliente(fd_conexion_ptr);
-    }*/
-    free(fd_conexion_ptr);
+void procesar_conexion(void* void_args) {
+    t_procesar_conexion_args* args = (t_procesar_conexion_args*) void_args;
+    int cliente_socket = args->fd;
+    char* nombre_cliente = args->cliente_name;
+    free(args);
+
+     op_code cop;
+    while (cliente_socket != -1) {
+
+        if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
+            log_info(logger_conexiones, "%s DISCONNECT!", nombre_cliente);
+            free(nombre_cliente);
+            return;
+        }
+
+        switch (cop)
+        {
+        case 1:
+            /* code */
+            break;
+        
+        default:
+            break;
+        }
+    }
+    free(nombre_cliente);
 }
 
 
