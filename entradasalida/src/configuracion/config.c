@@ -4,10 +4,27 @@ t_cfg configuracion;
 t_config* config;
 t_log* logger_entrada_salida;
 t_log* logger_conexiones;
+char * tipo_interfaz_string;
+
+t_interfaz config_string_a_enum(char* str){
+    if (strcmp(str,"GENERICA")== 0 ){
+        return GENERICA;
+    }
+    else if (strcmp(str,"STDIN")== 0 ){
+        return STDIN;
+    }
+    else if (strcmp(str,"STDOUT")== 0 ){
+        return STDOUT;
+    }
+    else if (strcmp(str,"DIALFS")== 0 ){
+        return DIALFS;
+    }
+}
 
 void obtener_config(char* path_config){
     config = config_create(path_config);
-    configuracion.TIPO_INTERFAZ= config_get_string_value(config,"TIPO_INTERFAZ");
+    tipo_interfaz_string = config_get_string_value(config,"TIPO_INTERFAZ");
+    configuracion.TIPO_INTERFAZ = config_string_a_enum(tipo_interfaz_string);
     configuracion.TIEMPO_UNIDAD_TRABAJO = config_get_int_value(config,"TIEMPO_UNIDAD_TRABAJO");
     configuracion.IP_KERNEL = config_get_string_value(config,"IP_KERNEL");
     configuracion.PUERTO_KERNEL = config_get_int_value(config,"PUERTO_KERNEL");
