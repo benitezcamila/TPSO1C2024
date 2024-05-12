@@ -36,6 +36,7 @@ void establecer_conexion_cpu_I()
 
 void inicializar_kernel(){
     sockets.socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
+    //socket_server queda en listen() 
     log_info(logger_conexiones, "Kernel esta escuchando");
 } 
 
