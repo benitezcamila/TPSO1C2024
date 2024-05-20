@@ -11,6 +11,14 @@ t_list *lista_ordenada_por_algoritmo;
 t_list *lista_ejecutando;
 //es necesario el lista ejecutando?? 
 
+void encolar(t_list *pcbs, t_pcb *pcb){
+    list_add(pcbs, (void *)pcb);
+}
+
+t_pcb *desencolar(t_list *pcbs){
+    return (t_pcb *)list_remove(pcbs, 0);
+}
+
 void iniciar_colas()
 {
     cola_new = queue_create(); // cambio
@@ -21,9 +29,28 @@ void iniciar_colas()
     lista_ejecutando = list_create();
 }
 
+
+void planificarACortoPlazo(t_pcb *(*proximoAEjecutar)()){
+    while(1){
+        //sem_wait(&hayProcesosReady);
+        t_pcb *aEjecutar = proximoAEjecutar();
+        aEjecutar->estado = EXEC;
+
+
+
+    }
 /*
+Es capaz de crear un PCB y planificarlo por FIFO y RR.
 void planificar_a_corto_plazo_segun_algoritmo(){
     char *algoritmo_planificador = configuracion.algoritmo_planificador;
+    switch(algoritmo_planificador[0]){
+        case 'F': 
+        //Programar fifo tuki
+
+
+        case 'R': 
+        //progrmar el round robin :(
+    }
 
 
 

@@ -1,8 +1,10 @@
 #ifndef CICLODEINSTRUCCION_H
 #define CICLODEINSTRUCCION_H
 
+#include <utils/estructuras.h>
+
 //Comandos que nos piden
-typedef enum comando{
+typedef enum{
     SET, MOV_IN, MOV_OUT, SUM, SUB, JNZ,
     RESIZE, COPY_STRING, WAIT, SIGNAL,
     IO_GEN_SLEEP,
@@ -14,17 +16,14 @@ typedef enum comando{
     IO_FS_WRITE,
     IO_FS_READ,
     EXIT
-} comando;
+} t_comando;
 
-// Definición de registros de la CPU
+//TLB
 typedef struct {
-    uint32_t PC; // Program Counter
-    uint8_t AX, BX, CX, DX; // Registros de 1 byte
-    uint32_t EAX, EBX, ECX, EDX; // Registros de 4 bytes
-    uint32_t SI, DI; // Registros para direcciones lógicas
-} registros_CPU;
-
-registros_CPU* registros;
+    int pid;
+    int pagina;
+    int marco;
+} tlb;
 
 void mmu(uint32_t, uint32_t*, uint32_t*);
 void fetch_instruction();

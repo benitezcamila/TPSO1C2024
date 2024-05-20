@@ -80,5 +80,4 @@ void* a_enviar_create(t_paquete* paquete){
 	offset += sizeof(uint32_t);
 	memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
 	return a_enviar;
-
 }
