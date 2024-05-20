@@ -23,7 +23,6 @@ void enviar_instruccion(char* instruccionAEnviar) {
    // enviar_paquete(paquete, sockets.socket_cliente_CPU);
     send(sockets.socket_cliente_CPU, a_enviar_create,paquete->buffer->size + string_length(instruccionAEnviar)+ sizeof(op_code),0);
     eliminar_paquete(paquete);
-
 }
 
 

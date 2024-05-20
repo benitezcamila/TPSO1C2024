@@ -3,6 +3,9 @@
 
 #include <utils/estructuras.h>
 
+const short maxLongInstruccion = 6;
+char* linea_de_instruccion[maxLongInstruccion];
+
 //Comandos que nos piden
 typedef enum{
     SET, MOV_IN, MOV_OUT, SUM, SUB, JNZ,
