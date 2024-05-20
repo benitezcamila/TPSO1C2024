@@ -13,7 +13,8 @@ typedef enum{
 
 typedef enum {
     HANDSHAKE = 1,
-    PCB
+    PCB,
+    PAQUETE
 }op_code;
 
 typedef struct {

@@ -27,8 +27,9 @@ int recibir_operacion(int);
 int crear_conexion(char *, char* ,t_log*,char*);
 void liberar_conexion(int);
 int enviar_hanshake(int,char*);
+int recibir_entero(int);
+void* serializar_paquete(t_paquete* paquete, int bytes);
 
-/*
 void recibir_mensaje(int,t_log*);
 void* serializar_paquete(t_paquete* paquete, int bytes);
 t_list* recibir_paquete(int);
@@ -39,7 +40,6 @@ t_paquete* crear_paquete(void);
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void enviar_paquete(t_paquete* paquete, int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
-*/
 
 
 #endif
