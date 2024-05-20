@@ -171,8 +171,44 @@ int enviar_hanshake(int socket,char* nom_cliente){
 	return bytes;
 }
 
+int recibir_entero(int socket_cliente) {
+    int entero;
+    recv(socket_cliente, &entero, sizeof(int), MSG_WAITALL);
+    return entero;
+}
 
 
+void enviar_paquete(t_paquete* paquete, int socket_cliente) {
+    int bytes = paquete->buffer->size + 2 * sizeof(int);
+    void* a_enviar = serializar_paquete(paquete, bytes);
+    send(socket_cliente, a_enviar, bytes, 0);
+    free(a_enviar);
+}
+
+void* serializar_paquete(t_paquete* paquete, int bytes) {
+    void* magic = malloc(bytes);
+    int desplazamiento = 0;
+    memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(int));
+    desplazamiento += sizeof(int);
+    memcpy(magic + desplazamiento, &(paquete->buffer->size), sizeof(int));
+    desplazamiento += sizeof(int);
+    memcpy(magic + desplazamiento, paquete->buffer->stream, paquete->buffer->size);
+    desplazamiento += paquete->buffer->size;
+    return magic;
+}
+
+void eliminar_paquete(t_paquete* paquete) {
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+t_paquete* crear_paquete(void)
+{
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+	paquete->codigo_operacion = PAQUETE;
+	crear_buffer(paquete);
+	return paquete;
+}
 /*
 void recibir_mensaje(int socket_cliente,t_log* logger)
 {
@@ -250,13 +286,7 @@ void crear_buffer(t_paquete* paquete)
 	paquete->buffer->stream = NULL;
 }
 
-t_paquete* crear_paquete(void)
-{
-	t_paquete* paquete = malloc(sizeof(t_paquete));
-	paquete->codigo_operacion = PAQUETE;
-	crear_buffer(paquete);
-	return paquete;
-}
+
 
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
 {
