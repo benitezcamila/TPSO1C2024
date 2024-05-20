@@ -59,7 +59,7 @@ void procesar_conexion(void* void_args) {
     char* nombre_cliente = args->cliente_name;
     free(args);
 
-     op_code cop;
+    op_code cop;
     while (cliente_socket != -1) {
 
         if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
