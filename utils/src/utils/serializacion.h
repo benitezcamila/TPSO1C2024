@@ -47,4 +47,9 @@ void desempaquetar_pcb(t_buffer*,t_pcb*);
 
 void* a_enviar_create(t_paquete*);
 
+t_paquete* crear_paquete(op_code, uint32_t);
+
+void eliminar_paquete(t_paquete*);
+
+void enviar_paquete(t_paquete* paquete, int socket_cliente);
 #endif /* UTILS_H_ */

@@ -9,6 +9,7 @@
 #include <commons/string.h>
 #include <commons/config.h>
 #include <semaphore.h>
+#include "src/utils/estructuras.h"
 #define maxiumLineLength 256
 
 

@@ -14,7 +14,8 @@ typedef enum{
 typedef enum {
     HANDSHAKE = 1,
     PCB,
-    PAQUETE
+    PAQUETE,
+    INSTRUCCION
 }op_code;
 
 typedef struct {
