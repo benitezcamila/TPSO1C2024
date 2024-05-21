@@ -94,8 +94,6 @@ t_list* leer_instrucciones_del_path() {
     char* aux = malloc(sizeof(char) * maxiumLineLength);
     t_list* instruccionesParaCPu = list_create();
     while (fgets(aux, maxiumLineLength, archivo_instrucciones)) {
-
-       
         list_add(instruccionesParaCPu, aux );
 
     }
