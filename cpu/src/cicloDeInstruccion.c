@@ -6,7 +6,7 @@ void procesar_conexion_kernel(){
 
     while(sockets.)
 }
-
+/*
 //TODO
 void enviar_instruccion(char* instruccionAEnviar) {
     t_paquete* paquete = crear_paquete(INSTRUCCION,string_length(instruccionAEnviar)+1+sizeof(uint32_t));
@@ -33,7 +33,7 @@ void recibir_instruccion(){
         //falta
     }
 }
-
+*/
 void cicloDeInstruccion(){
     fetch_instruction();
     decode();
