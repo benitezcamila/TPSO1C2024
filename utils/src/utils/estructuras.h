@@ -16,7 +16,8 @@ typedef enum {
     PCB,
     PAQUETE,
     INSTRUCCION,
-    CONTEXTO_EXEC
+    CONTEXTO_EXEC,
+    DESALOJO_QUANTUM,
 }op_code;
 
 typedef enum{
@@ -25,6 +26,7 @@ typedef enum{
     INTERRUPCION,
     LLAMADO_KERNEL,
     BLOQUEO,
+    FIN_QUANTUM,
 
 }motivo_desalojo;
 
@@ -40,6 +42,7 @@ typedef struct {
     uint32_t quantum;
     registros_CPU* registros;
     estados_proceso estado;
+    int ticket;
 
 } t_pcb;
 

@@ -2,6 +2,7 @@
 
 sem_t sem_grado_multiprogramacion;
 sem_t proceso_ejecutando;
+sem_t hay_procesos_nuevos;
 pthread_t temporizador_quantum;
 //colas de estado
 t_queue *cola_new;
@@ -15,11 +16,18 @@ t_queue *cola_finalizados;
 //t_list *lista_ejecutando;
 //es necesario el lista ejecutando?? 
 
+void iniciar_semaforos_planificacion(){
+    int grado_multiprogramacion = configuracion.GRADO_MULTIPROGRAMACION;
+    sem_init(&hay_procesos_nuevos, 0, 0);
+    sem_init(&sem_grado_multiprogramacion, 0, grado_multiprogramacion);
+    sem_init(&proceso_ejecutando, 0, 1);
+}
+
 void iniciar_colas()
 {
     cola_new = queue_create(); // cambio
     cola_ready = queue_create();
-    cola_prioritaria_VRR; = queue_create();
+    cola_prioritaria_VRR = queue_create();
     bloqueado = queue_create();
     suspendido_bloqueado = queue_create();
     suspendido_listo = queue_create();
@@ -40,21 +48,25 @@ void planificar_a_corto_plazo(t_pcb *(*proximoAEjecutar)()){
 }
 */
 
+void planificar_a_largo_plazo(){
+
+}
 
 
 //Es capaz de crear un PCB y planificarlo por FIFO y RR.
 void planificar_a_corto_plazo_segun_algoritmo(){
-    char *algoritmo_planificador = configuracion.algoritmo_planificador;
+    char *algoritmo_planificador = configuracion.ALGORITMO_PLANIFICACION;
     while(1){
     if(strcmp(algoritmo_planificador,"FIFO")){ 
         //se podria usar proximoAEjecutarFIFO
         t_pcb *a_ejecutar = proximo_ejecutar_FIFO();
+        ejecutar_FIFO(a_ejecutar);
         }
 
     else if (strcmp(algoritmo_planificador,"RR")){
 
         t_pcb* a_ejecutar = proximo_ejecutar_RR();
-        //progrmar el round robin :(
+        ejecutar_RR(a_ejecutar);
         }
 
     else if (strcmp(algoritmo_planificador,"VRR")){
@@ -64,28 +76,28 @@ void planificar_a_corto_plazo_segun_algoritmo(){
 }
 
 t_pcb* proximo_ejecutar_FIFO(){
-    return queue_pop(cola_ready);
+    return (t_pcb*)queue_pop(cola_ready);
 }
 
 t_pcb* proximo_ejecutar_RR(){
-    return queue_pop(cola_ready);
+    return (t_pcb*)queue_pop(cola_ready);
 }
 
 t_pcb* proximo_ejecutar_VRR(){
     if(queue_is_empty(cola_prioritaria_VRR)){
-        return queue_pop(cola_ready);
+        return (t_pcb*)queue_pop(cola_ready);
     }
-    return queue_pop(cola_prioritaria_VRR);
+    return (t_pcb*)queue_pop(cola_prioritaria_VRR);
 }
 
 void ejecutar_FIFO(t_pcb *a_ejecutar){
   //sem_wait(&hayProcesosReady);
 
-    wait(proceso_ejecutando);
+    sem_wait(&proceso_ejecutando);
     a_ejecutar->estado = EXEC;
-    log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar.pid);
+    log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
     //creo y envio el contexto de ejecucion
-    crear_paquete_contexto_exec(t_pcb *a_ejecutar);
+    crear_paquete_contexto_exec(a_ejecutar);
 
     recibir_contexto_exec(a_ejecutar);
 
@@ -94,25 +106,32 @@ void ejecutar_FIFO(t_pcb *a_ejecutar){
 
 void ejecutar_RR(t_pcb *a_ejecutar){
 
-    wait(proceso_ejecutando);
+    sem_wait(&proceso_ejecutando);
     a_ejecutar->estado = EXEC;
-    log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar.pid);
+    log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
+    a_ejecutar->ticket++;
     //creo y envio el contexto de ejecucion
-    crear_paquete_contexto_exec(t_pcb *a_ejecutar);
-    pthread_create(&temporizador_quantum,NULL,(void*)iniciar_quantum,&(a_ejecutar->quantum));
+    crear_paquete_contexto_exec(a_ejecutar);
+    pthread_create(&temporizador_quantum,NULL,(void*)esperar_interrupcion_quantum,a_ejecutar);
     recibir_contexto_exec(a_ejecutar);
-    pthread_join(temporizador_quantum);
+    pthread_detach(temporizador_quantum);
     //falta terminar
     
 
 }
 
-void iniciar_quantum(uint32_t quantum_restante){
+void esperar_interrupcion_quantum(t_pcb *a_ejecutar){
+    int ticket_referencia = a_ejecutar->ticket;
+    usleep(a_ejecutar->quantum * 1000);
+    if(ticket_referencia == a_ejecutar->ticket && a_ejecutar->estado == EXEC){
+        void* a_enviar = malloc(sizeof(op_code));
+        op_code cod = DESALOJO_QUANTUM;
+        memcpy(a_enviar,&(cod),sizeof(op_code));
+        send(sockets.socket_CPU_I,a_enviar,sizeof(op_code),0);
+        free (a_enviar);
+    }
 
 }
-
-
-
 
 
 

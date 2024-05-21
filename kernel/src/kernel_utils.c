@@ -46,7 +46,7 @@ void inicializar_kernel(){
 int server_escuchar() {
     char* nom_cliente = malloc(20);
     int cliente_socket = esperar_cliente(sockets.socket_server,logger_conexiones,nom_cliente);
-    sem_wait(&sem_escuchar);
+    sem_post(&sem_escuchar);
     if (cliente_socket != -1) {
         pthread_t hilo;
         t_procesar_conexion_args* args = malloc(sizeof(t_procesar_conexion_args));
