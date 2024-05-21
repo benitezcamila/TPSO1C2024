@@ -1,16 +1,37 @@
 #include <cicloDeInstruccion.h>
 #define maxiumLinea 256
 
+void procesar_conexion_kernel(){
+    op_code cod_operacion;
+
+    while(sockets.)
+}
+
+//TODO
 void enviar_instruccion(char* instruccionAEnviar) {
-    t_paquete* paquete = crear_paquete();
-    agregar_a_paquete(paquete, instruccionAEnviar, strlen(instruccionAEnviar) + 1);
-   // enviar_paquete(paquete, sockets.socket_cliente_CPU);
-    send(sockets.socket_cliente_CPU, a_enviar_create,paquete->buffer->size + string_length(instruccionAEnviar)+ sizeof(op_code),0);
+    t_paquete* paquete = crear_paquete(INSTRUCCION,string_length(instruccionAEnviar)+1+sizeof(uint32_t));
+    buffer_add_string(paquete->buffer,string_length(instruccionAEnviar)+1,instruccionAEnviar);
+    enviar_paquete(paquete, sockets.socket_cliente_CPU);
+    eliminar_paquete(paquete);
+}
+
+//TODO
+void solicitar_instruccion(){
+    t_paquete* paquete = crear_paquete(INSTRUCCION,string_length(instruccionAEnviar)+1+sizeof(uint32_t));
+    buffer_add_string(paquete->buffer,string_length(instruccionAEnviar)+1,instruccionAEnviar);
+    enviar_paquete(paquete, sockets.socket_cliente_CPU);    
     eliminar_paquete(paquete);
 }
 
 void recibir_instruccion(){
-    
+    t_paquete* paquete = sizeof(t_paquete);
+	recv(sockets.socket_memoria, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
+
+    if(paquete->codigo_operacion == INSTRUCCION){
+        recv(sockets.socket_memoria, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+        paquete->buffer->stream = malloc(paquete->buffer->size);
+        //falta
+    }
 }
 
 void cicloDeInstruccion(){
