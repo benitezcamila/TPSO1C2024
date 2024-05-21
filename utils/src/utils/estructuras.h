@@ -15,8 +15,18 @@ typedef enum {
     HANDSHAKE = 1,
     PCB,
     PAQUETE,
-    INSTRUCCION
+    INSTRUCCION,
+    CONTEXTO_EXEC
 }op_code;
+
+typedef enum{
+    PROCESS_EXIT,
+    PROCESS_ERROR,
+    INTERRUPCION,
+    LLAMADO_KERNEL,
+    BLOQUEO,
+
+}motivo_desalojo;
 
 typedef struct {
     uint32_t PC; // Program Counter

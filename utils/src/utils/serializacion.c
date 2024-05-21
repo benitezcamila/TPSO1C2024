@@ -100,5 +100,6 @@ void enviar_paquete(t_paquete* paquete, int socket_cliente) {
     int bytes = paquete->buffer->size + 2 * sizeof(int);
     void* a_enviar = a_enviar_create(paquete);
     send(socket_cliente, a_enviar, paquete->buffer->size + sizeof(uint32_t) + sizeof(op_code), 0);
+	eliminar_paquete(paquete);
     free(a_enviar);
 }

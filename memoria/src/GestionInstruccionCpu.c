@@ -21,7 +21,6 @@ void enviar_instruccion(char* instruccionAEnviar) {
     t_paquete* paquete = crear_paquete(INSTRUCCION,string_length(instruccionAEnviar)+1+sizeof(uint32_t));
     buffer_add_string(paquete->buffer,string_length(instruccionAEnviar)+1,instruccionAEnviar);
     enviar_paquete(paquete, sockets.socket_cliente_CPU);
-    eliminar_paquete(paquete);
 }
 
 
