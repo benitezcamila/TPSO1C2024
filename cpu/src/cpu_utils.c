@@ -2,7 +2,6 @@
 
 str_sockets sockets;
 
-
 void iniciar_server_kernel(){
     pthread_t dispatch, interrupt;
     pthread_create(&dispatch,NULL,(void*)inicializar_cpu_dispatch,NULL);
@@ -83,6 +82,21 @@ void procesar_conexion(void* void_args) {
     free(nombre_cliente);
 }
 
+void recibir_contexto_ejecucion(){
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    recv(sockets.socket_server_D, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
+
+    if(paquete->codigo_operacion == CONTEXTO_EXEC){
+        recv(sockets.socket_server_D, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+        paquete->buffer->stream = malloc(paquete->buffer->size);
+
+        recv(sockets.socket_CPU_D, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
+        buffer_read(paquete->buffer, contextoRegistros, sizeof(registros_CPU));
+    }
+    else{
+        //Loggear error?
+    }
+}
 
 /*
 int enviar_log_D( int fd_conexion_ptr){

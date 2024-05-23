@@ -12,7 +12,7 @@ typedef struct{
     int socket_server_I;
     int socket_server_D;
     int socket_memoria;
-}str_sockets;
+} str_sockets;
 
 extern str_sockets sockets;
 void iniciar_server_kernel();
@@ -24,5 +24,6 @@ void procesar_conexion(void*);
 int server_escuchar(int);
 int enviar_log_D();
 int enviar_log_I();
+void recibir_contexto_ejecucion();
 
 #endif
