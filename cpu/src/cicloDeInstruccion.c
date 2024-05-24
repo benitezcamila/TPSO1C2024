@@ -15,7 +15,7 @@ void fetch_instruction(){
 void decode(){
    recibir_instruccion_de_memoria();
    //Acá tendría que usar la MMU.
-   //Ver cómo carajo sigue (Se recibe el char*, se lo separa con string_n_split y se coloca los tokens en linea_de_instruccion).
+   //Ver cómo sigue (Se recibe el char*, se lo separa con string_n_split y se coloca los tokens en linea_de_instruccion).
    //Probablemente: linea_de_instruccion = string_n_split(instruccion, maxLongInstruccion, " ");
    //Además, hay que agregarle el '\0' a cada token creo.
 }
@@ -42,7 +42,8 @@ void execute(){
    }
    else if(strcmp(linea_de_instruccion[0], "IO_GEN_SLEEP") == 0){
       //Debería loggear qué instrucción se usa.
-      io_gen_sleep(linea_de_instruccion[1], linea_de_instruccion[2]);
+      uint32_t unidadesDeTrabajo = (uint32_t)atoi(linea_de_instruccion[2])
+      io_gen_sleep(linea_de_instruccion[1], unidadesDeTrabajo);
    }
    //Y así...
 }
@@ -200,11 +201,12 @@ void jump_no_zero(char* registro, int nroInstruccion){
     }
 }
 
-//PLACEHOLDER:
-typedef int Interfaz;
+void io_gen_sleep(char* nombreInterfaz, uint32_t unidadesDeTrabajo){
+    t_paquete* paquete = crear_paquete(IO_GEN_SLEEP, sizeof(registros_CPU) + sizeof(motivo_desalojo));
+    buffer_add_string(paquete->buffer, string_length(nombreInterfaz), interfaz);
+    buffer_add_uint32(paquete->buffer, unidadesDeTrabajo);
 
-void io_gen_sleep(Interfaz interfaz, int unidadesDeTrabajo){
-    //
+    enviar_paquete(paquete, sockets.socket_server_D);
 }
 
 //FUNCIONES AUXILIARES.
