@@ -1,7 +1,6 @@
 #include "conexion.h"
 
-int iniciar_servidor(char* puerto)
-{
+int iniciar_servidor(char* puerto){
 	int socket_servidor;
 
 	struct addrinfo hints, *servinfo;
@@ -25,9 +24,7 @@ int iniciar_servidor(char* puerto)
 	return socket_servidor;
 }
 
-int esperar_cliente(int socket_servidor,t_log* log_conexiones,char* nom_cliente)
-{
-
+int esperar_cliente(int socket_servidor,t_log* log_conexiones,char* nom_cliente){
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
 
 	t_paquete* paquete = malloc(sizeof(t_paquete));
@@ -38,13 +35,13 @@ int esperar_cliente(int socket_servidor,t_log* log_conexiones,char* nom_cliente)
 	recv(socket_cliente, &(paquete->codigo_operacion),sizeof(op_code),MSG_WAITALL);
 	
 	if(paquete->codigo_operacion == HANDSHAKE){
-	recv(socket_cliente,&(paquete->buffer->size),sizeof(uint32_t),MSG_WAITALL);
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
-	char* string_aux = buffer_read_string(paquete->buffer,len_cliente);
-	strcpy(nom_cliente,string_aux);
-	free(string_aux);
-	buffer_read(paquete->buffer,msg_recibido,sizeof(cod_handshake));
+		recv(socket_cliente,&(paquete->buffer->size),sizeof(uint32_t),MSG_WAITALL);
+		paquete->buffer->stream = malloc(paquete->buffer->size);
+		recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
+		char* string_aux = buffer_read_string(paquete->buffer,len_cliente);
+		strcpy(nom_cliente,string_aux);
+		free(string_aux);
+		buffer_read(paquete->buffer,msg_recibido,sizeof(cod_handshake));
 	}
 	else{
 		log_info(log_conexiones,"Codigo de operacion incorrecto en el Handshake");
@@ -53,16 +50,13 @@ int esperar_cliente(int socket_servidor,t_log* log_conexiones,char* nom_cliente)
 	log_info(log_conexiones,"Se conecto cliente %s",nom_cliente );
 	
 	if(*msg_recibido ==  CODIGO){
-
 		cod_handshake* codigo = malloc(sizeof(cod_handshake));
 		*codigo = OK;
 		send(socket_cliente,codigo,sizeof(cod_handshake),0);
 		log_info(log_conexiones,"El codigo del Handshake es correcto");
 		free(codigo);
-		
 	}
 	else{
-
 		cod_handshake* codigo = malloc(sizeof(cod_handshake));;
 		*codigo = FALLO;
 		send(socket_cliente,codigo,sizeof(cod_handshake),0);
@@ -79,23 +73,19 @@ int esperar_cliente(int socket_servidor,t_log* log_conexiones,char* nom_cliente)
 }
 
 
-int recibir_operacion(int socket_cliente)
-{
+int recibir_operacion(int socket_cliente){
 	int cod_op;
-	if(recv(socket_cliente, &cod_op, sizeof(int), MSG_WAITALL) > 0)
-		return cod_op;
-	else
-	{
-		close(socket_cliente);
-		return -1;
-	}
+		if(recv(socket_cliente, &cod_op, sizeof(int), MSG_WAITALL) > 0)
+			return cod_op;
+		else{
+			close(socket_cliente);
+
+			return -1;
+		}
 }
 
 
-
-
-int crear_conexion(char *ip, char* puerto,t_log* log_conexiones,char* nom_cliente)
-{
+int crear_conexion(char *ip, char* puerto,t_log* log_conexiones,char* nom_cliente){
 	struct addrinfo hints;
 	struct addrinfo *server_info;
 
@@ -111,12 +101,12 @@ int crear_conexion(char *ip, char* puerto,t_log* log_conexiones,char* nom_client
 
 	// Ahora que tenemos el socket, vamos a conectarlo
 	while(1){
-	if(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == 0){
-		break;
-	}
-	else{
-		sleep(1);
-	}
+		if(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == 0){
+			break;
+		}
+		else{
+			sleep(1);
+		}
 	}
 
 	int bytes_enviados = enviar_hanshake(socket_cliente,nom_cliente);
@@ -141,14 +131,11 @@ int crear_conexion(char *ip, char* puerto,t_log* log_conexiones,char* nom_client
 }
 
 
-void liberar_conexion(int socket_cliente)
-{
+void liberar_conexion(int socket_cliente){
 	close(socket_cliente);
 }
 
 int enviar_hanshake(int socket,char* nom_cliente){
-
-	
     t_paquete* paquete = malloc(sizeof(t_paquete));
 	cod_handshake* codigo = malloc(sizeof(cod_handshake));
 	*codigo = CODIGO;

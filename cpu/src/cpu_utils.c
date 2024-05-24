@@ -52,33 +52,41 @@ int server_escuchar(int server_socket) {
     return 0;
 }
 
+//PROBABLEMENTE HAYA QUE CAMBIAR COSAS.
 void procesar_conexion(void* void_args) {
     t_procesar_conexion_args* args = (t_procesar_conexion_args*) void_args;
     int cliente_socket = args->fd;
     char* nombre_cliente = args->cliente_name;
     free(args);
 
-    op_code cop;
+    op_code codigo_op;
     while (cliente_socket != -1) {
 
-        if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
+        if (recv(cliente_socket, &codigo_op, sizeof(op_code), 0) != sizeof(op_code)) {
             log_info(logger_conexiones, "%s DISCONNECT!", nombre_cliente);
             free(nombre_cliente);
             
             return;
         }
 
-        switch (cop)
-        {
-        case 1:
-            /* code */
+        switch (codigo_op) {
+        case CONTEXTO_EJECUCION:
+            //Loggear.
+            procesar_dispatch();
+            break;
+
+        case INTERRUPT_PROC:
+            //Loggear.
+            procesar_interrupt();
             break;
         
         default:
+            //Loggear un error.
             break;
         }
         
     }
+
     free(nombre_cliente);
 }
 
@@ -96,6 +104,39 @@ void recibir_contexto_ejecucion(){
     else{
         //Loggear error?
     }
+}
+
+void solicitar_instruccion_a_memoria(){
+    t_paquete* paquete = crear_paquete(SOLICITUD_INSTRUCCION, sizeof(uint32_t));
+    buffer_add_uint32(paquete->buffer, contextoRegistros->PC);
+
+    enviar_paquete(paquete, sockets.socket_memoria);
+}
+
+void recibir_instruccion_de_memoria(){
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    recv(sockets.socket_memoria, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
+
+    if(paquete->codigo_operacion == INSTRUCCION){
+        recv(sockets.socket_memoria, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+        paquete->buffer->stream = malloc(paquete->buffer->size);
+
+        uint32_t longitud_linea_instruccion = 0;
+
+        recv(sockets.socket_memoria, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
+        linea_de_instruccion = buffer_read_string(paquete->buffer, &longitud_linea_instruccion);
+    }
+    else{
+        //Loggear error?
+    }
+}
+
+void enviar_contexto_a_kernel(motivo_desalojo motivo){
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(registros_CPU) + sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, contextoRegistros, sizeof(registros_CPU));
+
+    enviar_paquete(paquete, sockets.socket_server_D);
 }
 
 /*

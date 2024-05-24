@@ -25,5 +25,8 @@ int server_escuchar(int);
 int enviar_log_D();
 int enviar_log_I();
 void recibir_contexto_ejecucion();
+void solicitar_instruccion_a_memoria();
+void recibir_instruccion_de_memoria();
+void enviar_contexto_a_kernel();
 
 #endif

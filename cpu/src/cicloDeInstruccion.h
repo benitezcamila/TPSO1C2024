@@ -3,8 +3,9 @@
 
 #include <utils/estructuras.h>
 
-const short maxLongInstruccion = 6;
-char* linea_de_instruccion[maxLongInstruccion];
+extern char* linea_de_instruccion;
+extern const short maxLongInstruccion = 6;
+extern char* linea_de_instruccion_tokenizada[maxLongInstruccion];
 
 //Comandos que nos piden
 typedef enum{
