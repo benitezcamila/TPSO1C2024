@@ -46,8 +46,11 @@ void inicializar_kernel(){
 
 int server_escuchar() {
     char* nom_cliente = malloc(20);
-    int cliente_socket = esperar_cliente(sockets.socket_server,logger_conexiones,nom_cliente);
-    sem_wait(&sem_escuchar);
+
+    int cliente_socket = esperar_cliente(sockets.socket_server,logger_conexiones,nom_cliente); //conecta, valida con handshake y devuelve socket
+    log_info(logger_conexiones, "Conectado 1");
+    //sem_wait(&sem_escuchar); //semaforo escuchar, repetido?
+    log_info(logger_conexiones, "No bloqueado");
     if (cliente_socket != -1) {
         pthread_t hilo;
         t_procesar_conexion_args* args = malloc(sizeof(t_procesar_conexion_args));
@@ -67,7 +70,7 @@ void procesar_conexion(void* void_args) {
     char* nombre_cliente = args->cliente_name;
     free(args);
 
-     op_code cop;
+    op_code cop;
     while (cliente_socket != -1) {
 
         if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
@@ -80,9 +83,11 @@ void procesar_conexion(void* void_args) {
         {
         case 1:
             /* code */
+            log_info(logger_conexiones,"me mandaste 1");
             break;
         
         default:
+            log_info(logger_conexiones,"no estas mandando nada");
             break;
         }
     }
