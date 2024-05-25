@@ -4,9 +4,6 @@
 #include <utils/estructuras.h>
 #include <commons/string.h>
 
-typedef enum{
-    DESALOJO_QUANTUM
-} tipo_de_interrupcion;
 
 extern char* linea_de_instruccion;
 extern const short max_long_instruccion = 6;

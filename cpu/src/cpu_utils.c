@@ -144,6 +144,7 @@ void recibir_interrupcion_de_kernel(){
 }
 
 void enviar_contexto_a_kernel(motivo_desalojo motivo){
+    ind_contexto_kernel = 0;
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(registros_CPU) + sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contextoRegistros, sizeof(registros_CPU));

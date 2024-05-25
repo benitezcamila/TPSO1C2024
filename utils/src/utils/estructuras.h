@@ -19,7 +19,8 @@ typedef enum {
     CONTEXTO_EXEC,
     DESALOJO_QUANTUM,
     INTERRUPT_PROC,
-    SOLICITUD_INSTRUCCION
+    SOLICITUD_INSTRUCCION,
+    IO_GEN_SLEEP
 } op_code;
 
 typedef enum {
@@ -31,6 +32,9 @@ typedef enum {
     FIN_QUANTUM
 } motivo_desalojo;
 
+typedef enum{
+    DESALOJO_QUANTUM
+} tipo_de_interrupcion;
 typedef struct {
     uint32_t PC; // Program Counter
     uint8_t AX, BX, CX, DX; // Registros de 1 byte

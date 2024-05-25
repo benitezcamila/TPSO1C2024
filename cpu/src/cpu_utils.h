@@ -21,7 +21,6 @@ typedef struct{
 extern int ind_contexto_kernel;
 extern int llego_interrupcion;
 extern str_sockets sockets;
-tipo_de_interrupcion motivo_interrupcion;
 
 void iniciar_server_kernel();
 void inicializar_cpu_dispatch();
