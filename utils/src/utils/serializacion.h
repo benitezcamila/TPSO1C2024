@@ -7,23 +7,9 @@
 #include <string.h>
 #include "estructuras.h"
 
-/*
-typedef enum
-{
-	MENSAJE,
-	PAQUETE,
-	COD_OP_CREACION_TABLA,
-	COD_OP_DESTRUCCION_TABLA,
-	COD_OP_ACCESO_TABLA,
-	COD_OP_AMPLIACION_PROCESO,
-	COD_OP_REDUCION_PROCESO,
-	COD_OP_ACCESO_ESPACIO_USUARIO,
-	COD_OP_FETCH,
-	COD_OP_INSTRUCCION_EJECUTADA,
-	COD_OP_,
 
-}op_code;
-*/
+
+
 
 
 
@@ -61,4 +47,9 @@ void desempaquetar_pcb(t_buffer*,t_pcb*);
 
 void* a_enviar_create(t_paquete*);
 
+t_paquete* crear_paquete(op_code, uint32_t);
+
+void eliminar_paquete(t_paquete*);
+
+void enviar_paquete(t_paquete* paquete, int socket_cliente);
 #endif /* UTILS_H_ */

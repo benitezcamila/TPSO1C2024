@@ -3,11 +3,20 @@
 str_sockets sockets;
 sem_t sem_escuchar;
 
+
 void inicializar_memoria(){
     sockets.socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
     log_info(logger_conexiones, "Memoria esta escuchando");
     
 } 
+
+void iniciar_proceso(){
+    procesos = malloc(sizeof(procesos));
+    procesos->pid = kernelPcb.pid;
+    procesos->instruccionesParaCpu = list_create();    
+    procesos->instruccionesParaCpu = leer_instrucciones_del_path();
+
+}
 
 void atender_escuchas(){
     while(1){
@@ -68,20 +77,55 @@ void procesar_conexion(void* void_args) {
 // checkpoint 2, capaz de leer las instrucciones y enviarlas al cpu
 
 // leer las instrucciones del path
-void leer_instrucciones_del_path(){
-    
+t_list* leer_instrucciones_del_path() {
+   
+
+    // Concatenar la ruta de configuracion.PATH_INSTRUCCIONES
+    strcat(rutaKernel, configuracion.PATH_INSTRUCCIONES); 
+
+    // Abrir el archivo
+   
+    FILE* archivo_instrucciones = fopen(rutaKernel, "rb");
+   
+    if (archivo_instrucciones == NULL) {
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
+    }
+    char* aux = malloc(sizeof(char) * maxiumLineLength);
+    t_list* instruccionesParaCPu = list_create();
+    while (fgets(aux, maxiumLineLength, archivo_instrucciones)) {
+        list_add(instruccionesParaCPu, aux );
+
+    }
+    fclose(archivo_instrucciones);
+    free(aux);
+return instruccionesParaCPu;   
+
+}
+
+void agregarProcesoALaCola(procesoListaInst* proceso){
+    list_add(listaDeProcesos, proceso);
 }
 
 
-
-// envia la instruccion siguiente
-void enviar_instrucciones_cpu(){
-
-
-
+procesoListaInst* buscar_procesoPorId(int pid){
+        bool pidIguales(  procesoListaInst* proceso){
+   return proceso->pid == pid;
+}
+        return list_find(listaDeProcesos, (void*) pidIguales);
+        
 }
 
 
+char* instruccionActual (procesoListaInst* proceso, int ip ){
+
+if(ip<0 || list_size(proceso->instruccionesParaCpu) < ip ){
+    exit(EXIT_FAILURE);
+    return NULL;
+}
+
+return list_get(proceso->instruccionesParaCpu,ip); 
+}
 
 
 

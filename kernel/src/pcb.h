@@ -9,6 +9,7 @@
 #include <utils/conexion.h>
 #include <utils/serializacion.h>
 #include "kernel_utils.h"
+#include "planificacion.h"
 
 
 extern t_dictionary* dicc_pcb;
@@ -20,5 +21,7 @@ registros_CPU* crear_registros();
 int siguiente_PID();
 t_buffer* crear_buffer_pcb();
 void crear_paquete_pcb(t_pcb*);
+void crear_paquete_contexto_exec(t_pcb*);
+void recibir_contexto_exec(t_pcb*);
 
 #endif
