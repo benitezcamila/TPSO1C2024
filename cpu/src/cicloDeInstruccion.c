@@ -20,28 +20,28 @@ void decode(){
 
 void execute(){
    //Revisar si esta comparación está bien hecha.
-   if(strcmp(linea_de_instruccion[0], "SET") == 0){
+   if(strcmp(linea_de_instruccion_tokenizada[0], "SET") == 0){
       //Debería loggear qué instrucción se usa.
-      int valor = atoi(linea_de_instruccion[2])
-      set(linea_de_instruccion[1], valor);
+      int valor = atoi(linea_de_instruccion_tokenizada[2])
+      set(linea_de_instruccion_tokenizada[1], valor);
    }
-   else if(strcmp(linea_de_instruccion[0], "SUM") == 0){
+   else if(strcmp(linea_de_instruccion_tokenizada[0], "SUM") == 0){
       //Debería loggear qué instrucción se usa.
-      sum(linea_de_instruccion[1], linea_de_instruccion[2]);
+      sum(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
    }
-   else if(strcmp(linea_de_instruccion[0], "SUB") == 0){
+   else if(strcmp(linea_de_instruccion_tokenizada[0], "SUB") == 0){
       //Debería loggear qué instrucción se usa.
-      sub(linea_de_instruccion[1], linea_de_instruccion[2]);
+      sub(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
    }
-   else if(strcmp(linea_de_instruccion[0], "JNZ") == 0){
+   else if(strcmp(linea_de_instruccion_tokenizada[0], "JNZ") == 0){
       //Debería loggear qué instrucción se usa.
-      int proxInstruccion = atoi(linea_de_instruccion[2]);
-      jump_no_zero(linea_de_instruccion[1], proxInstruccion);
+      int proxInstruccion = atoi(linea_de_instruccion_tokenizada[2]);
+      jump_no_zero(linea_de_instruccion_tokenizada[1], proxInstruccion);
    }
-   else if(strcmp(linea_de_instruccion[0], "IO_GEN_SLEEP") == 0){
+   else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_GEN_SLEEP") == 0){
       //Debería loggear qué instrucción se usa.
-      uint32_t unidadesDeTrabajo = (uint32_t)atoi(linea_de_instruccion[2])
-      io_gen_sleep(linea_de_instruccion[1], unidadesDeTrabajo);
+      uint32_t unidadesDeTrabajo = (uint32_t)atoi(linea_de_instruccion_tokenizada[2])
+      io_gen_sleep(linea_de_instruccion_tokenizada[1], unidadesDeTrabajo);
    }
    //Y así...
 }
