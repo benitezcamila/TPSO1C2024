@@ -71,13 +71,15 @@ void procesar_conexion(void* void_args) {
 
         switch (codigo_op) {
         case CONTEXTO_EJECUCION:
-            //Loggear.
-            procesar_dispatch();
+            while(1){
+                ciclo_de_instruccion();
+            }
             break;
 
         case INTERRUPT_PROC:
             //Loggear.
-            procesar_interrupt();
+            recibir_interrupcion_de_kernel();
+            enviar_contexto_a_kernel();
             break;
         
         default:
