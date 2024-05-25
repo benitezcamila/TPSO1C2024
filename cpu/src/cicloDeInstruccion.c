@@ -14,10 +14,8 @@ void fetch_instruction(){
 
 void decode(){
    recibir_instruccion_de_memoria();
+   linea_de_instruccion_tokenizada = string_n_split(linea_de_instruccion, maxLongInstruccion, " ");
    //Acá tendría que usar la MMU.
-   //Ver cómo sigue (Se recibe el char*, se lo separa con string_n_split y se coloca los tokens en linea_de_instruccion).
-   //Probablemente: linea_de_instruccion = string_n_split(instruccion, maxLongInstruccion, " ");
-   //Además, hay que agregarle el '\0' a cada token creo.
 }
 
 void execute(){
