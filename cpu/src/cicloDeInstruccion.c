@@ -1,15 +1,19 @@
 #include <cicloDeInstruccion.h>
+#include <cpu_utils.h>
 #define maxiumLinea 256
 
 
 char* linea_de_instruccion;
-const short maxLongInstruccion = 6;
-char* linea_de_instruccion_tokenizada[maxLongInstruccion];
+const short max_long_instruccion = 6;
+char* linea_de_instruccion_tokenizada[max_long_instruccion];
+int llego_interrupcion;
+tipo_de_interrupcion motivo_interrupcion;
 
-void cicloDeInstruccion(){
+void ciclo_de_instruccion(){
     fetch_instruction();
     decode();
     execute();
+    check_interrupt();
 }
 
 void fetch_instruction(){
@@ -19,7 +23,7 @@ void fetch_instruction(){
 
 void decode(){
    recibir_instruccion_de_memoria();
-   linea_de_instruccion_tokenizada = string_n_split(linea_de_instruccion, maxLongInstruccion, " ");
+   linea_de_instruccion_tokenizada = string_n_split(linea_de_instruccion, max_long_instruccion, " ");
    //Acá tendría que usar la MMU.
 }
 
@@ -49,6 +53,23 @@ void execute(){
       io_gen_sleep(linea_de_instruccion_tokenizada[1], unidadesDeTrabajo);
    }
    //Y así...
+}
+
+//NO SÉ SI LE FALTA ALGO. CHECKEAR.
+void check_interrupt(){
+    if(llego_interrupcion == 1){
+        llego_interrupcion = 0;
+
+        switch(motivo_interrupcion){
+        case DESALOJO_QUANTUM:
+            enviar_contexto_a_kernel(DESALOJO_QUANTUM);
+            break;
+
+        default:
+            //Loggear error.
+            break;
+        }
+    }
 }
 
 //Funciones de instrucciones.

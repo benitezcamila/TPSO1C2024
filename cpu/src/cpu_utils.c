@@ -3,6 +3,7 @@
 int ind_contexto_kernel = 0;
 sem_t sem_contexto_kernel;
 str_sockets sockets;
+int llego_interrupcion = 0;
 
 void iniciar_server_kernel(){
     pthread_t dispatch, interrupt;
@@ -72,7 +73,7 @@ void procesar_conexion(void* void_args) {
         }
 
         switch (codigo_op) {
-        case CONTEXTO_EJECUCION:
+        case CONTEXTO_EXEC:
             ind_contexto_kernel = 1;
             while(ind_contexto_kernel == 1){
                 ciclo_de_instruccion();
@@ -81,8 +82,8 @@ void procesar_conexion(void* void_args) {
 
         case INTERRUPT_PROC:
             //Loggear.
+            llego_interrupcion = 1;
             recibir_interrupcion_de_kernel();
-            enviar_contexto_a_kernel();
             break;
         
         default:
@@ -134,6 +135,12 @@ void recibir_instruccion_de_memoria(){
     else{
         //Loggear error?
     }
+}
+
+//NO SÉ SI ESTÁ BIEN. CHECKEAR.
+void recibir_interrupcion_de_kernel(){
+    recv(sockets.socket_server_I, &(motivo_interrupcion), sizeof(tipo_de_interrupcion), MSG_WAITALL);
+    ind_contexto_kernel = 0;
 }
 
 void enviar_contexto_a_kernel(motivo_desalojo motivo){

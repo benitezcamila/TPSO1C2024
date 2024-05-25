@@ -8,6 +8,9 @@
 #include <commons/log.h>
 #include <commons/string.h>
 #include <commons/config.h>
+#include <semaphore.h>
+#include <cicloDeInstruccion.h>
+#include <utils/estructuras.h>
 
 typedef struct{
     int socket_server_I;
@@ -15,8 +18,11 @@ typedef struct{
     int socket_memoria;
 } str_sockets;
 
-extern int ind_contexto_kernel
+extern int ind_contexto_kernel;
+extern int llego_interrupcion;
 extern str_sockets sockets;
+tipo_de_interrupcion motivo_interrupcion;
+
 void iniciar_server_kernel();
 void inicializar_cpu_dispatch();
 void inicializar_cpu_interrupt();
@@ -29,6 +35,7 @@ int enviar_log_I();
 void recibir_contexto_ejecucion();
 void solicitar_instruccion_a_memoria();
 void recibir_instruccion_de_memoria();
+void recibir_interrupcion_de_kernel();
 void enviar_contexto_a_kernel();
 
 #endif
