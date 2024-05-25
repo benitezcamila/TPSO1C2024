@@ -58,6 +58,6 @@ void obtener_config(char* path_config){
 }
 
 void iniciar_logger(){
-    logger_entrada_salida = log_create("logs/entrada salida.log","Entrada Salida",1,LOG_LEVEL_INFO);
-    logger_conexiones = log_create("logs/conexiones.log","Conexion",1,LOG_LEVEL_INFO);
+    logger_entrada_salida = log_create("/home/utnso/tp-2024-1c-Chiripiorca/entradasalida/logs/entrada salida.log","Entrada Salida",1,LOG_LEVEL_INFO);
+    logger_conexiones = log_create("/home/utnso/tp-2024-1c-Chiripiorca/entradasalida/logs/conexiones.log","Conexion",1,LOG_LEVEL_INFO);
 }

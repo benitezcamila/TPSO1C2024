@@ -2,6 +2,7 @@
 
 str_sockets sockets;
 sem_t sem_escuchar;
+t_dictionary* dicc_io;
 
 pthread_t conexion_CPU_I,conexion_CPU_D, conexion_memoria;
 
@@ -85,7 +86,10 @@ void procesar_conexion(void* void_args) {
             /* code */
             log_info(logger_conexiones,"me mandaste 1");
             break;
-        
+        case ENTRADASALIDA:
+            log_info(logger_conexiones,"me mandaste la info de entradasalida");
+            /* agregar la info al diccionario (con mutex?) */
+            break;
         default:
             log_info(logger_conexiones,"no estas mandando nada");
             break;

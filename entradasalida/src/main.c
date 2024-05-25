@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "main.h"
 
+
 int main(int argc, char* argv[]) {
     char* nombre_interfaz = argv[2];
     char* path_config = argv[1];

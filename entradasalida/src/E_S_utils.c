@@ -1,13 +1,17 @@
 #include <E_S_utils.h>
 
 str_sockets sockets;
+char* nombre_interfaz;
 
 void establecer_conexion_kernel(){
     int fd_kernel = crear_conexion(configuracion.IP_KERNEL ,string_itoa(configuracion.PUERTO_KERNEL),logger_conexiones,"Entrada Salida");
     sockets.socket_kernel = fd_kernel;
     log_info(logger_conexiones, "Conectado Entrada/Salida-Kernel");
+    //enviar_info_io_a_kernel();
+    log_info(logger_conexiones, nombre_interfaz);
+    log_info(logger_conexiones, "Info enviada");
     // agregar loop para atender conexion
-    procesar_io_gen_sleep(3000);
+    //procesar_io_gen_sleep(3000);
 }
 void establecer_conexion_memoria(){
     int fd_memoria = crear_conexion(configuracion.IP_MEMORIA ,string_itoa(configuracion.PUERTO_MEMORIA),logger_conexiones,"Entrada Salida");
@@ -23,6 +27,16 @@ void procesar_io_gen_sleep (int milisegundos_de_espera) {
     log_info(logger_conexiones,  string_itoa(temporal_gettime(temporal)));
     temporal_destroy(temporal);
 }
+
+
+void enviar_info_io_a_kernel(){
+    t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_interfaz) + strlen(nombre_interfaz));
+    buffer_add(paquete->buffer, &configuracion.TIPO_INTERFAZ, sizeof(t_interfaz));
+    buffer_add(paquete->buffer, nombre_interfaz , strlen(nombre_interfaz));
+
+    enviar_paquete(paquete, sockets.socket_kernel );
+}
+
 
 /*void proceso_E_S(){
     pthread_t hilo_kernel, hilo_memoria;

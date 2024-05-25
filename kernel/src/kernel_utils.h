@@ -22,6 +22,7 @@ typedef struct {
 
 extern str_sockets sockets;
 extern sem_t sem_escuchar;
+extern t_dictionary* dicc_io;
 
 extern pthread_t conexion_CPU_I,conexion_CPU_D, conexion_memoria;
 

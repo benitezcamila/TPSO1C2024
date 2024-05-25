@@ -19,7 +19,8 @@ typedef enum {
     CONTEXTO_EXEC,
     DESALOJO_QUANTUM,
     INTERRUPT_PROC,
-    SOLICITUD_INSTRUCCION
+    SOLICITUD_INSTRUCCION,
+    ENTRADASALIDA
 } op_code;
 
 typedef enum {
