@@ -15,10 +15,7 @@ typedef struct {
     int socket_kernel;
 }str_sockets;
 
- 
-
 extern str_sockets sockets;
-extern char* nombre_interfaz;
 
 //void proceso_E_S();
 void establecer_conexion_memoria();

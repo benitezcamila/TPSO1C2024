@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include "main.h"
 
+char* nombre_interfaz;
 
 int main(int argc, char* argv[]) {
-    char* nombre_interfaz = argv[2];
+    nombre_interfaz = argv[2];
     char* path_config = argv[1];
     pthread_t memoria, kernel;
     iniciar_logger();

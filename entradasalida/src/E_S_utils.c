@@ -1,7 +1,7 @@
 #include <E_S_utils.h>
 
 str_sockets sockets;
-char* nombre_interfaz;
+extern char* nombre_interfaz;
 
 void establecer_conexion_kernel(){
     int fd_kernel = crear_conexion(configuracion.IP_KERNEL ,string_itoa(configuracion.PUERTO_KERNEL),logger_conexiones,"Entrada Salida");
