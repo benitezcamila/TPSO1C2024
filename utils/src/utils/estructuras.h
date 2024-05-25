@@ -3,6 +3,7 @@
 
 #include <commons/log.h>
 
+
 typedef enum {
     NEW,
     READY,
@@ -20,7 +21,8 @@ typedef enum {
     DESALOJO_QUANTUM,
     INTERRUPT_PROC,
     SOLICITUD_INSTRUCCION,
-    IO_GEN_SLEEP
+    IO_GEN_SLEEP,
+    ENTRADASALIDA
 } op_code;
 
 typedef enum {
@@ -66,6 +68,11 @@ typedef struct {
     char* cliente_name;
 } t_procesar_conexion_args;
 
-
+typedef enum {
+    GENERICA,
+    STDIN,
+    STDOUT,
+    DIALFS
+} t_interfaz;
 
 #endif
