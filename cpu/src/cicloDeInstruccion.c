@@ -2,7 +2,7 @@
 #include <cpu_utils.h>
 #define maxiumLinea 256
 
-
+registros_CPU* contextoRegistros;
 char* linea_de_instruccion;
 const short max_long_instruccion = 6;
 char* linea_de_instruccion_tokenizada[max_long_instruccion];
