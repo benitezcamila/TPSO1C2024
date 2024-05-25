@@ -8,5 +8,6 @@
 #include <readline/history.h>
 #include <cpu_utils.h>
 
+void iniciar_semaforos();
 
 #endif

@@ -1,12 +1,14 @@
 #ifndef CPU_UTILS_H
 #define CPU_UTILS_H
 
-#include <utils/conexion.h>
+#include "utils/conexion.h"
+#include "utils/serializacion.h"
 #include <configuracion/config.h>
 #include <pthread.h>
 #include <commons/log.h>
 #include <commons/string.h>
 #include <commons/config.h>
+#include <semaphore.h>
 
 typedef struct{
     int socket_server_I;
@@ -14,6 +16,7 @@ typedef struct{
     int socket_memoria;
 } str_sockets;
 
+extern int ind_contexto_kernel
 extern str_sockets sockets;
 void iniciar_server_kernel();
 void inicializar_cpu_dispatch();
