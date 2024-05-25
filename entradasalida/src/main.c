@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "main.h"
 
-char* nombre_interfaz;
+extern char* nombre_interfaz;
 
 int main(int argc, char* argv[]) {
     nombre_interfaz = argv[2];
