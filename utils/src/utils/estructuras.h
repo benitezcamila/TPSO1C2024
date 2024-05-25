@@ -3,6 +3,7 @@
 
 #include <commons/log.h>
 
+
 typedef enum {
     NEW,
     READY,
@@ -63,6 +64,11 @@ typedef struct {
     char* cliente_name;
 } t_procesar_conexion_args;
 
-
+typedef enum {
+    GENERICA,
+    STDIN,
+    STDOUT,
+    DIALFS
+} t_interfaz;
 
 #endif

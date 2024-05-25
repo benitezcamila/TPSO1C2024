@@ -65,6 +65,9 @@ int server_escuchar() {
     return 0;
 }
 
+
+
+
 void procesar_conexion(void* void_args) {
     t_procesar_conexion_args* args = (t_procesar_conexion_args*) void_args;
     int cliente_socket = args->fd;
@@ -87,8 +90,7 @@ void procesar_conexion(void* void_args) {
             log_info(logger_conexiones,"me mandaste 1");
             break;
         case ENTRADASALIDA:
-            log_info(logger_conexiones,"me mandaste la info de entradasalida");
-            /* agregar la info al diccionario (con mutex?) */
+            recibir_info_io(cliente_socket);
             break;
         default:
             log_info(logger_conexiones,"no estas mandando nada");
@@ -104,3 +106,29 @@ void establecer_conexiones(){
     establecer_conexion_memoria();
 }
 
+void recibir_info_io(int cliente_socket){
+    log_info(logger_conexiones,"me mandaste la info de entradasalida");
+    /* agregar la info al diccionario (con mutex?) */            
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->buffer= malloc(sizeof(t_buffer));
+    recv(cliente_socket, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+    paquete->buffer->stream = malloc(paquete->buffer->size);
+    recv(cliente_socket, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
+    /*serializo*/
+    t_interfaz tipo_interfaz;
+    buffer_read(paquete->buffer,&tipo_interfaz,sizeof(t_interfaz));
+    uint32_t long_nombre;
+    char* nombre_interfaz = buffer_read_string(paquete->buffer,&long_nombre);
+    log_info(logger_conexiones,"Tipo de interfaz recibida");
+    log_info(logger_conexiones,string_itoa(tipo_interfaz));
+    log_info(logger_conexiones,"Nombre de interfaz recibida");
+    log_info(logger_conexiones,nombre_interfaz);
+
+    free(long_nombre);
+    free(nombre_interfaz);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+    //dictionary_put(dicc_io,string_itoa(nombre_interfaz),tipo_interfaz);
+
+}

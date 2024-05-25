@@ -6,13 +6,9 @@
 #include <commons/log.h>
 #include <stdint.h>
 #include <string.h>
+#include "utils/conexion.h"
+#include "utils/serializacion.h"
 
-typedef enum {
-    GENERICA,
-    STDIN,
-    STDOUT,
-    DIALFS
-} t_interfaz;
 
 typedef struct {
     t_interfaz TIPO_INTERFAZ;

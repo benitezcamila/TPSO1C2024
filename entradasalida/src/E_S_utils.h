@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <configuracion/config.h>
 #include <pthread.h>
+#include "utils/conexion.h"
+#include "utils/serializacion.h"
 
 typedef struct {
     int socket_memoria;
