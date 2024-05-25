@@ -1,5 +1,7 @@
 #include "cpu_utils.h"
 
+int ind_contexto_kernel = 0;
+sem_t sem_contexto_kernel;
 str_sockets sockets;
 
 void iniciar_server_kernel(){
@@ -71,7 +73,8 @@ void procesar_conexion(void* void_args) {
 
         switch (codigo_op) {
         case CONTEXTO_EJECUCION:
-            while(1){
+            ind_contexto_kernel = 1;
+            while(ind_contexto_kernel == 1){
                 ciclo_de_instruccion();
             }
             break;

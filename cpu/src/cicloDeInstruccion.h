@@ -4,6 +4,7 @@
 #include <utils/estructuras.h>
 #include <commons/string.h>
 
+
 extern char* linea_de_instruccion;
 extern const short maxLongInstruccion = 6;
 extern char* linea_de_instruccion_tokenizada[maxLongInstruccion];

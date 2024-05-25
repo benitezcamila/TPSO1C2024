@@ -1,6 +1,11 @@
 #include <cicloDeInstruccion.h>
 #define maxiumLinea 256
 
+
+char* linea_de_instruccion;
+const short maxLongInstruccion = 6;
+char* linea_de_instruccion_tokenizada[maxLongInstruccion];
+
 void cicloDeInstruccion(){
     fetch_instruction();
     decode();
@@ -200,8 +205,9 @@ void jump_no_zero(char* registro, int nroInstruccion){
 }
 
 void io_gen_sleep(char* nombreInterfaz, uint32_t unidadesDeTrabajo){
+    ind_contexto_kernel = 0;
     t_paquete* paquete = crear_paquete(IO_GEN_SLEEP, sizeof(registros_CPU) + sizeof(motivo_desalojo));
-    buffer_add_string(paquete->buffer, string_length(nombreInterfaz), interfaz);
+    buffer_add_string(paquete->buffer, string_length(nombreInterfaz)+1, nombreInterfaz);
     buffer_add_uint32(paquete->buffer, unidadesDeTrabajo);
 
     enviar_paquete(paquete, sockets.socket_server_D);
