@@ -3,6 +3,7 @@
 t_dictionary* dicc_pcb;
 int current_pid = 0;
 
+
 registros_CPU* crear_registros(){
     registros_CPU* registros = malloc(sizeof(registros_CPU));
 
@@ -41,7 +42,6 @@ int siguiente_PID(){
     
     return current_pid;
 }
-
 
 void eliminar_pcb(char* pid){
     t_pcb* pcb = dictionary_remove(dicc_pcb,pid);
@@ -90,12 +90,10 @@ void crear_paquete_contexto_exec(t_pcb* pcb){
 }
 
 void recibir_contexto_exec(t_pcb* pcb){
+    uint64_t quantum_usado = temporal_gettime(temp_quantum);
+    temporal_destroy(temp_quantum);
     sem_post(&proceso_ejecutando);
-<<<<<<< HEAD
-    t_paquete* paquete = sizeof(t_paquete);
-=======
     t_paquete* paquete = malloc(sizeof(t_paquete));
->>>>>>> origin/main
     recv(sockets.socket_CPU_D,&(paquete->codigo_operacion),sizeof(op_code),MSG_WAITALL);
     motivo_desalojo mot_desalojo;
     if(paquete->codigo_operacion == CONTEXTO_EXEC){
@@ -109,16 +107,14 @@ void recibir_contexto_exec(t_pcb* pcb){
     switch (mot_desalojo)
     {
     case PROCESS_EXIT:
-
         pcb->estado = EXIT;
-        queue_push(cola_finalizados,pcb);
+        queue_push(cola_a_liberar,pcb);
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: SUCESS", pcb->pid);
         break;
     
     case PROCESS_ERROR:
-
         pcb->estado = EXIT;
-        queue_push(cola_finalizados,pcb);
+        queue_push(cola_a_liberar,pcb);
         uint32_t len_motivo;
         char* motivo_error = buffer_read_string(paquete->buffer,&len_motivo);
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: %s", pcb->pid,motivo_error);
@@ -126,13 +122,15 @@ void recibir_contexto_exec(t_pcb* pcb){
         break;
 
     case INTERRUPCION:
-
         pcb->estado = EXIT;
-        queue_push(cola_finalizados,pcb);
+        queue_push(cola_a_liberar,pcb);
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER");
         break;
 
     case BLOQUEO:
+        if(strcmp(configuracion.ALGORITMO_PLANIFICACION,"VRR") == 0){
+            pcb->quantum -= quantum_usado;
+        }
         uint32_t len;
         char* interfaz = buffer_read_string(paquete->buffer,&len);
         char* recurso= buffer_read_string(paquete->buffer,&len);

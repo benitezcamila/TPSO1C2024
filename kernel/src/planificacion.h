@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
+#include <commons/temporal.h>
 #include "kernel_utils.h"
 #include "pcb.h"
 
@@ -17,9 +18,13 @@ extern t_queue *cola_prioritaria_VRR;
 extern t_queue *bloqueado;
 extern t_queue *suspendido_bloqueado;
 extern t_queue *suspendido_listo; 
-extern t_queue *cola_finalizados;
+extern t_queue *cola_a_liberar;
+extern t_temporal* temp_quantum;
+
 
 void iniciar_colas();
+void liberar_procesos();
+void liberar_pcb(t_pcb*);
 void planificar_a_largo_plazo();
 void planificar_a_corto_plazo_segun_algoritmo();
 t_pcb* proximo_ejecutar_FIFO();
