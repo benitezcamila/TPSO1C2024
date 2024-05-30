@@ -86,7 +86,7 @@ t_paquete* crear_paquete(op_code code, uint32_t size_buff)
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->codigo_operacion = code;
-	buffer_create(size_buff);
+	paquete->buffer = buffer_create(size_buff);
 	return paquete;
 }
 

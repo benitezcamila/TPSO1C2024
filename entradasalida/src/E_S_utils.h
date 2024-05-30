@@ -5,15 +5,17 @@
 #include <commons/log.h>
 #include <commons/string.h>
 #include <commons/config.h>
+#include <commons/temporal.h>
+#include <unistd.h>
 #include <configuracion/config.h>
 #include <pthread.h>
+#include "utils/conexion.h"
+#include "utils/serializacion.h"
 
 typedef struct {
     int socket_memoria;
     int socket_kernel;
 }str_sockets;
-
- 
 
 extern str_sockets sockets;
 

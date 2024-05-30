@@ -4,7 +4,7 @@
 #include <utils/estructuras.h>
 #include <commons/string.h>
 
-
+extern registros_CPU* contextoRegistros;
 extern char* linea_de_instruccion;
 extern const short max_long_instruccion = 6;
 extern char* linea_de_instruccion_tokenizada[max_long_instruccion];
