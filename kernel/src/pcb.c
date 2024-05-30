@@ -91,7 +91,11 @@ void crear_paquete_contexto_exec(t_pcb* pcb){
 
 void recibir_contexto_exec(t_pcb* pcb){
     sem_post(&proceso_ejecutando);
+<<<<<<< HEAD
     t_paquete* paquete = sizeof(t_paquete);
+=======
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+>>>>>>> origin/main
     recv(sockets.socket_CPU_D,&(paquete->codigo_operacion),sizeof(op_code),MSG_WAITALL);
     motivo_desalojo mot_desalojo;
     if(paquete->codigo_operacion == CONTEXTO_EXEC){

@@ -2,8 +2,16 @@
 #define CICLODEINSTRUCCION_H
 
 #include <utils/estructuras.h>
+#include <commons/string.h>
 
-//Comandos que nos piden
+
+extern char* linea_de_instruccion;
+extern const short max_long_instruccion = 6;
+extern char* linea_de_instruccion_tokenizada[max_long_instruccion];
+extern int llego_interrupcion;
+extern tipo_de_interrupcion motivo_interrupcion;
+
+/*Comandos que nos piden
 typedef enum{
     SET, MOV_IN, MOV_OUT, SUM, SUB, JNZ,
     RESIZE, COPY_STRING, WAIT, SIGNAL,
@@ -17,7 +25,7 @@ typedef enum{
     IO_FS_READ,
     EXIT
 } t_comando;
-
+*/
 //TLB
 typedef struct {
     int pid;

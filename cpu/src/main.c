@@ -15,3 +15,7 @@ int main(int argc, char* argv[]) {
     pthread_join(escuchar_conexiones,NULL);
     return 0;
 }
+
+void iniciar_semaforos(){
+   
+}

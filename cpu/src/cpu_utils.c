@@ -1,7 +1,9 @@
 #include "cpu_utils.h"
 
+int ind_contexto_kernel = 0;
+sem_t sem_contexto_kernel;
 str_sockets sockets;
-
+int llego_interrupcion = 0;
 
 void iniciar_server_kernel(){
     pthread_t dispatch, interrupt;
@@ -53,36 +55,102 @@ int server_escuchar(int server_socket) {
     return 0;
 }
 
+//PROBABLEMENTE HAYA QUE CAMBIAR COSAS.
 void procesar_conexion(void* void_args) {
     t_procesar_conexion_args* args = (t_procesar_conexion_args*) void_args;
     int cliente_socket = args->fd;
     char* nombre_cliente = args->cliente_name;
     free(args);
 
-    op_code cop;
+    op_code codigo_op;
     while (cliente_socket != -1) {
 
-        if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
+        if (recv(cliente_socket, &codigo_op, sizeof(op_code), 0) != sizeof(op_code)) {
             log_info(logger_conexiones, "%s DISCONNECT!", nombre_cliente);
             free(nombre_cliente);
             
             return;
         }
 
-        switch (cop)
-        {
-        case 1:
-            /* code */
+        switch (codigo_op) {
+        case CONTEXTO_EXEC:
+            ind_contexto_kernel = 1;
+            while(ind_contexto_kernel == 1){
+                ciclo_de_instruccion();
+            }
+            break;
+
+        case INTERRUPT_PROC:
+            //Loggear.
+            llego_interrupcion = 1;
+            recibir_interrupcion_de_kernel();
             break;
         
         default:
+            //Loggear un error.
             break;
         }
         
     }
+
     free(nombre_cliente);
 }
 
+void recibir_contexto_ejecucion(){
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    recv(sockets.socket_server_D, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
+
+    if(paquete->codigo_operacion == CONTEXTO_EXEC){
+        recv(sockets.socket_server_D, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+        paquete->buffer->stream = malloc(paquete->buffer->size);
+
+        recv(sockets.socket_CPU_D, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
+        buffer_read(paquete->buffer, contextoRegistros, sizeof(registros_CPU));
+    }
+    else{
+        //Loggear error?
+    }
+}
+
+void solicitar_instruccion_a_memoria(){
+    t_paquete* paquete = crear_paquete(SOLICITUD_INSTRUCCION, sizeof(uint32_t));
+    buffer_add_uint32(paquete->buffer, contextoRegistros->PC);
+
+    enviar_paquete(paquete, sockets.socket_memoria);
+}
+
+void recibir_instruccion_de_memoria(){
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    recv(sockets.socket_memoria, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
+
+    if(paquete->codigo_operacion == INSTRUCCION){
+        recv(sockets.socket_memoria, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+        paquete->buffer->stream = malloc(paquete->buffer->size);
+
+        uint32_t longitud_linea_instruccion = 0;
+
+        recv(sockets.socket_memoria, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
+        linea_de_instruccion = buffer_read_string(paquete->buffer, &longitud_linea_instruccion);
+    }
+    else{
+        //Loggear error?
+    }
+}
+
+//NO SÉ SI ESTÁ BIEN. CHECKEAR.
+void recibir_interrupcion_de_kernel(){
+    recv(sockets.socket_server_I, &(motivo_interrupcion), sizeof(tipo_de_interrupcion), MSG_WAITALL);
+    ind_contexto_kernel = 0;
+}
+
+void enviar_contexto_a_kernel(motivo_desalojo motivo){
+    ind_contexto_kernel = 0;
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(registros_CPU) + sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, contextoRegistros, sizeof(registros_CPU));
+
+    enviar_paquete(paquete, sockets.socket_server_D);
+}
 
 /*
 int enviar_log_D( int fd_conexion_ptr){

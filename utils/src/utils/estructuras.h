@@ -3,13 +3,13 @@
 
 #include <commons/log.h>
 
-typedef enum{
+typedef enum {
     NEW,
     READY,
     BLOCKED,
     EXEC,
     EXIT
-}estados_proceso;
+} estados_proceso;
 
 typedef enum {
     HANDSHAKE = 1,
@@ -18,18 +18,36 @@ typedef enum {
     INSTRUCCION,
     CONTEXTO_EXEC,
     DESALOJO_QUANTUM,
+<<<<<<< HEAD
 }op_code;
 
 typedef enum{
+=======
+    INTERRUPT_PROC,
+    SOLICITUD_INSTRUCCION,
+    IO_GEN_SLEEP
+} op_code;
+
+typedef enum {
+>>>>>>> origin/main
     PROCESS_EXIT,
     PROCESS_ERROR,
     INTERRUPCION,
     LLAMADO_KERNEL,
     BLOQUEO,
+<<<<<<< HEAD
     FIN_QUANTUM,
 
 }motivo_desalojo;
 
+=======
+    FIN_QUANTUM
+} motivo_desalojo;
+
+typedef enum{
+    DESALOJO_QUANTUM
+} tipo_de_interrupcion;
+>>>>>>> origin/main
 typedef struct {
     uint32_t PC; // Program Counter
     uint8_t AX, BX, CX, DX; // Registros de 1 byte
@@ -43,7 +61,10 @@ typedef struct {
     registros_CPU* registros;
     estados_proceso estado;
     int ticket;
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 } t_pcb;
 
 typedef struct {
