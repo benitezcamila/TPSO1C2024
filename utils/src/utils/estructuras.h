@@ -22,7 +22,9 @@ typedef enum {
     INTERRUPT_PROC,
     SOLICITUD_INSTRUCCION,
     IO_GEN_SLEEP,
-    ENTRADASALIDA
+    ENTRADASALIDA,
+    ENVIAR_INSTRUCCION, //memoria a cpu
+    INICIAR_PROCESO
 } op_code;
 
 typedef enum {
@@ -35,7 +37,7 @@ typedef enum {
 } motivo_desalojo;
 
 typedef enum{
-    DESALOJO_QUANTUM
+    DESALOJOQUANTUM
 } tipo_de_interrupcion;
 typedef struct {
     uint32_t PC; // Program Counter

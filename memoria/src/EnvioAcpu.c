@@ -4,10 +4,9 @@
 
 
 // envia la instruccion siguiente
-void enviar_instrucciones_cpu(){
-int pid = recibir_entero(sockets.socket_cliente_CPU);
-int ip = recibir_entero(sockets.socket_cliente_CPU);
-
+void enviar_instrucciones_cpu(t_buffer* elBufferDeCpu){
+uint32_t pid = buffer_read_uint32(elBufferDeCpu);
+uint32_t ip = buffer_read_uint32(elBufferDeCpu);
 procesoListaInst* proceso = buscar_procesoPorId(pid);
 char* instruccionAEnviar = malloc (sizeof(char)* maxiumLineLength);
 instruccionAEnviar = instruccionActual(proceso, ip);

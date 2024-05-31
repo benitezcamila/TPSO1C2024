@@ -158,6 +158,16 @@ int enviar_hanshake(int socket,char* nom_cliente){
 	return bytes;
 }
 
-
-
+t_buffer* recibir_todo_elbuffer(int socket_conexion ){
+	uint32_t size;
+	if(recv(socket_conexion, &size, sizeof(uint32_t), MSG_WAITALL)> 0){
+		t_buffer* buffer = buffer_create(size);
+		if(recv(socket_conexion, buffer->stream, buffer->size,MSG_WAITALL )>0){
+			return buffer;
+		
+		}}else{
+		printf("Pifiaste negro");
+		exit(EXIT_FAILURE);
+		}return NULL;
+}
 

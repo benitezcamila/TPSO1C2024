@@ -9,7 +9,7 @@
 #include <commons/string.h>
 #include <commons/config.h>
 #include <semaphore.h>
-#include "src/utils/estructuras.h"
+#include "utils/estructuras.h"
 #define maxiumLineLength 256
 
 
@@ -38,11 +38,10 @@ typedef struct {
     int pid;
     t_list* instruccionesParaCpu;
 }procesoListaInst;
-extern  procesoListaInst* procesos; 
-
 struct paquetePcb{
     int pid;
 };
+void enviar_instrucciones_cpu(t_buffer*);
 char* instruccionActual (procesoListaInst* proceso, int ip );
 extern struct paquetePcb kernelPcb;
 bool pidIguales(procesoListaInst* proceso);

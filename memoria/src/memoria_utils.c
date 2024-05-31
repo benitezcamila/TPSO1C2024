@@ -2,7 +2,7 @@
 
 str_sockets sockets;
 sem_t sem_escuchar;
-
+t_list* listaDeProcesos;
 
 void inicializar_memoria(){
     sockets.socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
@@ -10,11 +10,14 @@ void inicializar_memoria(){
     
 } 
 
-void iniciar_proceso(){
-    procesos = malloc(sizeof(procesos));
-    procesos->pid = kernelPcb.pid;
-    procesos->instruccionesParaCpu = list_create();    
-    procesos->instruccionesParaCpu = leer_instrucciones_del_path();
+void iniciar_proceso(t_buffer* bufferDeKernel){
+    procesoListaInst* procesos = malloc(sizeof(procesoListaInst));
+
+    procesos->pid = buffer_read_uint32(bufferDeKernel);
+    procesos->instruccionesParaCpu = list_create();
+
+    uint32_t sizeDelProceso = buffer_read_uint8(bufferDeKernel);    
+    procesos->instruccionesParaCpu = leer_instrucciones_del_path(buffer_read_string(bufferDeKernel,&sizeDelProceso));
 
 }
 
@@ -61,11 +64,17 @@ void procesar_conexion(void* void_args) {
 
         switch (cop)
         {
-        case 1:
-            /* code */
+        case ENVIAR_INSTRUCCION:
+            t_buffer* bufferDeCpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
+            enviar_instrucciones_cpu(bufferDeCpu);
+            log_info(logger_memoria, "inicio envio de instrucciones");
             break;
-        
+        case INICIAR_PROCESO:
+            t_buffer* bufferDeKernel = recibir_todo_elbuffer(sockets.socket_cliente_kernel);
+            iniciar_proceso(bufferDeKernel);
+            log_info(logger_memoria, "inicio proceso");
         default:
+        log_warning(logger_memoria, "PASO ALGO");
             break;
         }
     }
@@ -77,7 +86,7 @@ void procesar_conexion(void* void_args) {
 // checkpoint 2, capaz de leer las instrucciones y enviarlas al cpu
 
 // leer las instrucciones del path
-t_list* leer_instrucciones_del_path() {
+t_list* leer_instrucciones_del_path(char* rutaKernel) {
    
 
     // Concatenar la ruta de configuracion.PATH_INSTRUCCIONES
@@ -125,6 +134,8 @@ if(ip<0 || list_size(proceso->instruccionesParaCpu) < ip ){
 }
 
 return list_get(proceso->instruccionesParaCpu,ip); 
+}
+void cargarInfoDeProceso(){
 }
 
 
