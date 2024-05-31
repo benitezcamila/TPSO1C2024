@@ -110,7 +110,6 @@ void procesar_conexion(void* void_args) {
         break;
 
         default:
-        log_warning(logger_memoria, "PASO ALGO");
             break;
         }
     }
@@ -169,6 +168,8 @@ if(ip<0 || list_size(proceso->instruccionesParaCpu) < ip ){
 }
 
 return list_get(proceso->instruccionesParaCpu,ip); 
+}
+void cargarInfoDeProceso(){
 }
 
 
