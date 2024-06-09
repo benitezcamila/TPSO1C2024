@@ -7,18 +7,33 @@ t_list* listaDeProcesos;
 void inicializar_memoria(){
     sockets.socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
     log_info(logger_conexiones, "Memoria esta escuchando");
+    void* espacioUsuario = malloc(sizeof(configuracion.TAM_MEMORIA));
     
+    cantFrames = configuracion.TAM_MEMORIA/ configuracion.TAM_PAGINA;
+    
+  
+
+    memset(bitMap, 0 , sizeof(int) * cantFrames);
+    tabla_global = list_create();
+
 } 
 
 void iniciar_proceso(t_buffer* bufferDeKernel){
     procesoListaInst* procesos = malloc(sizeof(procesoListaInst));
 
+// ------------ cargar buffer kernel -------//
     procesos->pid = buffer_read_uint32(bufferDeKernel);
     procesos->instruccionesParaCpu = list_create();
-
     uint32_t sizeDelProceso = buffer_read_uint8(bufferDeKernel);    
+
+// ------------ leo archivo instrucciones ---------//    
     procesos->instruccionesParaCpu = leer_instrucciones_del_path(buffer_read_string(bufferDeKernel,&sizeDelProceso));
 
+    cargarEnTablaDePaginas(procesos->pid);
+    agregarProcesoALaCola(procesos);
+
+
+    free(procesos);
 }
 
 void atender_escuchas(){
@@ -65,14 +80,33 @@ void procesar_conexion(void* void_args) {
         switch (cop)
         {
         case ENVIAR_INSTRUCCION:
-            t_buffer* bufferDeCpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
-            enviar_instrucciones_cpu(bufferDeCpu);
+            t_buffer* buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
+            enviar_instrucciones_cpu(buffer_de_cpu);
             log_info(logger_memoria, "inicio envio de instrucciones");
             break;
         case INICIAR_PROCESO:
-            t_buffer* bufferDeKernel = recibir_todo_elbuffer(sockets.socket_cliente_kernel);
-            iniciar_proceso(bufferDeKernel);
+            t_buffer* buffer_de_kernel = recibir_todo_elbuffer(sockets.socket_cliente_kernel);
+            iniciar_proceso(buffer_de_kernel);
             log_info(logger_memoria, "inicio proceso");
+            break;
+    
+
+        case AJUSTAR_TAMANIO:
+            buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
+            ajustar_tam_proceso( buffer_de_cpu);
+            log_info(logger_memoria, "ajusto tamanio proceso");
+            break;
+
+        case FINALIZAR_PROCESO:
+             buffer_de_kernel = recibir_todo_elbuffer(sockets.socket_cliente_kernel);
+            break;
+        case ESCRIBIR_ESPACIO_USUARIO_ES:
+            t_buffer* buffer_ENTRADA_SALIDA = recibir_todo_elbuffer(sockets.socket_cliente_E_S);
+            break;
+        case ESCRIBIR_ESPACIO_USUARIO_CPU:
+            buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
+        break;
+
         default:
         log_warning(logger_memoria, "PASO ALGO");
             break;
@@ -121,8 +155,7 @@ procesoListaInst* buscar_procesoPorId(int pid){
         bool pidIguales(  procesoListaInst* proceso){
    return proceso->pid == pid;
 }
-        return list_find(listaDeProcesos, (void*) pidIguales);
-        
+        return list_find(listaDeProcesos, (void*) pidIguales);       
 }
 
 
@@ -134,8 +167,6 @@ if(ip<0 || list_size(proceso->instruccionesParaCpu) < ip ){
 }
 
 return list_get(proceso->instruccionesParaCpu,ip); 
-}
-void cargarInfoDeProceso(){
 }
 
 
