@@ -1,5 +1,5 @@
-#ifndef CICLODEINSTRUCCION_H
-#define CICLODEINSTRUCCION_H
+#ifndef CICLO_DE_INSTRUCCION_H
+#define CICLO_DE_INSTRUCCION_H
 
 #include <utils/estructuras.h>
 #include <commons/string.h>

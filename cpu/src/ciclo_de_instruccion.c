@@ -1,8 +1,7 @@
-#include <cicloDeInstruccion.h>
+#include <ciclo_de_instruccion.h>
 #include <cpu_utils.h>
-#define maxiumLinea 256
 
-registros_CPU* contextoRegistros;
+registros_CPU* contextoRegistros; //CAMBIAR A SNAKESCAPE C/U
 char* linea_de_instruccion;
 const short max_long_instruccion = 6;
 char* linea_de_instruccion_tokenizada[max_long_instruccion];
@@ -84,7 +83,7 @@ void set(char* registro, int valor){
         contextoRegistros->CX = valor;
     }
     else if(strcmp(registro, "DX") == 0){
-        contextoReos->DX = valor;
+        contextoRegistros->DX = valor;
     }
     else if(strcmp(registro, "EAX") == 0){
         contextoRegistros->EAX = valor;
