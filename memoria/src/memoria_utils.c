@@ -169,8 +169,6 @@ if(ip<0 || list_size(proceso->instruccionesParaCpu) < ip ){
 
 return list_get(proceso->instruccionesParaCpu,ip); 
 }
-void cargarInfoDeProceso(){
-}
 
 
 
