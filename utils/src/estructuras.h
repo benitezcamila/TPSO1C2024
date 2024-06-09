@@ -24,7 +24,11 @@ typedef enum {
     IO_GEN_SLEEP,
     ENTRADASALIDA,
     ENVIAR_INSTRUCCION, //memoria a cpu
-    INICIAR_PROCESO
+    INICIAR_PROCESO,    // kernel memoria
+    ESCRIBIR_ESPACIO_USUARIO_ES, 
+    ESCRIBIR_ESPACIO_USUARIO_CPU,
+    FINALIZAR_PROCESO,
+    AJUSTAR_TAMANIO
 } op_code;
 
 typedef enum {
