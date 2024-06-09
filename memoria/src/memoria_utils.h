@@ -1,7 +1,7 @@
 #ifndef MEMORIA_UTILS_H
 #define MEMORIA_UTILS_H
 
-#include <utils/conexion.h>
+#include <utils/src/conexion.h>
 #include "configuracion/config.h"
 #include <bits/pthreadtypes.h>
 #include <pthread.h>
@@ -9,7 +9,8 @@
 #include <commons/string.h>
 #include <commons/config.h>
 #include <semaphore.h>
-#include "utils/estructuras.h"
+#include <utils/src/estructuras.h>
+#include <gestion_memoria.h>
 #define maxiumLineLength 256
 
 
@@ -38,14 +39,20 @@ typedef struct {
     int pid;
     t_list* instruccionesParaCpu;
 }procesoListaInst;
+
 struct paquetePcb{
     int pid;
 };
-void enviar_instrucciones_cpu(t_buffer*);
-char* instruccionActual (procesoListaInst* proceso, int ip );
+
 extern struct paquetePcb kernelPcb;
-bool pidIguales(procesoListaInst* proceso);
-void enviar_instruccion(char*);
 extern t_list* listaDeProcesos;
-procesoListaInst* buscar_procesoPorId(int pid);
+
+void enviar_instrucciones_cpu(t_buffer*);
+void tam_pagina(t_buffer*);
+char* instruccionActual (procesoListaInst*, int );
+bool pidIguales(procesoListaInst*);
+void enviar_instruccion(char*);
+void ajustar_tam_proceso( t_buffer*);
+void agregarProcesoALaCola(procesoListaInst*);
+procesoListaInst* buscar_procesoPorId(int);
 #endif
