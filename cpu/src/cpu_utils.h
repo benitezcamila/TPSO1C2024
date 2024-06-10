@@ -16,11 +16,7 @@ typedef struct{
     int socket_server_I;
     int socket_server_D;
     int socket_memoria;
-<<<<<<< HEAD
 }str_sockets;
-=======
-} str_sockets;
->>>>>>> origin/main
 
 extern int ind_contexto_kernel;
 extern int llego_interrupcion;
