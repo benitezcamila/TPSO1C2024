@@ -9,6 +9,7 @@
 #include <commons/temporal.h>
 #include "kernel_utils.h"
 #include "pcb.h"
+#include <pthread.h>
 
 extern sem_t sem_grado_multiprogramacion;
 extern sem_t proceso_ejecutando;
@@ -21,7 +22,6 @@ extern t_queue *suspendido_listo;
 extern t_queue *cola_a_liberar;
 extern t_temporal* temp_quantum;
 
-
 void iniciar_colas();
 void liberar_procesos();
 void liberar_pcb(t_pcb*);
@@ -31,6 +31,7 @@ void planificar_a_corto_plazo_segun_algoritmo();
 t_pcb* proximo_ejecutar_FIFO();
 t_pcb* proximo_ejecutar_RR();
 t_pcb* proximo_ejecutar_VRR();
+void ejecutar_con_quantum(t_pcb *);
 void ejecutar_FIFO(t_pcb *);
 void ejecutar_RR(t_pcb *);
 void esperar_interrupcion_quantum(t_pcb *);

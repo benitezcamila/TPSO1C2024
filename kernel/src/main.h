@@ -10,6 +10,7 @@
 #include<readline/history.h>
 #include "kernel_utils.h"
 #include "pcb.h"
+#include "recursos.h"
 
 extern pthread_t levantar_kernel, escuchar_conexiones, establecer_conexion, planificador_corto_plazo, planificador_largo_plazo;
 

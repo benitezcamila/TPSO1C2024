@@ -9,6 +9,7 @@
 #include "utils/conexion.h"
 #include "utils/serializacion.h"
 #include <semaphore.h>
+#include "pcb.h"
 
 
 

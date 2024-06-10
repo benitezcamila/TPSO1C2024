@@ -14,7 +14,7 @@ void inicializar_memoria(){
   
 
     memset(bitMap, 0 , sizeof(int) * cantFrames);
-    tabla_global = list_create();
+    tabla_global = t_dictionary_create();
 
 } 
 
@@ -100,11 +100,13 @@ void procesar_conexion(void* void_args) {
         case FINALIZAR_PROCESO:
              buffer_de_kernel = recibir_todo_elbuffer(sockets.socket_cliente_kernel);
             break;
-        case ESCRIBIR_ESPACIO_USUARIO_ES:
+        case access_ESPACIO_USUARIO_ES:
             t_buffer* buffer_ENTRADA_SALIDA = recibir_todo_elbuffer(sockets.socket_cliente_E_S);
+            access_espacio_usuario(buffer_ENTRADA_SALIDA);
             break;
-        case ESCRIBIR_ESPACIO_USUARIO_CPU:
+        case access_ESPACIO_USUARIO_CPU:
             buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
+            access_espacio_usuario(buffer_ENTRADA_SALIDA);
         break;
 
         default:

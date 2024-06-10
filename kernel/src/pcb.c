@@ -2,6 +2,7 @@
 
 t_dictionary* dicc_pcb;
 int current_pid = 0;
+t_pcb* pcb_en_ejecucion;
 
 
 registros_CPU* crear_registros(){
@@ -91,23 +92,28 @@ void crear_paquete_contexto_exec(t_pcb* pcb){
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC,sizeof(registros_CPU));
     buffer_add(paquete->buffer,pcb->registros,sizeof(registros_CPU));
     enviar_paquete(paquete,sockets.socket_CPU_D);
+    pcb_en_ejecucion = pcb;
 
 }
 
 void recibir_contexto_exec(t_pcb* pcb){
-    uint64_t quantum_usado = temporal_gettime(temp_quantum);
+    uint64_t quantum_a_asignar = configuracion.QUANTUM;
+    if(strcmp(configuracion.ALGORITMO_PLANIFICACION, "VRR") == 0 || strcmp(configuracion.ALGORITMO_PLANIFICACION, "RR") == 0){
+    quantum_a_asignar = pcb->quantum - temporal_gettime(temp_quantum);
     temporal_destroy(temp_quantum);
-    sem_post(&proceso_ejecutando);
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    recv(sockets.socket_CPU_D,&(paquete->codigo_operacion),sizeof(op_code),MSG_WAITALL);
-    motivo_desalojo mot_desalojo;
-    if(paquete->codigo_operacion == CONTEXTO_EXEC){
-    recv(sockets.socket_CPU_D,&(paquete->buffer->size),sizeof(uint32_t),MSG_WAITALL);
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-    recv(sockets.socket_CPU_D, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
-    buffer_read(paquete->buffer,&mot_desalojo,sizeof(motivo_desalojo));
-    buffer_read(paquete->buffer,pcb->registros,sizeof(registros_CPU));
     }
+    
+    motivo_desalojo mot_desalojo;
+    uint32_t buffer_size;
+    recv(sockets.socket_CPU_D,&buffer_size,sizeof(uint32_t),MSG_WAITALL);
+    t_buffer* buffer = buffer_create(buffer_size);
+    recv(sockets.socket_CPU_D, buffer->stream, buffer->size, MSG_WAITALL);
+    buffer_read(buffer,&mot_desalojo,sizeof(motivo_desalojo));
+    if(mot_desalojo != SIGNAL_RECURSO){
+    sem_post(&proceso_ejecutando);
+    }
+    buffer_read(buffer,pcb->registros,sizeof(registros_CPU));
+    
 
     switch (mot_desalojo)
     {
@@ -121,7 +127,7 @@ void recibir_contexto_exec(t_pcb* pcb){
         pcb->estado = EXIT;
         queue_push(cola_a_liberar,pcb);
         uint32_t len_motivo;
-        char* motivo_error = buffer_read_string(paquete->buffer,&len_motivo);
+        char* motivo_error = buffer_read_string(buffer,&len_motivo);
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: %s", pcb->pid,motivo_error);
         free(motivo_error);
         break;
@@ -132,23 +138,55 @@ void recibir_contexto_exec(t_pcb* pcb){
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER");
         break;
 
-    case BLOQUEO:
-        if(strcmp(configuracion.ALGORITMO_PLANIFICACION,"VRR") == 0){
-            pcb->quantum -= quantum_usado;
+    case PETICION_RECURSO: {
+        if(strcmp(configuracion.ALGORITMO_PLANIFICACION, "VRR") == 0){
+        pcb->quantum = quantum_a_asignar;
+        queue_push(cola_prioritaria_VRR,pcb);
         }
         uint32_t len;
-        char* interfaz = buffer_read_string(paquete->buffer,&len);
-        char* recurso= buffer_read_string(paquete->buffer,&len);
+        char* recurso = buffer_read_string(buffer,&len);
         log_info(logger_kernel, "PID: %d - Estado Anterior: EXEC - Estado Actual: BLOCKED", pcb->pid);
-        log_info(logger_kernel, "PID: %d - Bloqueado por: %s / %s", pcb->pid,interfaz,recurso);
-        free(interfaz);
+        log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb->pid,recurso);
+        pcb->estado = BLOCKED;
+        str_recursos* str_rec = dictionary_get(recursos,recurso);
+        queue_push(str_rec->cola,pcb);
+        gestionar_recurso(str_rec);
         free(recurso);
+        break;
+    }
+    
+    case SIGNAL_RECURSO: {
+        if(strcmp(configuracion.ALGORITMO_PLANIFICACION, "VRR") == 0 || strcmp(configuracion.ALGORITMO_PLANIFICACION, "RR") == 0){
+            pcb->quantum = quantum_a_asignar;
+            ejecutar_con_quantum(pcb);
+        }
+        else{
+            crear_paquete_contexto_exec(pcb);
+        }
+        uint32_t len = 0;
+        char* recurso = buffer_read_string(buffer,&len);
+        str_recursos* str_rec = dictionary_get(recursos,recurso);
+        sem_post(&str_rec->cantidad_recursos);
+        break;
+    }
+/*
+    case ENTRADASALIDA:
+        if(strcmp(configuracion.ALGORITMO_PLANIFICACION, "VRR" == 0)){
+        pcb->quantum = quantum_a_asignar;
+        queue_push(cola_prioritaria_VRR,pcb);
+        };
+        uint32_t len;
+        char* motivo = buffer_read_string(paquete->buffer,&len);
+        log_info(logger_kernel, "PID: %d - Estado Anterior: EXEC - Estado Actual: BLOCKED", pcb->pid);
+        log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb->pid,motivo);
+        free(motivo);
         pcb->estado = BLOCKED;
         queue_push(bloqueado,pcb);
-        break;
+        break;      
 
     case LLAMADO_KERNEL:
     break;
+    */
 
     case FIN_QUANTUM:
     pcb->estado = READY;
@@ -160,7 +198,7 @@ void recibir_contexto_exec(t_pcb* pcb){
     default:
         break;
     }
-    eliminar_paquete(paquete);
+    buffer_destroy(buffer);
 
 }
 

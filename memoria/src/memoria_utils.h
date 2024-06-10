@@ -1,7 +1,7 @@
 #ifndef MEMORIA_UTILS_H
 #define MEMORIA_UTILS_H
 
-#include <utils/src/conexion.h>
+#include <utils/conexion.h>
 #include "configuracion/config.h"
 #include <bits/pthreadtypes.h>
 #include <pthread.h>

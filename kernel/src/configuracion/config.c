@@ -15,8 +15,16 @@ void obtener_config(){
     configuracion.PUERTO_CPU_INTERRUPT = config_get_int_value(config,"PUERTO_CPU_INTERRUPT");
     configuracion.ALGORITMO_PLANIFICACION = config_get_string_value(config,"ALGORITMO_PLANIFICACION");
     configuracion.QUANTUM = config_get_int_value(config,"QUANTUM");
-    configuracion.RECURSOS =config_get_array_value(config,"RECURSOS");
-    configuracion.INSTANCIAS_RECURSOS = config_get_array_value(config,"INSTANCIAS_RECURSOS");
+    configuracion.RECURSOS = list_create();
+    char** aux_recursos = config_get_array_value(config,"RECURSOS");
+    for(int i = 0; aux_recursos[i] != NULL; i++){
+        list_add(configuracion.RECURSOS, aux_recursos[i]);
+    }
+    configuracion.INSTANCIAS_RECURSOS = list_create();
+    char** aux_instancias =config_get_array_value(config,"INSTANCIAS_RECURSOS");
+    for(int i = 0; aux_instancias[i] != NULL; i++){
+        list_add(configuracion.RECURSOS, aux_instancias[i]);
+    }
     configuracion.GRADO_MULTIPROGRAMACION = config_get_int_value(config,"GRADO_MULTIPROGRAMACION");
 
 }

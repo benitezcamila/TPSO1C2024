@@ -14,6 +14,7 @@ t_queue *suspendido_listo;
 //ver si puede ser lista 
 t_queue *cola_a_liberar;
 t_temporal* temp_quantum;
+
 //t_list *lista_ejecutando;
 //es necesario el lista ejecutando?? 
 
@@ -37,7 +38,7 @@ void iniciar_colas(){
 
 void liberar_procesos(){
 
-    for(int i = 0; i<queue_size(cola_a_liberar); i++){
+    for(int i = 0; i < queue_size(cola_a_liberar); i++){
         t_pcb* pcb_a_liberar = queue_pop(cola_a_liberar);
         liberar_pcb(pcb_a_liberar);
         sem_post(&sem_grado_multiprogramacion);
@@ -55,7 +56,7 @@ void liberar_pcb(t_pcb* pcb){
 
 void crear_proceso(t_pcb* pcb){
     uint32_t tam_string = string_length(pcb->pathOperaciones);
-    t_paquete* paquete = crear_paquete(INICIAR_PROCESO,sizeof(uin32_t)*2+tam_string);
+    t_paquete* paquete = crear_paquete(INICIAR_PROCESO,sizeof(uint32_t)*2+tam_string);
     buffer_add_uint32(paquete->buffer,pcb->pid);
     buffer_add_string(paquete->buffer,tam_string,pcb->pathOperaciones);
 }
@@ -91,7 +92,8 @@ void planificar_a_corto_plazo_segun_algoritmo(){
         }
 
     else if (strcmp(algoritmo_planificador, "VRR")){
-
+        t_pcb* a_ejecutar = proximo_ejecutar_VRR();
+        ejecutar_RR(a_ejecutar);
         }
     }
 }
@@ -120,8 +122,6 @@ void ejecutar_FIFO(t_pcb *a_ejecutar){
     //creo y envio el contexto de ejecucion
     crear_paquete_contexto_exec(a_ejecutar);
 
-    recibir_contexto_exec(a_ejecutar);
-
 
 }
 
@@ -130,35 +130,35 @@ void ejecutar_RR(t_pcb *a_ejecutar){
     sem_wait(&proceso_ejecutando);
     a_ejecutar->estado = EXEC;
     log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
-    a_ejecutar->ticket++;
     //creo y envio el contexto de ejecucion
-    crear_paquete_contexto_exec(a_ejecutar);
-    pthread_create(&temporizador_quantum, NULL, (void*)esperar_interrupcion_quantum, a_ejecutar);
-    recibir_contexto_exec(a_ejecutar);
-    pthread_detach(temporizador_quantum);
-    //falta terminar
+    ejecutar_con_quantum(a_ejecutar);
     
 
 }
+
 
 void ejecutar_VRR(t_pcb *a_ejecutar){
 
     sem_wait(&proceso_ejecutando);
     a_ejecutar->estado = EXEC;
     log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
-    a_ejecutar->ticket++;
     //creo y envio el contexto de ejecucion
-    crear_paquete_contexto_exec(a_ejecutar);
-    temp_quantum = temporal_create();
-    pthread_create(&temporizador_quantum, NULL, (void*)esperar_interrupcion_quantum, a_ejecutar);
-    recibir_contexto_exec(a_ejecutar);
-    pthread_detach(temporizador_quantum);
-    //falta terminar
-    
+    ejecutar_con_quantum(a_ejecutar);
 
 }
 
+void ejecutar_con_quantum(t_pcb *a_ejecutar){
+    crear_paquete_contexto_exec(a_ejecutar);
+    a_ejecutar->quantum=configuracion.QUANTUM;
+    temp_quantum = temporal_create();
+    pthread_create(&temporizador_quantum, NULL, (void*)esperar_interrupcion_quantum, a_ejecutar);
+    pthread_detach(temporizador_quantum);
+    //falta terminar
+    
+}
+
 void esperar_interrupcion_quantum(t_pcb *a_ejecutar){
+    a_ejecutar->ticket++;
     int ticket_referencia = a_ejecutar->ticket;
     usleep(a_ejecutar->quantum * 1000);
     if(ticket_referencia == a_ejecutar->ticket && a_ejecutar->estado == EXEC){

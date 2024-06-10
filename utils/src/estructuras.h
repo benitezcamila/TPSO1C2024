@@ -26,8 +26,8 @@ typedef enum {
     LIBERAR_PROCESO,
     ENVIAR_INSTRUCCION, //memoria a cpu
     INICIAR_PROCESO,    // kernel memoria
-    ESCRIBIR_ESPACIO_USUARIO_ES, 
-    ESCRIBIR_ESPACIO_USUARIO_CPU,
+    access_ESPACIO_USUARIO_ES, 
+    access_ESPACIO_USUARIO_CPU,
     FINALIZAR_PROCESO,
     AJUSTAR_TAMANIO
 } op_code;
@@ -37,7 +37,9 @@ typedef enum {
     PROCESS_ERROR,
     INTERRUPCION,
     LLAMADO_KERNEL,
-    BLOQUEO,
+    PETICION_IO,
+    PETICION_RECURSO,
+    SIGNAL_RECURSO,
     FIN_QUANTUM,
 
 }motivo_desalojo;

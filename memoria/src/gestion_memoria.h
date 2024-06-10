@@ -9,16 +9,16 @@
 #include <commons/string.h>
 #include <commons/config.h>
 #include <semaphore.h>
-#include <utils/estructuras.h>
 #include "memoria_utils.h"
+#include <commons/collections/dictionary.h>
 
 
-
- 
-typedef struct{
+ typedef 
+ {
     int numero_marco;
     int pid_pagina;
-    int tamDisp;
+    int tam_disponible;
+    bool escrita;
 }t_pagina;
 
 
@@ -29,9 +29,9 @@ typedef struct
 }tabla_pagina;
 
 
-t_list* tabla_global;
-void* espacioUsuario;
-int cantFrames;
+extern t_dictionary* tabla_global;
+extern void* espacioUsuario;
+extern int cantFrames;
 
 
 
@@ -43,5 +43,5 @@ int marcoDisponible();
 void asignar_id_pagina(tabla_pagina*);
 void reduccion_del_proceso(tabla_pagina*, int);
 void ampliacion_del_proceso(tabla_pagina*, int); 
-
+void access_espacio_usuario(t_buffer*);
 #endif

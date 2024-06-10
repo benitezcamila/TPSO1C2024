@@ -49,9 +49,9 @@ int server_escuchar() {
     char* nom_cliente = malloc(20);
 
     int cliente_socket = esperar_cliente(sockets.socket_server,logger_conexiones,nom_cliente); //conecta, valida con handshake y devuelve socket
-    log_info(logger_conexiones, "Conectado 1");
+    //log_info(logger_conexiones, "Conectado 1");
     //sem_wait(&sem_escuchar); //semaforo escuchar, repetido?
-    log_info(logger_conexiones, "No bloqueado");
+    //log_info(logger_conexiones, "No bloqueado");
     if (cliente_socket != -1) {
         pthread_t hilo;
         t_procesar_conexion_args* args = malloc(sizeof(t_procesar_conexion_args));
@@ -85,10 +85,10 @@ void procesar_conexion(void* void_args) {
 
         switch (cop)
         {
-        case 1:
-            /* code */
-            log_info(logger_conexiones,"me mandaste 1");
-            break;
+        case CONTEXTO_EXEC:
+        recibir_contexto_exec(pcb_en_ejecucion);
+        break;
+
         case ENTRADASALIDA:
             recibir_info_io(cliente_socket);
             break;
