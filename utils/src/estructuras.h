@@ -19,11 +19,6 @@ typedef enum {
     INSTRUCCION,
     CONTEXTO_EXEC,
     DESALOJO_QUANTUM,
-<<<<<<< HEAD
-}op_code;
-
-typedef enum{
-=======
     INTERRUPT_PROC,
     SOLICITUD_INSTRUCCION,
     IO_GEN_SLEEP,
@@ -37,25 +32,20 @@ typedef enum{
 } op_code;
 
 typedef enum {
->>>>>>> origin/main
     PROCESS_EXIT,
     PROCESS_ERROR,
     INTERRUPCION,
     LLAMADO_KERNEL,
     BLOQUEO,
-<<<<<<< HEAD
     FIN_QUANTUM,
 
 }motivo_desalojo;
 
-=======
-    FIN_QUANTUM
-} motivo_desalojo;
 
 typedef enum{
     DESALOJOQUANTUM
 } tipo_de_interrupcion;
->>>>>>> origin/main
+
 typedef struct {
     uint32_t PC; // Program Counter
     uint8_t AX, BX, CX, DX; // Registros de 1 byte
@@ -69,10 +59,6 @@ typedef struct {
     registros_CPU* registros;
     estados_proceso estado;
     int ticket;
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/main
 } t_pcb;
 
 typedef struct {
