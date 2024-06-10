@@ -82,19 +82,19 @@ void procesar_conexion(void* void_args) {
         case ENVIAR_INSTRUCCION:
             t_buffer* buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
             enviar_instrucciones_cpu(buffer_de_cpu);
-            log_info(logger_memoria, "inicio envio de instrucciones");
+            log_info(logger_memoria, "Inicio envio de instrucciones");
             break;
         case INICIAR_PROCESO:
             t_buffer* buffer_de_kernel = recibir_todo_elbuffer(sockets.socket_cliente_kernel);
             iniciar_proceso(buffer_de_kernel);
-            log_info(logger_memoria, "inicio proceso");
+            log_info(logger_memoria, "Inicio proceso");
             break;
     
 
         case AJUSTAR_TAMANIO:
             buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
             ajustar_tam_proceso( buffer_de_cpu);
-            log_info(logger_memoria, "ajusto tamanio proceso");
+            log_info(logger_memoria, "Ajusto tamanio proceso");
             break;
 
         case FINALIZAR_PROCESO:

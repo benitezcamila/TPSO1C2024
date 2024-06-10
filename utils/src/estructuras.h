@@ -23,6 +23,7 @@ typedef enum {
     SOLICITUD_INSTRUCCION,
     IO_GEN_SLEEP,
     ENTRADASALIDA,
+    LIBERAR_PROCESO,
     ENVIAR_INSTRUCCION, //memoria a cpu
     INICIAR_PROCESO,    // kernel memoria
     ESCRIBIR_ESPACIO_USUARIO_ES, 
@@ -37,8 +38,10 @@ typedef enum {
     INTERRUPCION,
     LLAMADO_KERNEL,
     BLOQUEO,
-    FIN_QUANTUM
-} motivo_desalojo;
+    FIN_QUANTUM,
+
+}motivo_desalojo;
+
 
 typedef enum{
     DESALOJOQUANTUM
@@ -57,6 +60,7 @@ typedef struct {
     registros_CPU* registros;
     estados_proceso estado;
     int ticket;
+    char* pathOperaciones;
 } t_pcb;
 
 typedef struct {

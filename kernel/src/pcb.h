@@ -17,6 +17,7 @@ extern int current_pid;
 extern registros_CPU* registros;
 
 t_pcb* crear_pcb();
+void eliminar_pcb(char*);
 registros_CPU* crear_registros();
 int siguiente_PID();
 t_buffer* crear_buffer_pcb();

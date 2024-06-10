@@ -1,7 +1,7 @@
 #ifndef GESTION_MEMORIA_H
 #define GESTION_MEMORIA_H
 
-#include <utils/src/conexion.h>
+#include <utils/conexion.h>
 #include "configuracion/config.h"
 #include <bits/pthreadtypes.h>
 #include <pthread.h>
@@ -9,7 +9,7 @@
 #include <commons/string.h>
 #include <commons/config.h>
 #include <semaphore.h>
-#include <utils/src/estructuras.h>
+#include <utils/estructuras.h>
 #include "memoria_utils.h"
 
 

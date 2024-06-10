@@ -3,6 +3,7 @@
 t_dictionary* dicc_pcb;
 int current_pid = 0;
 
+
 registros_CPU* crear_registros(){
     registros_CPU* registros = malloc(sizeof(registros_CPU));
 
@@ -21,7 +22,7 @@ registros_CPU* crear_registros(){
     return registros;
 }
 
-t_pcb* crear_pcb(){
+t_pcb* crear_pcb(char* path){
     t_pcb* pcb_creado = malloc(sizeof(t_pcb));
 
     pcb_creado->pid = siguiente_PID();
@@ -29,6 +30,8 @@ t_pcb* crear_pcb(){
     pcb_creado->registros = crear_registros();
     pcb_creado->estado = NEW;
     pcb_creado->ticket = 0;
+    pcb_creado->pathOperaciones = malloc(string_length(path));
+    strcpy(pcb_creado->pathOperaciones,path);
 
     dictionary_put(dicc_pcb,string_itoa(pcb_creado->pid),pcb_creado);
 
@@ -42,10 +45,10 @@ int siguiente_PID(){
     return current_pid;
 }
 
-
 void eliminar_pcb(char* pid){
     t_pcb* pcb = dictionary_remove(dicc_pcb,pid);
     free(pcb->registros);
+    free(pcb->pathOperaciones);
     free(pcb);
 }
 
@@ -63,8 +66,10 @@ void crear_paquete_pcb(t_pcb* pcb) {
     buffer_add_uint32(paquete->buffer,sizeof(pcb->registros));
     buffer_add(paquete->buffer,pcb->registros,sizeof(pcb->registros));
     buffer_add_uint32(paquete->buffer,pcb->estado);
+    buffer_add_uint32(paquete->buffer,pcb->ticket);
+    buffer_add_string(paquete->buffer,string_length(pcb->pathOperaciones),pcb->pathOperaciones);
 
-    send(sockets.socket_CPU_D, paquete->buffer->stream, paquete->buffer->size + sizeof(uint32_t)*2, 0);
+    send(sockets.socket_CPU_D, paquete->buffer->stream, paquete->buffer->size + sizeof(uint32_t)*3 + string_length(pcb->pathOperaciones), 0);
     
     free(paquete->buffer->stream);
     free(paquete->buffer);
@@ -90,6 +95,8 @@ void crear_paquete_contexto_exec(t_pcb* pcb){
 }
 
 void recibir_contexto_exec(t_pcb* pcb){
+    uint64_t quantum_usado = temporal_gettime(temp_quantum);
+    temporal_destroy(temp_quantum);
     sem_post(&proceso_ejecutando);
     t_paquete* paquete = malloc(sizeof(t_paquete));
     recv(sockets.socket_CPU_D,&(paquete->codigo_operacion),sizeof(op_code),MSG_WAITALL);
@@ -105,16 +112,14 @@ void recibir_contexto_exec(t_pcb* pcb){
     switch (mot_desalojo)
     {
     case PROCESS_EXIT:
-
         pcb->estado = EXIT;
-        queue_push(cola_finalizados,pcb);
+        queue_push(cola_a_liberar,pcb);
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: SUCESS", pcb->pid);
         break;
     
     case PROCESS_ERROR:
-
         pcb->estado = EXIT;
-        queue_push(cola_finalizados,pcb);
+        queue_push(cola_a_liberar,pcb);
         uint32_t len_motivo;
         char* motivo_error = buffer_read_string(paquete->buffer,&len_motivo);
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: %s", pcb->pid,motivo_error);
@@ -122,13 +127,15 @@ void recibir_contexto_exec(t_pcb* pcb){
         break;
 
     case INTERRUPCION:
-
         pcb->estado = EXIT;
-        queue_push(cola_finalizados,pcb);
+        queue_push(cola_a_liberar,pcb);
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER");
         break;
 
     case BLOQUEO:
+        if(strcmp(configuracion.ALGORITMO_PLANIFICACION,"VRR") == 0){
+            pcb->quantum -= quantum_usado;
+        }
         uint32_t len;
         char* interfaz = buffer_read_string(paquete->buffer,&len);
         char* recurso= buffer_read_string(paquete->buffer,&len);

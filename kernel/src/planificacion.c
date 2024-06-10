@@ -12,7 +12,8 @@ t_queue *bloqueado;
 t_queue *suspendido_bloqueado;
 t_queue *suspendido_listo; 
 //ver si puede ser lista 
-t_queue *cola_finalizados;
+t_queue *cola_a_liberar;
+t_temporal* temp_quantum;
 //t_list *lista_ejecutando;
 //es necesario el lista ejecutando?? 
 
@@ -23,35 +24,55 @@ void iniciar_semaforos_planificacion(){
     sem_init(&proceso_ejecutando, 0, 1);
 }
 
-void iniciar_colas()
-{
+void iniciar_colas(){
     cola_new = queue_create(); // cambio
     cola_ready = queue_create();
     cola_prioritaria_VRR = queue_create();
     bloqueado = queue_create();
     suspendido_bloqueado = queue_create();
     suspendido_listo = queue_create();
-    cola_finalizados = queue_create();
+    cola_a_liberar = queue_create();
     //lista_ejecutando = list_create();
 }
 
-/*
-void planificar_a_corto_plazo(t_pcb *(*proximoAEjecutar)()){
-    while(1){
-        //sem_wait(&hayProcesosReady);
-        t_pcb *aEjecutar = proximoAEjecutar();
-        aEjecutar->estado = EXEC;
+void liberar_procesos(){
 
-
-
+    for(int i = 0; i<queue_size(cola_a_liberar); i++){
+        t_pcb* pcb_a_liberar = queue_pop(cola_a_liberar);
+        liberar_pcb(pcb_a_liberar);
+        sem_post(&sem_grado_multiprogramacion);
     }
+    
 }
-*/
+
+void liberar_pcb(t_pcb* pcb){
+    t_paquete* paquete = crear_paquete(LIBERAR_PROCESO,sizeof(uint32_t));
+    buffer_add_uint32(paquete->buffer,pcb->pid);
+    enviar_paquete(paquete,sockets.socket_memoria);
+    
+    eliminar_pcb(string_itoa(pcb->pid));
+}
+
+void crear_proceso(t_pcb* pcb){
+    uint32_t tam_string = string_length(pcb->pathOperaciones);
+    t_paquete* paquete = crear_paquete(INICIAR_PROCESO,sizeof(uin32_t)*2+tam_string);
+    buffer_add_uint32(paquete->buffer,pcb->pid);
+    buffer_add_string(paquete->buffer,tam_string,pcb->pathOperaciones);
+}
 
 void planificar_a_largo_plazo(){
+    while(1){
+        sem_wait(&sem_grado_multiprogramacion);
+        t_pcb* proceso_para_ready = queue_pop(cola_new);
+        queue_push(cola_ready, proceso_para_ready);
+        crear_proceso(proceso_para_ready);
+
+        if(!queue_is_empty(cola_a_liberar)){
+        liberar_procesos();
+        }
+    }
 
 }
-
 
 //Es capaz de crear un PCB y planificarlo por FIFO y RR.
 void planificar_a_corto_plazo_segun_algoritmo(){
@@ -63,13 +84,13 @@ void planificar_a_corto_plazo_segun_algoritmo(){
         ejecutar_FIFO(a_ejecutar);
         }
 
-    else if (strcmp(algoritmo_planificador,"RR")){
+    else if (strcmp(algoritmo_planificador, "RR")){
 
         t_pcb* a_ejecutar = proximo_ejecutar_RR();
         ejecutar_RR(a_ejecutar);
         }
 
-    else if (strcmp(algoritmo_planificador,"VRR")){
+    else if (strcmp(algoritmo_planificador, "VRR")){
 
         }
     }
@@ -112,7 +133,24 @@ void ejecutar_RR(t_pcb *a_ejecutar){
     a_ejecutar->ticket++;
     //creo y envio el contexto de ejecucion
     crear_paquete_contexto_exec(a_ejecutar);
-    pthread_create(&temporizador_quantum,NULL,(void*)esperar_interrupcion_quantum,a_ejecutar);
+    pthread_create(&temporizador_quantum, NULL, (void*)esperar_interrupcion_quantum, a_ejecutar);
+    recibir_contexto_exec(a_ejecutar);
+    pthread_detach(temporizador_quantum);
+    //falta terminar
+    
+
+}
+
+void ejecutar_VRR(t_pcb *a_ejecutar){
+
+    sem_wait(&proceso_ejecutando);
+    a_ejecutar->estado = EXEC;
+    log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
+    a_ejecutar->ticket++;
+    //creo y envio el contexto de ejecucion
+    crear_paquete_contexto_exec(a_ejecutar);
+    temp_quantum = temporal_create();
+    pthread_create(&temporizador_quantum, NULL, (void*)esperar_interrupcion_quantum, a_ejecutar);
     recibir_contexto_exec(a_ejecutar);
     pthread_detach(temporizador_quantum);
     //falta terminar
@@ -126,8 +164,9 @@ void esperar_interrupcion_quantum(t_pcb *a_ejecutar){
     if(ticket_referencia == a_ejecutar->ticket && a_ejecutar->estado == EXEC){
         void* a_enviar = malloc(sizeof(op_code));
         op_code cod = DESALOJO_QUANTUM;
+        a_ejecutar->quantum = configuracion.QUANTUM;
         memcpy(a_enviar,&(cod),sizeof(op_code));
-        send(sockets.socket_CPU_I,a_enviar,sizeof(op_code),0);
+        send(sockets.socket_CPU_I, a_enviar, sizeof(op_code), 0);
         free (a_enviar);
     }
 
