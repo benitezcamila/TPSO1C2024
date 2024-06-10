@@ -22,7 +22,7 @@ registros_CPU* crear_registros(){
     return registros;
 }
 
-t_pcb* crear_pcb(){
+t_pcb* crear_pcb(char* path){
     t_pcb* pcb_creado = malloc(sizeof(t_pcb));
 
     pcb_creado->pid = siguiente_PID();
@@ -30,6 +30,8 @@ t_pcb* crear_pcb(){
     pcb_creado->registros = crear_registros();
     pcb_creado->estado = NEW;
     pcb_creado->ticket = 0;
+    pcb_creado->pathOperaciones = malloc(string_length(path));
+    strcpy(pcb_creado->pathOperaciones,path);
 
     dictionary_put(dicc_pcb,string_itoa(pcb_creado->pid),pcb_creado);
 
@@ -46,6 +48,7 @@ int siguiente_PID(){
 void eliminar_pcb(char* pid){
     t_pcb* pcb = dictionary_remove(dicc_pcb,pid);
     free(pcb->registros);
+    free(pcb->pathOperaciones);
     free(pcb);
 }
 
@@ -63,8 +66,10 @@ void crear_paquete_pcb(t_pcb* pcb) {
     buffer_add_uint32(paquete->buffer,sizeof(pcb->registros));
     buffer_add(paquete->buffer,pcb->registros,sizeof(pcb->registros));
     buffer_add_uint32(paquete->buffer,pcb->estado);
+    buffer_add_uint32(paquete->buffer,pcb->ticket);
+    buffer_add_string(paquete->buffer,string_length(pcb->pathOperaciones),pcb->pathOperaciones);
 
-    send(sockets.socket_CPU_D, paquete->buffer->stream, paquete->buffer->size + sizeof(uint32_t)*2, 0);
+    send(sockets.socket_CPU_D, paquete->buffer->stream, paquete->buffer->size + sizeof(uint32_t)*3 + string_length(pcb->pathOperaciones), 0);
     
     free(paquete->buffer->stream);
     free(paquete->buffer);

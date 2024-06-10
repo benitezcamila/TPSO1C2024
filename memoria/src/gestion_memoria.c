@@ -1,4 +1,4 @@
-#include <gestion_memoria.h>
+#include "gestion_memoria.h"
 #include <math.h>
 
 void crearTablaPagina(int pid){

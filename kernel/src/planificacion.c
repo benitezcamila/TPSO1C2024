@@ -40,7 +40,7 @@ void liberar_procesos(){
     for(int i = 0; i<queue_size(cola_a_liberar); i++){
         t_pcb* pcb_a_liberar = queue_pop(cola_a_liberar);
         liberar_pcb(pcb_a_liberar);
-        sem_post(sem_grado_multiprogramacion);
+        sem_post(&sem_grado_multiprogramacion);
     }
     
 }
@@ -53,11 +53,19 @@ void liberar_pcb(t_pcb* pcb){
     eliminar_pcb(string_itoa(pcb->pid));
 }
 
+void crear_proceso(t_pcb* pcb){
+    uint32_t tam_string = string_length(pcb->pathOperaciones);
+    t_paquete* paquete = crear_paquete(INICIAR_PROCESO,sizeof(uin32_t)*2+tam_string);
+    buffer_add_uint32(paquete->buffer,pcb->pid);
+    buffer_add_string(paquete->buffer,tam_string,pcb->pathOperaciones);
+}
+
 void planificar_a_largo_plazo(){
     while(1){
-        sem_wait(sem_grado_multiprogramacion);
+        sem_wait(&sem_grado_multiprogramacion);
         t_pcb* proceso_para_ready = queue_pop(cola_new);
         queue_push(cola_ready, proceso_para_ready);
+        crear_proceso(proceso_para_ready);
 
         if(!queue_is_empty(cola_a_liberar)){
         liberar_procesos();
@@ -65,7 +73,6 @@ void planificar_a_largo_plazo(){
     }
 
 }
-
 
 //Es capaz de crear un PCB y planificarlo por FIFO y RR.
 void planificar_a_corto_plazo_segun_algoritmo(){

@@ -158,7 +158,7 @@ int enviar_hanshake(int socket,char* nom_cliente){
 	return bytes;
 }
 
-t_buffer* recibir_todo_elbuffer(int socket_conexion ){
+t_buffer* recibir_todo_el_buffer(int socket_conexion ){
 	uint32_t size;
 	if(recv(socket_conexion, &size, sizeof(uint32_t), MSG_WAITALL)> 0){
 		t_buffer* buffer = buffer_create(size);

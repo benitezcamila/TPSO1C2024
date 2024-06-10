@@ -25,6 +25,7 @@ extern t_temporal* temp_quantum;
 void iniciar_colas();
 void liberar_procesos();
 void liberar_pcb(t_pcb*);
+void crear_proceso(t_pcb*);
 void planificar_a_largo_plazo();
 void planificar_a_corto_plazo_segun_algoritmo();
 t_pcb* proximo_ejecutar_FIFO();
