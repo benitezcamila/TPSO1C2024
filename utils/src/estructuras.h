@@ -43,6 +43,7 @@ typedef enum {
 typedef enum{
     DESALOJOQUANTUM
 } tipo_de_interrupcion;
+
 typedef struct {
     uint32_t PC; // Program Counter
     uint8_t AX, BX, CX, DX; // Registros de 1 byte
