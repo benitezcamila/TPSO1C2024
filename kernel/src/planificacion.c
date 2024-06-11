@@ -12,7 +12,6 @@ t_queue *bloqueado;
 t_queue *suspendido_bloqueado;
 t_queue *suspendido_listo; 
 //ver si puede ser lista 
-t_queue *cola_a_liberar;
 t_temporal* temp_quantum;
 
 //t_list *lista_ejecutando;
@@ -54,11 +53,14 @@ void liberar_pcb(t_pcb* pcb){
     eliminar_pcb(string_itoa(pcb->pid));
 }
 
-void crear_proceso(t_pcb* pcb){
+void crear_proceso(char* path){
+    t_pcb* a_crear = crear_pcb(path);
+    queue_push(cola_new,a_crear);
     uint32_t tam_string = string_length(pcb->pathOperaciones);
     t_paquete* paquete = crear_paquete(INICIAR_PROCESO,sizeof(uint32_t)*2+tam_string);
     buffer_add_uint32(paquete->buffer,pcb->pid);
     buffer_add_string(paquete->buffer,tam_string,pcb->pathOperaciones);
+    enviar_paquete(paquete,sockets.socket_memoria);
 }
 
 void planificar_a_largo_plazo(){
@@ -66,11 +68,6 @@ void planificar_a_largo_plazo(){
         sem_wait(&sem_grado_multiprogramacion);
         t_pcb* proceso_para_ready = queue_pop(cola_new);
         queue_push(cola_ready, proceso_para_ready);
-        crear_proceso(proceso_para_ready);
-
-        if(!queue_is_empty(cola_a_liberar)){
-        liberar_procesos();
-        }
     }
 
 }

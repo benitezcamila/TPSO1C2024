@@ -135,13 +135,13 @@ void recibir_contexto_exec(t_pcb* pcb){
     {
     case PROCESS_EXIT:
         pcb->estado = EXIT;
-        queue_push(cola_a_liberar,pcb);
+        //falta logica de elminiar proceso
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: SUCESS", pcb->pid);
         break;
     
     case PROCESS_ERROR:
         pcb->estado = EXIT;
-        queue_push(cola_a_liberar,pcb);
+        //falta logica de elminiar proceso
         uint32_t len_motivo;
         char* motivo_error = buffer_read_string(buffer,&len_motivo);
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: %s", pcb->pid,motivo_error);
@@ -150,7 +150,7 @@ void recibir_contexto_exec(t_pcb* pcb){
 
     case INTERRUPCION:
         pcb->estado = EXIT;
-        queue_push(cola_a_liberar,pcb);
+        //falta logica de elminiar proceso
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER");
         break;
 

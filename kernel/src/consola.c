@@ -59,9 +59,9 @@ void ejecutar_script(const char *path) {
     fclose(file);
 }
 
-void iniciar_proceso(const char *path) {
+void iniciar_proceso(char *path) {
     printf("Iniciando proceso con archivo: %s\n", path);
-    // Add your process initialization logic here
+    crear_proceso(path);
 }
 
 void finalizar_proceso(int pid) {

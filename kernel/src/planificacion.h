@@ -19,7 +19,6 @@ extern t_queue *cola_prioritaria_VRR;
 extern t_queue *bloqueado;
 extern t_queue *suspendido_bloqueado;
 extern t_queue *suspendido_listo; 
-extern t_queue *cola_a_liberar;
 extern t_temporal* temp_quantum;
 
 void iniciar_colas();
