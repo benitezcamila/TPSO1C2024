@@ -13,7 +13,7 @@
 #include <commons/collections/dictionary.h>
 
 
- typedef 
+ typedef struct
  {
     int numero_marco;
     int pid_pagina;

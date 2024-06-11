@@ -21,10 +21,11 @@ void crear_colas_bloqueo(){
 
 void gestionar_recurso(str_recursos* recurso){
     while(1){
-        if(!queue_is_empty(recurso->cola)){
+        sem_wait(&(recurso->recurso_solicitado));
         sem_wait(&(recurso->cantidad_recursos));
-
-        }
+        t_pcb* pcb = queue_pop(recurso->cola);
+        list_add(recurso->procesos_okupas,&pcb->pid);
+        queue_push(cola_ready,pcb);
     }
 }
 

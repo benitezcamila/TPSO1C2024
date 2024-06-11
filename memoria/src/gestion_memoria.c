@@ -103,7 +103,7 @@ void* leer_espacio_usuario(uint32_t pid,uint32_t direc_fisica, uint32_t tamanio)
         offSet = 0;
         i++;
         pag_a_leer = list_get(tabla,pag_a_leer+i);
-        direc_fisica = pag_a_leer->nro_marco * configuracion.TAM_PAGINA;
+        direc_fisica = pag_a_leer->numero_marco * configuracion.TAM_PAGINA;
         tam_a_leer = min(tamanio, (pag_a_leer->tamanio));
         valor =+ leer_memoria (direc_fisica, tam_a_leer);
         

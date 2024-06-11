@@ -8,11 +8,13 @@
 typedef struct{
     t_queue* cola;
     sem_t cantidad_recursos;
+    sem_t recurso_solicitado;
+    t_list* procesos_okupas;
 }str_recursos;
 
 extern int cantidad_recursos;
 extern t_dictionary* recursos;
 
-void crear_colas_bloqueo()
+void crear_colas_bloqueo();
 void gestionar_recurso(str_recursos*);
 #endif
