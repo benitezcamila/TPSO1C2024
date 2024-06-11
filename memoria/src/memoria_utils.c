@@ -116,7 +116,7 @@ void procesar_conexion(void* void_args) {
         case ACCESO_TABLA_PAGINAS:
             buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
             a_enviar = buscar_marco_pagina (buffer_de_cpu);
-            
+            enviar_paquete((t_paquete*) a_enviar, sockets.socket_cliente_CPU);
 
         default:
             break;
