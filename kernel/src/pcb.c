@@ -46,8 +46,24 @@ int siguiente_PID(){
     return current_pid;
 }
 
+void liberar_recursos(t_pcb* pcb){
+    t_list* lista_keys = dictionary_keys(recursos);
+    for(int i = 0, j = list_size(lista_keys); i < j;i++){
+        str_recursos* recurso = dictionary_get(recursos,list_get(lista_keys,i));
+        while(list_remove_element(recurso->cola->elements,pcb)){
+
+        }
+        while(list_remove_element(recurso->procesos_okupas,&pcb->pid)){
+            sem_post(&(recurso->cantidad_recursos));
+        }
+        
+    }
+    list_destroy(lista_keys);
+}
+
 void eliminar_pcb(char* pid){
     t_pcb* pcb = dictionary_remove(dicc_pcb,pid);
+    liberar_recursos(pcb);
     free(pcb->registros);
     free(pcb->pathOperaciones);
     free(pcb);
@@ -150,7 +166,6 @@ void recibir_contexto_exec(t_pcb* pcb){
         pcb->estado = BLOCKED;
         str_recursos* str_rec = dictionary_get(recursos,recurso);
         queue_push(str_rec->cola,pcb);
-        gestionar_recurso(str_rec);
         free(recurso);
         break;
     }
@@ -166,6 +181,7 @@ void recibir_contexto_exec(t_pcb* pcb){
         uint32_t len = 0;
         char* recurso = buffer_read_string(buffer,&len);
         str_recursos* str_rec = dictionary_get(recursos,recurso);
+        list_remove_element(str_rec->procesos_okupas,&pcb->pid);
         sem_post(&str_rec->cantidad_recursos);
         break;
     }

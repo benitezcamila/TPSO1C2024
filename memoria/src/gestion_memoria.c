@@ -113,6 +113,7 @@ bool existe_ese_marco(t_pagina* pagina){
         direc_fisica = pag_a_leer->numero_marco * configuracion.TAM_PAGINA;
         tam_a_leer = min(tamanio, (pag_a_leer->tam_disponible));
         valor = leer_memoria (direc_fisica, tam_a_leer);
+
         
     }else no_termino_de_leer = false;
     }
