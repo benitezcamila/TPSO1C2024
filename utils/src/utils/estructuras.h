@@ -29,7 +29,10 @@ typedef enum {
     access_ESPACIO_USUARIO_ES, 
     access_ESPACIO_USUARIO_CPU,
     FINALIZAR_PROCESO,
-    AJUSTAR_TAMANIO
+    AJUSTAR_TAMANIO, 
+    RESPUESTA_LECTURA_MEMORIA,
+    ACCESO_TABLA_PAGINAS, 
+    MARCO_BUSCADO
 } op_code;
 
 typedef enum {

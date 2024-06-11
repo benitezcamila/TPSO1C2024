@@ -7,14 +7,14 @@ t_list* listaDeProcesos;
 void inicializar_memoria(){
     sockets.socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
     log_info(logger_conexiones, "Memoria esta escuchando");
-    void* espacioUsuario = malloc(sizeof(configuracion.TAM_MEMORIA));
+    espacio_usuario = malloc(sizeof(configuracion.TAM_MEMORIA));
     
     cantFrames = configuracion.TAM_MEMORIA/ configuracion.TAM_PAGINA;
     
   
 
     memset(bitMap, 0 , sizeof(int) * cantFrames);
-    tabla_global = t_dictionary_create();
+    tabla_global = dictionary_create();
 
 } 
 
@@ -67,7 +67,7 @@ void procesar_conexion(void* void_args) {
     int cliente_socket = args->fd;
     char* nombre_cliente = args->cliente_name;
     free(args);
-
+    void* a_enviar;//espacio_usuario
      op_code cop;
     while (cliente_socket != -1) {
 
@@ -102,12 +102,21 @@ void procesar_conexion(void* void_args) {
             break;
         case access_ESPACIO_USUARIO_ES:
             t_buffer* buffer_ENTRADA_SALIDA = recibir_todo_elbuffer(sockets.socket_cliente_E_S);
-            access_espacio_usuario(buffer_ENTRADA_SALIDA);
+            a_enviar = access_espacio_usuario(buffer_ENTRADA_SALIDA);
+            if(a_enviar == NULL) enviar_hanshake(sockets.socket_cliente_E_S,"ok!");//lectura
+            enviar_paquete((t_paquete*)a_enviar, sockets.socket_cliente_E_S); //escritura
             break;
         case access_ESPACIO_USUARIO_CPU:
             buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
-            access_espacio_usuario(buffer_ENTRADA_SALIDA);
+            a_enviar = access_espacio_usuario(buffer_ENTRADA_SALIDA);
+            if(a_enviar == NULL) enviar_hanshake(sockets.socket_cliente_CPU,"ok!");//escritura
+            enviar_paquete((t_paquete*)a_enviar, sockets.socket_cliente_CPU);//lectura
         break;
+
+        case ACCESO_TABLA_PAGINAS:
+            buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
+            a_enviar = buscar_marco_pagina (buffer_de_cpu);
+            
 
         default:
             break;

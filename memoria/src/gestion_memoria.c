@@ -1,13 +1,13 @@
 #include "gestion_memoria.h"
 #include <math.h>
+#define min(a,b) (a<b?a:b)
 
-t_dictionary* tabla_global;
 
 void crearTablaPagina(int pid){
     tabla_pagina* tabPagina = malloc(sizeof(tabla_pagina));
     tabPagina->pid = pid;
     tabPagina->paginas = list_create();    
-    dictionary_put(tabla_global,string_itoa(pid), tab->tabla_pagina);
+    dictionary_put(tabla_global,string_itoa(pid), tabPagina);
 }
 
 void ajustar_tam_proceso(t_buffer* buffer_cpu){
@@ -29,7 +29,7 @@ void ajustar_tam_proceso(t_buffer* buffer_cpu){
 
     if(list_size (paginas_del_proceso->paginas) < cantFrames) ampliacion_del_proceso(paginas_del_proceso, cant_frames_requeridos); 
 
-    list_add(tabla_global , paginas_del_proceso );
+    dictionary_put(tabla_global, string_itoa(pid), paginas_del_proceso);
     free(paginas_del_proceso);
 
 }
@@ -72,45 +72,54 @@ int marcoDisponible(){
     exit(EXIT_FAILURE) ;// out of memory 
     }
 
-void access_espacio_usuario(t_buffer* buffer) {
+void* access_espacio_usuario(t_buffer* buffer) {
     uint32_t pid = buffer_read_uint32(buffer);
     uint32_t accion = buffer_read_uint8(buffer); // 1 escribir, 0 leer -> a lo clock 2.0
     uint32_t direc_fisica = buffer_read_uint32(buffer);
     uint32_t tamananio = buffer_read_uint32 (buffer); // tamanio a leer/escribir
 
-    if(accion == 0 ) leer_espacio_usuario(pid, direc_fisica, tamananio);
-    if(accion == 1) escribir_espacio_usuario(pid, direc_fisica, tamananio);
-
+    if(accion == 0 ) return leer_espacio_usuario(pid, direc_fisica, tamananio);
+    if(accion == 1)return  escribir_espacio_usuario(pid, direc_fisica, tamananio, buffer);
+exit(EXIT_FAILURE);
 }   
 
-void* leer_espacio_usuario(uint32_t pid,uint32_t direc_fisica, uint32_t tamanio){
+t_paquete* leer_espacio_usuario(uint32_t pid,uint32_t direc_fisica, uint32_t tamanio){
     void* valor = malloc(tamanio);
-    int nro_marco = floor((direc_fisica+espacioUsuario)/ configuracion.TAM_PAGINA);
-    int offSet = (direc_fisica+espacioUsuario) % configuracion.TAM_PAGINA;
+    int nro_marco = floor((direc_fisica) / configuracion.TAM_PAGINA);
+    int offSet = (direc_fisica) % configuracion.TAM_PAGINA;
     
     tabla_pagina* tabla = dictionary_get(tabla_global, string_itoa(pid));
-    bool existe_ese_marco(t_pagina* pagina){
-        return pagina->nro_marco == nro_marco;
-    }
-    t_pagina* pag_a_leer = list_find(tabla, (void*) existe_ese_marco);
+    t_paquete* info_a_enviar = crear_paquete(RESPUESTA_LECTURA_MEMORIA, tamanio + 2 * sizeof(int));
+    buffer_add_uint32(info_a_enviar->buffer, tamanio);
+bool existe_ese_marco(t_pagina* pagina){
+        return pagina->numero_marco == nro_marco;
+}
+
+    t_pagina* pag_a_leer = list_find(tabla->paginas, (void*) existe_ese_marco);
     bool no_termino_de_leer = true;
-    int tam_a_leer = min(tamanio, (pag_a_leer->tamanio-offSet));
-    leer_memoria (direc_fisica, tam_a_leer);
+    int tam_a_leer = min(tamanio, (pag_a_leer->tam_disponible - offSet));
+    
+    if(tam_a_leer <0 ) exit(EXIT_FAILURE);
+
+    valor = leer_memoria (direc_fisica, tam_a_leer);
+    buffer_add(info_a_enviar->buffer, valor, tam_a_leer);
     while(no_termino_de_leer){
     int i =0;
     if(configuracion.TAM_MEMORIA - offSet >tamanio ){
        
         offSet = 0;
         i++;
-        pag_a_leer = list_get(tabla,pag_a_leer+i);
-        direc_fisica = pag_a_leer->nro_marco * configuracion.TAM_PAGINA;
-        tam_a_leer = min(tamanio, (pag_a_leer->tamanio));
-        valor =+ leer_memoria (direc_fisica, tam_a_leer);
+        pag_a_leer = list_get(tabla->paginas,pag_a_leer->pid_pagina+i);
+        direc_fisica = pag_a_leer->numero_marco * configuracion.TAM_PAGINA;
+        tam_a_leer = min(tamanio, (pag_a_leer->tam_disponible));
+        valor = leer_memoria (direc_fisica, tam_a_leer);
         
-    }else no_termino_de_leer = true;
+    }else no_termino_de_leer = false;
     }
-    return valor;
+    buffer_add(info_a_enviar->buffer, valor, tam_a_leer);
+    return info_a_enviar;
 }
+
 void* leer_memoria(uint32_t dir_fisica, uint32_t tamanio){
 	void* valor_leido = malloc(tamanio);
     memcpy(valor_leido, espacio_usuario + dir_fisica, tamanio);
@@ -118,3 +127,68 @@ void* leer_memoria(uint32_t dir_fisica, uint32_t tamanio){
 
 }
 
+void* escribir_espacio_usuario(uint32_t pid,uint32_t direc_fisica,uint32_t tamanio,t_buffer* buffer){
+    void* data_a_escribir = malloc(tamanio);
+    buffer_read(buffer, data_a_escribir, tamanio); 
+
+    int nro_marco = floor((direc_fisica) / configuracion.TAM_PAGINA);
+    int offSet = (direc_fisica) % configuracion.TAM_PAGINA;
+    
+    tabla_pagina* tabla = dictionary_get(tabla_global, string_itoa(pid));
+    
+    bool existe_ese_marco(t_pagina* pagina){
+        return pagina->numero_marco == nro_marco;
+    }
+    
+    t_pagina* pag_a_leer = list_find(tabla->paginas, (void*) existe_ese_marco);    
+
+    if(hay_lugar_contiguo(tabla->paginas, pag_a_leer, offSet,tamanio)){
+        
+        escribir_memoria(tabla->paginas,pag_a_leer,offSet,tamanio, data_a_escribir);
+        return NULL;
+    }
+    exit(EXIT_FAILURE);
+}
+
+
+bool hay_lugar_contiguo(t_list* tabla,t_pagina* pag_a_leer,uint32_t offSet,uint32_t tamanio){
+    int paginas_a_escribir_extras = (tamanio - offSet) / configuracion.TAM_MEMORIA;
+    int indice_pagina = 0;
+    while(paginas_a_escribir_extras >= 0){
+        indice_pagina++;
+        t_pagina* pagina = list_get(tabla, pag_a_leer->pid_pagina+ indice_pagina );
+        if(pagina->escrita)return false;
+    }
+return true;
+}
+
+
+
+void escribir_memoria(t_list* paginas , t_pagina* pag_a_leer,uint32_t offSet,uint32_t tamanio, void* data_a_escribir){
+   int index_pagina = 0;
+   while(tamanio > 0 ){
+    int tam_a_escribir = pag_a_leer->tam_disponible- offSet;
+    memcpy(espacio_usuario+ offSet+ pag_a_leer->numero_marco* configuracion.TAM_MEMORIA, data_a_escribir, tam_a_escribir);
+    pag_a_leer->escrita = true;
+    
+    pag_a_leer->tam_disponible = min(0, pag_a_leer->tam_disponible - tamanio);
+    tamanio -= tam_a_escribir; 
+    offSet =0;
+    index_pagina++;
+    pag_a_leer = list_get(paginas, pag_a_leer->pid_pagina +index_pagina);
+   } 
+}
+
+
+t_paquete* buscar_marco_pagina (t_buffer* buffer_de_cpu){
+    t_paquete* a_enviar = crear_paquete(MARCO_BUSCADO, sizeof(uint32_t)  );//op_code y numero marco
+    uint32_t pid = buffer_read_uint32(buffer_de_cpu);
+    uint32_t numero_pagina = buffer_read_uint32(buffer_de_cpu);
+
+    tabla_pagina* tabla = dictionary_get(tabla_global, string_itoa(pid));
+    
+    t_pagina* pagina = list_get(tabla->paginas, numero_pagina-1);
+    buffer_add_uint32(a_enviar->buffer, pagina->numero_marco);
+
+    return a_enviar;
+}
