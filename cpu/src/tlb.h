@@ -15,7 +15,7 @@ typedef struct {
 
 // Estructura de la TLB
 typedef struct {
-    Entrada_TLB* entradas;
+    t_entrada_TLB* entradas;
     int capacidad;
     int count;
     int tiempo_actual; // Para llevar el tiempo en FIFO
@@ -28,9 +28,9 @@ typedef struct {
     uint32_t tamano; // Tamaño de la tabla de páginas (cantidad de páginas)
 } t_tabla_paginas;
 
-int buscar_en_TLB(TLB* tlb, uint32_t pid, uint32_t pagina);
-void agregar_entrada_TLB(TLB* tlb, uint32_t pid, uint32_t pagina, uint32_t marco);
-void reemplazo_FIFO(TLB* tlb, EntradaTLB nueva_entrada);
-void reemplazo_LRU(TLB* tlb, EntradaTLB nueva_entrada);
+int buscar_en_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina);
+void agregar_entrada_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina, uint32_t marco);
+void reemplazo_FIFO(t_TLB* tlb, t_entrada_TLB nueva_entrada);
+void reemplazo_LRU(t_TLB* tlb, t_entrada_TLB nueva_entrada);
 
 #endif

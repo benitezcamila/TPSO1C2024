@@ -104,8 +104,11 @@ void recibir_contexto_ejecucion(){
         recv(sockets.socket_server_D, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
         paquete->buffer->stream = malloc(paquete->buffer->size);
 
+        recv(sockets.socket_server_D, paquete->buffer->stream, sizeof(uint32_t), MSG_WAITALL);
+        buffer_read_uint32(paquete->buffer, &PID);
+
         recv(sockets.socket_CPU_D, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
-        buffer_read(paquete->buffer, contextoRegistros, sizeof(registros_CPU));
+        buffer_read(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     }
     else{
         //Loggear error?
@@ -114,7 +117,7 @@ void recibir_contexto_ejecucion(){
 
 void solicitar_instruccion_a_memoria(){
     t_paquete* paquete = crear_paquete(SOLICITUD_INSTRUCCION, sizeof(uint32_t));
-    buffer_add_uint32(paquete->buffer, contextoRegistros->PC);
+    buffer_add_uint32(paquete->buffer, contexto_registros->PC);
 
     enviar_paquete(paquete, sockets.socket_memoria);
 }
@@ -137,6 +140,8 @@ void recibir_instruccion_de_memoria(){
     }
 }
 
+void 
+
 //NO SÉ SI ESTÁ BIEN. CHECKEAR.
 void recibir_interrupcion_de_kernel(){
     recv(sockets.socket_server_I, &(motivo_interrupcion), sizeof(tipo_de_interrupcion), MSG_WAITALL);
@@ -147,7 +152,7 @@ void enviar_contexto_a_kernel(motivo_desalojo motivo){
     ind_contexto_kernel = 0;
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(registros_CPU) + sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
-    buffer_add(paquete->buffer, contextoRegistros, sizeof(registros_CPU));
+    buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
 
     enviar_paquete(paquete, sockets.socket_server_D);
 }
