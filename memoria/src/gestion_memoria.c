@@ -8,6 +8,7 @@ void crearTablaPagina(int pid){
     tabPagina->pid = pid;
     tabPagina->paginas = list_create();    
     dictionary_put(tabla_global,string_itoa(pid), tabPagina);
+    log_info(logger_memoria, "PID %d -  tamanio %d", tabPagina->pid, list_size(tabPagina->paginas));
 }
 
 void ajustar_tam_proceso(t_buffer* buffer_cpu){
@@ -15,20 +16,28 @@ void ajustar_tam_proceso(t_buffer* buffer_cpu){
     uint32_t tam_bytes = buffer_read_uint32(buffer_cpu);
     int cant_frames_requeridos = floor(tam_bytes / configuracion.TAM_PAGINA) + 1;
 
-
+    
     tabla_pagina* paginas_del_proceso = dictionary_get(tabla_global, string_itoa(pid));
 
-    if(list_size(paginas_del_proceso->paginas) == 0 ) {
+    int tam_actual = list_size( paginas_del_proceso->paginas);
+    if(tam_actual == 0 ) {
         asignar_id_pagina(paginas_del_proceso);
         cantFrames--;
+        tam_actual= 0;// para el log de ampliar
     }
 
-    if(list_size (paginas_del_proceso->paginas) > cantFrames) reduccion_del_proceso(paginas_del_proceso, cant_frames_requeridos); 
+    if(tam_actual > cantFrames) {
+        log_info(logger_memoria, "PID %d - tamanio actual %d - tamanio a reducir %d",pid, tam_actual, cantFrames );
+        reduccion_del_proceso(paginas_del_proceso, cant_frames_requeridos); 
+    }
 
 
+    if(tam_actual <= cantFrames) {
 
-    if(list_size (paginas_del_proceso->paginas) < cantFrames) ampliacion_del_proceso(paginas_del_proceso, cant_frames_requeridos); 
+        log_info(logger_memoria, "PID %d - tamanio actual %d - tamanio a ampliar %d",pid, tam_actual, cantFrames );
 
+        ampliacion_del_proceso(paginas_del_proceso, cant_frames_requeridos); 
+    }
     dictionary_put(tabla_global, string_itoa(pid), paginas_del_proceso);
     free(paginas_del_proceso);
 
@@ -76,11 +85,20 @@ void* access_espacio_usuario(t_buffer* buffer) {
     uint32_t pid = buffer_read_uint32(buffer);
     uint32_t accion = buffer_read_uint8(buffer); // 1 escribir, 0 leer -> a lo clock 2.0
     uint32_t direc_fisica = buffer_read_uint32(buffer);
-    uint32_t tamananio = buffer_read_uint32 (buffer); // tamanio a leer/escribir
+    uint32_t tamanio = buffer_read_uint32 (buffer); // tamanio a leer/escribir
 
-    if(accion == 0 ) return leer_espacio_usuario(pid, direc_fisica, tamananio);
-    if(accion == 1)return  escribir_espacio_usuario(pid, direc_fisica, tamananio, buffer);
-exit(EXIT_FAILURE);
+    if(accion == 0 ){ 
+    log_info(logger_memoria, "PID %d - accion leer - direc_fisica %d - tamanio %d ",pid, direc_fisica, tamanio );
+    return leer_espacio_usuario(pid, direc_fisica, tamanio);
+
+    
+    }
+    if(accion == 1){
+    log_info(logger_memoria, "PID %d - accion leer - direc_fisica %d - tamanio %d ",pid, direc_fisica, tamanio );  
+    return  escribir_espacio_usuario(pid, direc_fisica, tamanio, buffer);
+
+    }
+    exit(EXIT_FAILURE);
 }   
 
 t_paquete* leer_espacio_usuario(uint32_t pid,uint32_t direc_fisica, uint32_t tamanio){
@@ -189,6 +207,23 @@ t_paquete* buscar_marco_pagina (t_buffer* buffer_de_cpu){
     
     t_pagina* pagina = list_get(tabla->paginas, numero_pagina-1);
     buffer_add_uint32(a_enviar->buffer, pagina->numero_marco);
+    log_info(logger_memoria, "PID %d - Pagina %d - Marco %d", pid , numero_pagina, pagina->numero_marco);
 
     return a_enviar;
+}
+
+
+void finalizar_proceso(t_buffer* buffer_kernel){
+    
+    uint32_t pid = buffer_read_uint32(buffer_kernel);
+    
+    tabla_pagina* paginas_del_proceso = dictionary_get(tabla_global, string_itoa(pid));
+    uint32_t tam_tab_pagina = list_size(paginas_del_proceso->paginas);
+
+    reduccion_del_proceso(paginas_del_proceso, 0); // marco bits en 0 y saco paginas de la lista
+
+    dictionary_remove(tabla_global, string_itoa(pid));// saco del proceso.
+
+    log_info(logger_memoria, "PID %d -  tamanio %d", pid, tam_tab_pagina);
+
 }
