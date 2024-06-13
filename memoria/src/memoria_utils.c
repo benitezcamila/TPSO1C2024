@@ -99,14 +99,16 @@ void procesar_conexion(void* void_args) {
 
         case FINALIZAR_PROCESO:
              buffer_de_kernel = recibir_todo_elbuffer(sockets.socket_cliente_kernel);
+             finalizar_proceso(buffer_de_kernel);
+             log_info(logger_memoria, "Finalizo el proceso");
             break;
-        case access_ESPACIO_USUARIO_ES:
+        case ACCESS_ESPACIO_USUARIO_ES:
             t_buffer* buffer_ENTRADA_SALIDA = recibir_todo_elbuffer(sockets.socket_cliente_E_S);
             a_enviar = access_espacio_usuario(buffer_ENTRADA_SALIDA);
             if(a_enviar == NULL) enviar_hanshake(sockets.socket_cliente_E_S,"ok!");//lectura
             enviar_paquete((t_paquete*)a_enviar, sockets.socket_cliente_E_S); //escritura
             break;
-        case access_ESPACIO_USUARIO_CPU:
+        case ACCESS_ESPACIO_USUARIO_CPU:
             buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
             a_enviar = access_espacio_usuario(buffer_ENTRADA_SALIDA);
             if(a_enviar == NULL) enviar_hanshake(sockets.socket_cliente_CPU,"ok!");//escritura
