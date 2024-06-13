@@ -21,8 +21,9 @@ void ciclo_de_instruccion(){
 }
 
 void fetch_instruction(){
+    log_info(logger_cpu, "PID: %d - FETCH - Program Counter: %d", PID, contexto_registros->PC);
     solicitar_instruccion_a_memoria();
-    contexto_registros.PC += 1;
+    contexto_registros->PC += 1;
 }
 
 void decode(){
@@ -30,59 +31,88 @@ void decode(){
     linea_de_instruccion_tokenizada = string_n_split(linea_de_instruccion, max_long_instruccion, " ");
 }
 
+void loggear_instruccion(int cant_parametros){
+    switch(cant_parametros){
+        case 0:
+        log_info("PID: %d - Ejecutando: %s", linea_de_instruccion_tokenizada[0]);
+
+        case 1:
+        log_info("PID: %d - Ejecutando: %s - %s", linea_de_instruccion_tokenizada[0],
+                linea_de_instruccion_tokenizada[1]);
+
+        case 2:
+        log_info("PID: %d - Ejecutando: %s - %s %s", linea_de_instruccion_tokenizada[0],
+                linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
+
+        case 3:
+        log_info("PID: %d - Ejecutando: %s - %s %s %s", linea_de_instruccion_tokenizada[0],
+                linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2],
+                linea_de_instruccion_tokenizada[3]);
+
+        case 5:
+        log_info("PID: %d - Ejecutando: %s - %s %s %s %s %s", linea_de_instruccion_tokenizada[0],
+                linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2],
+                linea_de_instruccion_tokenizada[3], linea_de_instruccion_tokenizada[4],
+                linea_de_instruccion_tokenizada[5]);
+
+        default:
+        //Loggear error.
+    }
+}
+
 void execute(){
     //Revisar si esta comparación está bien hecha.
     if(strcmp(linea_de_instruccion_tokenizada[0], "SET") == 0){
-         //Debería loggear qué instrucción se usa.
+        loggear_instruccion(length(linea_de_instruccion_tokenizada));
         uint32_t valor = atoi(linea_de_instruccion_tokenizada[2]);
         set(linea_de_instruccion_tokenizada[1], valor);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "MOV_IN") == 0){
-        //Debería loggear qué instrucción se usa.
+        loggear_instruccion(length(linea_de_instruccion_tokenizada));
 	    mov_in(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "MOV_OUT") == 0){
-        //Debería loggear qué instrucción se usa.
+        loggear_instruccion(length(linea_de_instruccion_tokenizada));
 	    mov_out(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "SUM") == 0){
-        //Debería loggear qué instrucción se usa.
+        loggear_instruccion(length(linea_de_instruccion_tokenizada));
         sum(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "SUB") == 0){
-        //Debería loggear qué instrucción se usa.
+        loggear_instruccion(length(linea_de_instruccion_tokenizada));
         sub(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "JNZ") == 0){
-        //Debería loggear qué instrucción se usa.
+        loggear_instruccion(length(linea_de_instruccion_tokenizada));
         uint32_t proxInstruccion = atoi(linea_de_instruccion_tokenizada[2]);
         jump_no_zero(linea_de_instruccion_tokenizada[1], proxInstruccion);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "RESIZE") == 0){
-        //Debería loggear qué instrucción se usa.
+        loggear_instruccion(length(linea_de_instruccion_tokenizada));
 		int tamano = atoi(linea_de_instruccion_tokenizada[1]);
 		resize(tamano);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "COPY_STRING") == 0){
-        //Debería loggear qué instrucción se usa.
+        loggear_instruccion(length(linea_de_instruccion_tokenizada));
 		int tamano = atoi(linea_de_instruccion_tokenizada[1]);
 		copy_string(tamano);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_GEN_SLEEP") == 0){
-        //Debería loggear qué instrucción se usa.
+        loggear_instruccion(length(linea_de_instruccion_tokenizada));
         uint32_t unidades_de_trabajo = (uint32_t)atoi(linea_de_instruccion_tokenizada[2])
         io_gen_sleep(linea_de_instruccion_tokenizada[1], unidades_de_trabajo);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_STDIN_READ") == 0){
-        //Debería loggear qué instrucción se usa.
+        loggear_instruccion(length(linea_de_instruccion_tokenizada));
 		io_stdin_read(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_STDOUT_WRITE") == 0){
-        //Debería loggear qué instrucción se usa.
+        loggear_instruccion(length(linea_de_instruccion_tokenizada));
 		io_stdout_write(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "EXIT") == 0){
-        //Debería loggear qué instrucción se usa.
+        loggear_instruccion(length(linea_de_instruccion_tokenizada));
 		exit_process();
 	}
     //Y así...
