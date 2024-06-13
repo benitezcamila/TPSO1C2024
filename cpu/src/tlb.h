@@ -22,12 +22,6 @@ typedef struct {
     char algoritmo[4]; // Algoritmo de reemplazo ("FIFO" o "LRU")
 } t_TLB;
 
-// Estructura de la tabla de páginas
-typedef struct {
-    uint32_t* marcos;
-    uint32_t tamano; // Tamaño de la tabla de páginas (cantidad de páginas)
-} t_tabla_paginas;
-
 int buscar_en_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina);
 void agregar_entrada_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina, uint32_t marco);
 void reemplazo_FIFO(t_TLB* tlb, t_entrada_TLB nueva_entrada);

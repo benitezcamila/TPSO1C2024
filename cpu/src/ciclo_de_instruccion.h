@@ -12,9 +12,9 @@ extern char* linea_de_instruccion_tokenizada[max_long_instruccion];
 extern int llego_interrupcion;
 extern tipo_de_interrupcion motivo_interrupcion;
 extern int dir_logica = 0;
-extern int dir_fisica = 0;
+extern uint32_t dir_fisica = 0;
 
-void mmu(t_TLB, t_tabla_paginas*, uint32_t, uint32_t);
+void mmu(t_TLB, uint32_t, uint32_t);
 void fetch_instruction();
 void decode();
 void execute();

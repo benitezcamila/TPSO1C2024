@@ -11,7 +11,7 @@ char* linea_de_instruccion_tokenizada[max_long_instruccion];
 int llego_interrupcion;
 tipo_de_interrupcion motivo_interrupcion;
 int dir_logica = 0;
-int dir_fisica = 0;
+uint32_t dir_fisica = 0;
 
 void ciclo_de_instruccion(){
     fetch_instruction();
@@ -28,33 +28,22 @@ void fetch_instruction(){
 void decode(){
     recibir_instruccion_de_memoria();
     linea_de_instruccion_tokenizada = string_n_split(linea_de_instruccion, max_long_instruccion, " ");
-
-    if(instruccion_usa_mmu){
-        if(strcmp(linea_de_instruccion_tokenizada[0], "MOV_OUT") == 0){
-            dir_logica = obtener_dir_logica(linea_de_instruccion_tokenizada[1]);
-        }
-        else if(strcmp(linea_de_instruccion_tokenizada[0], "MOV_IN") == 0
-                || strcmp(linea_de_instruccion_tokenizada[0], "IO_STDIN_READ") == 0
-                || strcmp(linea_de_instruccion_tokenizada[0], "IO_STDOUT_WRITE") == 0){
-            dir_logica = obtener_dir_logica(linea_de_instruccion_tokenizada[2]);
-        }
-        dir_fisica = mmu(&tlb, &tabla, contexto_registros->PID, tamano_pagina);
-    }
 }
 
 void execute(){
     //Revisar si esta comparación está bien hecha.
     if(strcmp(linea_de_instruccion_tokenizada[0], "SET") == 0){
          //Debería loggear qué instrucción se usa.
-        int valor = atoi(linea_de_instruccion_tokenizada[2]);
+        uint32_t valor = atoi(linea_de_instruccion_tokenizada[2]);
         set(linea_de_instruccion_tokenizada[1], valor);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "MOV_IN") == 0){
         //Debería loggear qué instrucción se usa.
-	    mov_in(linea_de_instruccion_tokenizada[1]);
-    } else if(strcmp(linea_de_instruccion_tokenizada[0], "MOV_OUT") == 0){
+	    mov_in(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
+    }
+    else if(strcmp(linea_de_instruccion_tokenizada[0], "MOV_OUT") == 0){
         //Debería loggear qué instrucción se usa.
-	    mov_out(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]); //Revisar
+	    mov_out(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "SUM") == 0){
         //Debería loggear qué instrucción se usa.
@@ -66,14 +55,15 @@ void execute(){
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "JNZ") == 0){
         //Debería loggear qué instrucción se usa.
-        int proxInstruccion = atoi(linea_de_instruccion_tokenizada[2]);
-        jump_no_zero(linea_de_instruccion_tokenizada[1], (uint32_t)proxInstruccion);
+        uint32_t proxInstruccion = atoi(linea_de_instruccion_tokenizada[2]);
+        jump_no_zero(linea_de_instruccion_tokenizada[1], proxInstruccion);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "RESIZE") == 0){
         //Debería loggear qué instrucción se usa.
 		int tamano = atoi(linea_de_instruccion_tokenizada[1]);
 		resize(tamano);
-	} else if(strcmp(linea_de_instruccion_tokenizada[0], "COPY_STRING") == 0){
+	}
+    else if(strcmp(linea_de_instruccion_tokenizada[0], "COPY_STRING") == 0){
         //Debería loggear qué instrucción se usa.
 		int tamano = atoi(linea_de_instruccion_tokenizada[1]);
 		copy_string(tamano);
@@ -116,17 +106,18 @@ void check_interrupt(){
 }
 
 // Función para traducir direcciones lógicas a físicas
-int mmu(t_TLB* tlb, t_tabla_paginas* tabla, uint32_t pid, uint32_t tamano_pagina){
+uint32_t mmu(t_TLB* tlb, uint32_t pid, uint32_t tamano_pagina){
     uint32_t numero_pagina = floor(dir_logica / tamano_pagina);
     uint32_t desplazamiento = dir_logica - (numero_pagina * tamano_pagina);
     int marco = buscar_en_TLB(tlb, pid, numero_pagina);
 
+    //REVISAR ESTA PARTE
     if (marco == -1) { //TLB Miss
         if (numero_pagina < tabla->tamano && tabla->marcos[numero_pagina] != -1) {
             marco = tabla->marcos[numero_pagina];
             agregar_entrada_TLB(tlb, pid, numero_pagina, marco);
         } else {
-            return -1;
+            return -1; //Esto no debería ser posible técnicamente
         }
     }
 
@@ -134,7 +125,7 @@ int mmu(t_TLB* tlb, t_tabla_paginas* tabla, uint32_t pid, uint32_t tamano_pagina
 }
 
 //Funciones de instrucciones.
-void set(char* registro, int valor){
+void set(char* registro, uint32_t valor){
     if(strcmp(registro, "AX") == 0){
         contexto_registros->AX = valor;
     }
@@ -167,20 +158,21 @@ void set(char* registro, int valor){
     }
 }
 
-void mov_in(char* registro_datos){
-    //Ya obtuve en la mmu la dir_logica y la dir_fisica.
-    //Le pido a memoria el contenido de dir_fisica
-    //Meto el contenido que me pasa memoria en el reg_datos
-    int datos_de_memoria = 0;
+void mov_in(char* registro_datos, char* registro_direccion){
+    dir_logica = obtener_contenido_registro(registro_direccion);
+    dir_fisica = mmu(tlb, PID, tamano_pagina); //No sé de dónde saco tlb y tamano_pagina.
 
-    t_paquete* 
+    solicitar_leer_en_memoria(dir_fisica, es_registro_de_4_bytes(registro_datos));
+    leer_de_memoria_y_registrar(registro_datos);
 }
 
-void mov_out(char* registro_datos){
-    //Ya obtuve en la mmu la dir_logica y la dir_fisica.
-    int direccion_logica = contexto_registros->registros[atoi(reg_direccion)];
-    int direccion_fisica = traducirDireccion(&tlb, &tabla, contexto_registros->pid, direccion_logica, tamano_pagina);
-    espacio_usuario[direccion_fisica] = contexto_registros->registros[atoi(reg_datos)];
+void mov_out(char* registro_direccion, char* registro_datos){
+    dir_logica = obtener_contenido_registro(registro_direccion);
+    dir_fisica = mmu(tlb, PID, tamano_pagina); //No sé de dónde saco tlb y tamano_pagina.
+
+    uint32_t datos_de_registro = obtener_contenido_registro(registro_datos);
+
+    solicitar_escribir_en_memoria(dir_fisica, datos_de_registro);
 }
 
 void sum(char* registro1, char* registro2){
@@ -324,7 +316,7 @@ void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
 }
 
 //FUNCIONES AUXILIARES.
-void sumar_contenido_registro(char* registro, int valor){
+void sumar_contenido_registro(char* registro, uint32_t valor){
     if(strcmp(registro, "AX") == 0){
         contexto_registros->AX += valor;
     }
@@ -357,7 +349,7 @@ void sumar_contenido_registro(char* registro, int valor){
     }
 }
 
-void restar_contenido_registro(char* registro, int valor){
+void restar_contenido_registro(char* registro, uint32_t valor){
     if(strcmp(registro, "AX") == 0){
         contexto_registros->AX -= valor;
     }
@@ -390,20 +382,7 @@ void restar_contenido_registro(char* registro, int valor){
     }
 }
 
-void instruccion_usa_mmu(){
-    if(strcmp(linea_de_instruccion_tokenizada[0], "MOV_IN") == 0
-    || strcmp(linea_de_instruccion_tokenizada[0], "MOV_OUT") == 0
-    || strcmp(linea_de_instruccion_tokenizada[0], "RESIZE") == 0
-    || strcmp(linea_de_instruccion_tokenizada[0], "COPY_STRING") == 0
-    || strcmp(linea_de_instruccion_tokenizada[0], "IO_STDIN_READ") == 0
-    || strcmp(linea_de_instruccion_tokenizada[0], "IO_STDOUT_WRITE") == 0){
-        return true;
-    }
-
-    return false;
-}
-
-int obtener_dir_logica(char* registro){
+int obtener_contenido_registro(char* registro){
     if(strcmp(registro, "AX") == 0){
         return contexto_registros->AX;
     }
@@ -433,5 +412,35 @@ int obtener_dir_logica(char* registro){
     }
     else if(strcmp(registro, "DI") == 0){
         return contexto_registros->DI;
+    }
+}
+
+bool es_registro_de_4_bytes(char* registro){
+    if(strcmp(registro, "AX") == 0 || strcmp(registro, "BX") == 0
+            || strcmp(registro, "CX") == 0 || strcmp(registro, "DX") == 0){
+        return false;
+    }
+
+    return true;
+}
+
+void leer_de_memoria_y_registrar(char* registro_datos){
+    uint32_t datos_de_memoria;
+
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    recv(sockets.socket_memoria, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
+
+    if(paquete->codigo_operacion == RESPUESTA_LECTURA_MEMORIA){
+        recv(sockets.socket_memoria, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+        paquete->buffer->stream = malloc(paquete->buffer->size);
+
+        recv(sockets.socket_memoria, paquete->buffer->stream, sizeof(uint32_t), MSG_WAITALL);
+        buffer_read_uint32(paquete->buffer, &datos_de_memoria); //Recibo un uint32_t porque puede contener un uint8_t.
+                                                                //así que no debería haber problema a la hora de registrarlo.
+
+        set(registro_datos, datos_de_memoria);
+    }
+    else{
+        //Loggear error.
     }
 }

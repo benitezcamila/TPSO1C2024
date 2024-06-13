@@ -140,7 +140,29 @@ void recibir_instruccion_de_memoria(){
     }
 }
 
-void 
+void solicitar_leer_en_memoria(uint32_t dir_fisica, bool es_registro_4_bytes){
+    t_paquete* paquete = crear_paquete(SOLICITUD_LECTURA_MEM, sizeof(uint32_t));
+    buffer_add_uint32(paquete->buffer, PID);
+    buffer_add_uint32(paquete->buffer, dir_fisica);
+
+    if(!es_registro_4_bytes){
+        buffer_add_uint32(paquete->buffer, sizeof(uint8_t));
+    }
+    else{
+        buffer_add_uint32(paquete->buffer, sizeof(uint32_t));
+    }
+
+    enviar_paquete(paquete, sockets.socket_memoria);
+}
+
+void solicitar_escribir_en_memoria(uint32_t dir_fisica, uint32_t datos_de_registro){
+    t_paquete* paquete = crear_paquete(SOLICITUD_ESCRITURA_MEM, sizeof(uint32_t));
+    buffer_add_uint32(paquete->buffer, PID);
+    buffer_add_uint32(paquete->buffer, dir_fisica);
+    buffer_add_uint32(paquete->buffer, datos_de_registro);
+
+    enviar_paquete(paquete, sockets.socket_memoria);
+}
 
 //NO SÉ SI ESTÁ BIEN. CHECKEAR.
 void recibir_interrupcion_de_kernel(){
