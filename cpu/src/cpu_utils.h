@@ -35,6 +35,7 @@ void enviar_contexto_a_kernel(motivo_desalojo);
 void enviar_std_a_kernel(motivo_desalojo, char*, void*, uint32_t, uint32_t);
 void solicitar_create_delete_fs_a_kernel(motivo_desalojo, char*, char*);
 void solicitar_truncate_fs_a_kernel(motivo_desalojo, char*, void*, uint32_t);
+void solicitar_write_read_fs_a_kernel(motivo_desalojo, char*, char*, void*, uint32_t, uint32_t, void*, uint32_t);
 void solicitar_instruccion_a_memoria();
 int solicitar_marco_a_memoria(uint32_t );
 void recibir_instruccion_de_memoria();

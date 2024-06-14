@@ -474,7 +474,7 @@ void io_fs_truncate(char* nombre_interfaz, char* nombre_archivo, char* registro_
         void* tamanio = malloc(sizeof(uint32_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        solicitar_truncate_fs_a_kernel(IO_FS_TRUNCATE, nombre_interfaz, tamanio, sizeof(uint32_t));
+        solicitar_truncate_fs_a_kernel(IO_FS_TRUNCATE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t));
 
         free(tamanio);
     }
@@ -482,7 +482,7 @@ void io_fs_truncate(char* nombre_interfaz, char* nombre_archivo, char* registro_
         void* tamanio = malloc(sizeof(uint8_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        solicitar_truncate_fs_a_kernel(IO_FS_TRUNCATE, nombre_interfaz, tamanio, sizeof(uint8_t));
+        solicitar_truncate_fs_a_kernel(IO_FS_TRUNCATE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t));
 
         free(tamanio);
     }
@@ -490,12 +490,118 @@ void io_fs_truncate(char* nombre_interfaz, char* nombre_archivo, char* registro_
 
 void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_direccion,
                 char* registro_tamanio, char* registro_puntero_archivo){
-    //
+    ind_contexto_kernel = 0;
+    dir_logica = (uint32_t) obtener_contenido_registro(registro_direccion);
+    dir_fisica = mmu(tlb, PID);
+
+    if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
+        void* tamanio = malloc(sizeof(uint32_t));
+        tamanio = obtener_contenido_registro(registro_tamanio);
+
+        if(registro_puntero_archivo[0] == 'E' || registro_puntero_archivo[1] == 'I'){
+            void* puntero_registro = malloc(sizeof(uint32_t));
+            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+
+            solicitar_write_read_fs_a_kernel(IO_FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
+                                            dir_fisica, puntero_registro, sizeof(uint32_t));
+        
+            free(puntero_registro);
+        }
+        else{
+            void* puntero_registro = malloc(sizeof(uint8_t));
+            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+
+            solicitar_write_read_fs_a_kernel(IO_FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
+                                            dir_fisica, puntero_registro, sizeof(uint8_t));
+        
+            free(puntero_registro);
+        }
+
+        free(tamanio);
+    }
+    else{
+        void* tamanio = malloc(sizeof(uint8_t));
+        tamanio = obtener_contenido_registro(registro_tamanio);
+
+        if(registro_puntero_archivo[0] == 'E' || registro_puntero_archivo[1] == 'I'){
+            void* puntero_registro = malloc(sizeof(uint32_t));
+            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+
+            solicitar_write_read_fs_a_kernel(IO_FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
+                                            dir_fisica, puntero_registro, sizeof(uint32_t));
+        
+            free(puntero_registro);
+        }
+        else{
+            void* puntero_registro = malloc(sizeof(uint8_t));
+            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+
+            solicitar_write_read_fs_a_kernel(IO_FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
+                                            dir_fisica, puntero_registro, sizeof(uint8_t));
+
+            free(puntero_registro);
+        }
+
+        free(tamanio);
+    }
 }
 
 void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_direccion,
                 char* registro_tamanio, char* registro_puntero_archivo){
-    //
+    ind_contexto_kernel = 0;
+    dir_logica = (uint32_t) obtener_contenido_registro(registro_direccion);
+    dir_fisica = mmu(tlb, PID);
+
+    if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
+        void* tamanio = malloc(sizeof(uint32_t));
+        tamanio = obtener_contenido_registro(registro_tamanio);
+
+        if(registro_puntero_archivo[0] == 'E' || registro_puntero_archivo[1] == 'I'){
+            void* puntero_registro = malloc(sizeof(uint32_t));
+            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+
+            solicitar_write_read_fs_a_kernel(IO_FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
+                                            dir_fisica, puntero_registro, sizeof(uint32_t));
+        
+            free(puntero_registro);
+        }
+        else{
+            void* puntero_registro = malloc(sizeof(uint8_t));
+            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+
+            solicitar_write_read_fs_a_kernel(IO_FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
+                                            dir_fisica, puntero_registro, sizeof(uint8_t));
+        
+            free(puntero_registro);
+        }
+
+        free(tamanio);
+    }
+    else{
+        void* tamanio = malloc(sizeof(uint8_t));
+        tamanio = obtener_contenido_registro(registro_tamanio);
+
+        if(registro_puntero_archivo[0] == 'E' || registro_puntero_archivo[1] == 'I'){
+            void* puntero_registro = malloc(sizeof(uint32_t));
+            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+
+            solicitar_write_read_fs_a_kernel(IO_FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
+                                            dir_fisica, puntero_registro, sizeof(uint32_t));
+        
+            free(puntero_registro);
+        }
+        else{
+            void* puntero_registro = malloc(sizeof(uint8_t));
+            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+
+            solicitar_write_read_fs_a_kernel(IO_FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
+                                            dir_fisica, puntero_registro, sizeof(uint8_t));
+
+            free(puntero_registro);
+        }
+
+        free(tamanio);
+    }
 }
 
 void exit_process(){

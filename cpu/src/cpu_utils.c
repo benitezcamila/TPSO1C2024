@@ -131,13 +131,13 @@ void enviar_contexto_a_kernel(motivo_desalojo motivo){
 }
 
 void enviar_std_a_kernel(motivo_desalojo motivo, char* nombre_interfaz,
-                                void* tamanio_std, uint32_t tamanio_buffer, uint32_t dir_fisica){
+                                void* tamanio_std, uint32_t tamanio_data, uint32_t dir_fisica){
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
-                                        + string_length(nombre_interfaz)+1 + tamanio_buffer + sizeof(uint32_t));
+                                        + string_length(nombre_interfaz)+1 + tamanio_data + sizeof(uint32_t));
     buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
-    buffer_add(paquete->buffer, tamanio_std, tamanio_buffer);
+    buffer_add(paquete->buffer, tamanio_std, tamanio_data);
     buffer_add_uint32(paquete->buffer, dir_fisica);
 
     enviar_paquete(paquete, sockets.socket_server_D);
@@ -154,14 +154,33 @@ void solicitar_create_delete_fs_a_kernel(motivo_desalojo motivo, char* nombre_in
     enviar_paquete(paquete, sockets.socket_server_D);
 }
 
-void solicitar_truncate_fs_a_kernel(motivo_desalojo motivo, char* nombre_interfaz,
-                                    void* tamanio_fs, uint32_t tamanio_buffer){
+void solicitar_truncate_fs_a_kernel(motivo_desalojo motivo, char* nombre_interfaz, char* nombre_archivo,
+                                    void* tamanio_fs, uint32_t tamanio_data){
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
-                                        + string_length(nombre_interfaz)+1 + tamanio_buffer);
+                                        + string_length(nombre_interfaz)+1 + string_length(nombre_archivo)+1
+                                        + tamanio_data);
     buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
-    buffer_add(paquete->buffer, tamanio_fs, tamanio_buffer);
+    buffer_add_string(paquete->buffer, string_length(nombre_archivo)+1, nombre_archivo);
+    buffer_add(paquete->buffer, tamanio_fs, tamanio_data);
+
+    enviar_paquete(paquete, sockets.socket_server_D);
+}
+
+void solicitar_write_read_fs_a_kernel(motivo_desalojo motivo, char* nombre_interfaz, char* nombre_archivo,
+                                        void* tamanio_fs, uint32_t tamanio_data1, uint32_t dir_fisica,
+                                        void* puntero_archivo, uint32_t tamanio_data2){
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
+                                        + string_length(nombre_interfaz)+1 + string_length(nombre_archivo)+1
+                                        + sizeof(uint32_t) + tamanio_data1 + tamanio_data2);
+    buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
+    buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
+    buffer_add_string(paquete->buffer, string_length(nombre_archivo)+1, nombre_archivo);
+    buffer_add(paquete->buffer, tamanio_fs, tamanio_data1);
+    buffer_add_uint32(dir_fisica);
+    buffer_add(paquete->buffer, puntero_archivo, tamanio_data2);
 
     enviar_paquete(paquete, sockets.socket_server_D);
 }
