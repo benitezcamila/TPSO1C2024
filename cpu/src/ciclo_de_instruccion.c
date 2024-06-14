@@ -32,9 +32,7 @@ void decode(){
     linea_de_instruccion_tokenizada = string_n_split(linea_de_instruccion, max_long_instruccion, " ");
 }
 
-//Cambiar else if por switch case.
 void execute(){
-    //Revisar si esta comparación está bien hecha.
     if(strcmp(linea_de_instruccion_tokenizada[0], "SET") == 0){
         loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
         uint32_t valor = atoi(linea_de_instruccion_tokenizada[2]);
@@ -84,11 +82,32 @@ void execute(){
         loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
 		io_stdout_write(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3]);
 	}
+    else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_CREATE") == 0){
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+		io_fs_create(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
+	}
+    else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_DELETE") == 0){
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+		io_fs_delete(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
+	}
+    else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_TRUNCATE") == 0){
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+		io_fs_truncate(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3]);
+	}
+    else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_WRITE") == 0){
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+		io_fs_write(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3],
+                     linea_de_instruccion_tokenizada[4], linea_de_instruccion_tokenizada[5]);
+	}
+    else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_READ") == 0){
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+		io_fs_read(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3],
+                     linea_de_instruccion_tokenizada[4], linea_de_instruccion_tokenizada[5]);
+	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "EXIT") == 0){
         loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
 		exit_process();
 	}
-    //Y así...
 }
 
 //NO SÉ SI LE FALTA ALGO. CHECKEAR.
@@ -108,7 +127,7 @@ void check_interrupt(){
     }
 }
 
-// Función para traducir direcciones lógicas a físicas
+// Función para traducir direcciones lógicas a físicas.
 uint32_t mmu(t_TLB* tlb, uint32_t pid){
     uint32_t numero_pagina = floor(dir_logica / tamano_pagina);
     uint32_t desplazamiento = dir_logica - (numero_pagina * tamano_pagina);
@@ -171,6 +190,7 @@ void mov_in(char* registro_datos, char* registro_direccion){
         datos_de_memoria = leer_de_memoria(sizeof(uint32_t));
         
         set(registro_datos, datos_de_memoria);
+        log_info("PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, dir_fisica, (uint32_t)datos_de_memoria);
     }
     else{
         solicitar_leer_en_memoria(dir_fisica, sizeof(uint8_t));
@@ -179,6 +199,7 @@ void mov_in(char* registro_datos, char* registro_direccion){
         datos_de_memoria = leer_de_memoria(sizeof(uint8_t));
         
         set(registro_datos, datos_de_memoria);
+        log_info("PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, dir_fisica, (uint8_t)datos_de_memoria);
     }
 }
 
@@ -193,6 +214,8 @@ void mov_out(char* registro_direccion, char* registro_datos){
         solicitar_escribir_en_memoria(dir_fisica, datos_de_registro, sizeof(uint32_t));
 
         free(datos_de_registro);
+        //Seguro tenga que usar una función auxiliar para asegurarme que la escritura haya sido exitosa,
+        //y ahí mismo hago el loggeo de la escritura.
     }
     else{
         void* datos_de_registro = malloc(sizeof(uint8_t));
@@ -201,6 +224,8 @@ void mov_out(char* registro_direccion, char* registro_datos){
         solicitar_escribir_en_memoria(dir_fisica, datos_de_registro, sizeof(uint8_t));
 
         free(datos_de_registro);
+        //Seguro tenga que usar una función auxiliar para asegurarme que la escritura haya sido exitosa,
+        //y ahí mismo hago el loggeo de la escritura.
     }
 }
 
@@ -329,6 +354,8 @@ void resize(uint32_t tamanio){
     buffer_add_uint32(paquete->buffer, tamanio);
     
     enviar_paquete(paquete, sockets.socket_memoria);
+
+    recibir_respuesta_resize_memoria(PID);
 }
 
 void copy_string(uint32_t tamanio){
@@ -374,7 +401,7 @@ void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
 
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
                                         + string_length(nombre_interfaz)+1 + sizeof(uint32_t));
-    buffer_add(paquete->buffer, INST_IO_GEN_SLEEP, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, IO_GEN_SLEEP, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_uint32(paquete->buffer, unidades_de_trabajo);
@@ -391,7 +418,7 @@ void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* regist
         void* tamanio = malloc(sizeof(uint32_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        enviar_stdin_stdout_a_kernel(INST_IO_STDIN_READ, nombre_interfaz, tamanio, sizeof(uint32_t), dir_logica);
+        enviar_stdin_stdout_a_kernel(IO_STDIN_READ, nombre_interfaz, tamanio, sizeof(uint32_t), dir_logica);
 
         free(tamanio);
     }
@@ -399,7 +426,7 @@ void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* regist
         void* tamanio = malloc(sizeof(uint8_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        enviar_stdin_stdout_a_kernel(INST_IO_STDIN_READ, nombre_interfaz, tamanio, sizeof(uint8_t), dir_logica);
+        enviar_stdin_stdout_a_kernel(IO_STDIN_READ, nombre_interfaz, tamanio, sizeof(uint8_t), dir_logica);
 
         free(tamanio);
     }
@@ -414,7 +441,7 @@ void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* regi
         void* tamanio = malloc(sizeof(uint32_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        enviar_stdin_stdout_a_kernel(INST_IO_STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint32_t), dir_logica);
+        enviar_stdin_stdout_a_kernel(IO_STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint32_t), dir_logica);
 
         free(tamanio);
     }
@@ -422,10 +449,53 @@ void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* regi
         void* tamanio = malloc(sizeof(uint8_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        enviar_stdin_stdout_a_kernel(INST_IO_STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint8_t), dir_logica);
+        enviar_stdin_stdout_a_kernel(IO_STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint8_t), dir_logica);
 
         free(tamanio);
     }
+}
+
+void io_fs_create(char* nombre_interfaz, char* nombre_archivo){
+    ind_contexto_kernel = 0;
+
+    solicitar_create_delete_fs_a_kernel(IO_FS_CREATE, nombre_interfaz, nombre_archivo);
+}
+
+void io_fs_delete(char* nombre_interfaz, char* nombre_archivo){
+    ind_contexto_kernel = 0;
+
+    solicitar_create_delete_fs_a_kernel(IO_FS_DELETE, nombre_interfaz, nombre_archivo);
+}
+
+void io_fs_truncate(char* nombre_interfaz, char* nombre_archivo, char* registro_tamanio){
+    ind_contexto_kernel = 0;
+
+    if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
+        void* tamanio = malloc(sizeof(uint32_t));
+        tamanio = obtener_contenido_registro(registro_tamanio);
+
+        solicitar_truncate_fs_a_kernel(IO_FS_TRUNCATE, nombre_interfaz, tamanio, sizeof(uint32_t));
+
+        free(tamanio);
+    }
+    else{
+        void* tamanio = malloc(sizeof(uint8_t));
+        tamanio = obtener_contenido_registro(registro_tamanio);
+
+        solicitar_truncate_fs_a_kernel(IO_FS_TRUNCATE, nombre_interfaz, tamanio, sizeof(uint8_t));
+
+        free(tamanio);
+    }
+}
+
+void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_direccion,
+                char* registro_tamanio, char* registro_puntero_archivo){
+    //
+}
+
+void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_direccion,
+                char* registro_tamanio, char* registro_puntero_archivo){
+    //
 }
 
 void exit_process(){

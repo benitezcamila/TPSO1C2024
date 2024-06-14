@@ -32,6 +32,8 @@ typedef enum {
     RESPUESTA_LECTURA_MEMORIA,
     ACCESO_TABLA_PAGINAS, 
     MARCO_BUSCADO,
+    NO_RESIZE,
+    RESIZE_SUCCESS
 } op_code;
 
 typedef enum {
@@ -40,17 +42,23 @@ typedef enum {
     INTERRUPCION,
     LLAMADO_KERNEL,
     PETICION_IO,
-    PETICION_RECURSO,
-    SIGNAL_RECURSO,
-    INST_IO_GEN_SLEEP,
-    INST_IO_STDIN_READ,
-    INST_IO_STDOUT_WRITE,
+    OUT_OF_MEMORY,
+    PETICION_RECURSO, //wait
+    SIGNAL_RECURSO, //signal
+    IO_GEN_SLEEP, //cpu a kernel
+    IO_STDIN_READ, //cpu a kernel
+    IO_STDOUT_WRITE, //cpu a kernel
+    IO_FS_CREATE, //cpu a kernel
+    IO_FS_DELETE, //cpu a kernel
+    IO_FS_TRUNCATE, //cpu a kernel
+    IO_FS_WRITE, //cpu a kernel
+    IO_FS_READ, //cpu a kernel
     FIN_QUANTUM,
     //
 }motivo_desalojo;
 
 typedef enum{
-    DESALOJOQUANTUM
+    DESALOJO_QUANTUM
 } tipo_de_interrupcion;
 
 typedef struct {

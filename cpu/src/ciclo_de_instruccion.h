@@ -36,6 +36,11 @@ void signal(char*);
 void io_gen_sleep(char*, uint32_t);
 void io_stdin_read(char*, char*, char*);
 void io_stdout_write(char*, char*, char*);
+void io_fs_create(char*, char*);
+void io_fs_delete(char*, char*);
+void io_fs_truncate(char*, char*, char*);
+void io_fs_write(char*, char*, char*, char*, char*);
+void io_fs_read(char*, char*, char*, char*, char*);
 void exit_process()
 
 //Funciones auxiliares.

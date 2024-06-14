@@ -143,6 +143,29 @@ void enviar_std_a_kernel(motivo_desalojo motivo, char* nombre_interfaz,
     enviar_paquete(paquete, sockets.socket_server_D);
 }
 
+void solicitar_create_delete_fs_a_kernel(motivo_desalojo motivo, char* nombre_interfaz, char* nombre_archivo){
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
+                                        + string_length(nombre_interfaz)+1 + string_length(nombre_archivo)+1);
+    buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
+    buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
+    buffer_add_string(paquete->buffer, string_length(nombre_archivo)+1, nombre_archivo);
+
+    enviar_paquete(paquete, sockets.socket_server_D);
+}
+
+void solicitar_truncate_fs_a_kernel(motivo_desalojo motivo, char* nombre_interfaz,
+                                    void* tamanio_fs, uint32_t tamanio_buffer){
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
+                                        + string_length(nombre_interfaz)+1 + tamanio_buffer);
+    buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
+    buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
+    buffer_add(paquete->buffer, tamanio_fs, tamanio_buffer);
+
+    enviar_paquete(paquete, sockets.socket_server_D);
+}
+
 void solicitar_instruccion_a_memoria(){
     t_paquete* paquete = crear_paquete(SOLICITUD_INSTRUCCION, sizeof(uint32_t));
     buffer_add_uint32(paquete->buffer, contexto_registros->PC);
@@ -164,7 +187,25 @@ void recibir_instruccion_de_memoria(){
         linea_de_instruccion = buffer_read_string(paquete->buffer, &longitud_linea_instruccion);
     }
     else{
-        //Loggear error?
+        //Loggear error.
+    }
+}
+
+void recibir_respuesta_resize_memoria(uint32_t PID){
+    int op_code = recibir_operacion(sockets.socket_memoria);
+
+    switch (op_code){
+    case NO_RESIZE:
+        enviar_contexto_a_kernel(OUT_OF_MEMORY);
+        break;
+    
+    case RESIZE_SUCCESS:
+        log_info("El resize del proceso %d fue exitoso.", PID);
+        break;
+
+    default:
+        //Loggear error.
+        break;
     }
 }
 
