@@ -412,13 +412,13 @@ void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
 void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* registro_tamanio){
     ind_contexto_kernel = 0;
     dir_logica = (uint32_t) obtener_contenido_registro(registro_direccion);
-    //Posiblemente necesite pasarle a Kernel la dir_fisica
+    dir_fisica = mmu(tlb, PID);
 
     if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
         void* tamanio = malloc(sizeof(uint32_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        enviar_stdin_stdout_a_kernel(IO_STDIN_READ, nombre_interfaz, tamanio, sizeof(uint32_t), dir_logica);
+        enviar_std_a_kernel(IO_STDIN_READ, nombre_interfaz, tamanio, sizeof(uint32_t), dir_fisica);
 
         free(tamanio);
     }
@@ -426,7 +426,7 @@ void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* regist
         void* tamanio = malloc(sizeof(uint8_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        enviar_stdin_stdout_a_kernel(IO_STDIN_READ, nombre_interfaz, tamanio, sizeof(uint8_t), dir_logica);
+        enviar_std_a_kernel(IO_STDIN_READ, nombre_interfaz, tamanio, sizeof(uint8_t), dir_fisica);
 
         free(tamanio);
     }
@@ -435,13 +435,13 @@ void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* regist
 void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* registro_tamanio){
     ind_contexto_kernel = 0;
     dir_logica = (uint32_t) obtener_contenido_registro(registro_direccion);
-    //Posiblemente necesite pasarle a Kernel la dir_fisica
+    dir_fisica = mmu(tlb, PID);
 
     if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
         void* tamanio = malloc(sizeof(uint32_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        enviar_stdin_stdout_a_kernel(IO_STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint32_t), dir_logica);
+        enviar_std_a_kernel(IO_STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint32_t), dir_fisica);
 
         free(tamanio);
     }
@@ -449,7 +449,7 @@ void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* regi
         void* tamanio = malloc(sizeof(uint8_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        enviar_stdin_stdout_a_kernel(IO_STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint8_t), dir_logica);
+        enviar_std_a_kernel(IO_STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint8_t), dir_fisica);
 
         free(tamanio);
     }

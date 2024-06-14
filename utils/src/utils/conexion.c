@@ -142,9 +142,9 @@ int enviar_hanshake(int socket,char* nom_cliente){
 	
     paquete->codigo_operacion = HANDSHAKE;
 	uint32_t len_cliente = string_length(nom_cliente)+1;
-    paquete->buffer = buffer_create(sizeof(cod_handshake)+sizeof(uint32_t)+len_cliente);
-	buffer_add_string(paquete->buffer,len_cliente,nom_cliente);
-	buffer_add(paquete->buffer,codigo,sizeof(cod_handshake));
+    paquete->buffer = buffer_create(sizeof(cod_handshake) + sizeof(uint32_t) + len_cliente);
+	buffer_add_string(paquete->buffer, len_cliente, nom_cliente);
+	buffer_add(paquete->buffer, codigo, sizeof(cod_handshake));
 	void* a_enviar = a_enviar_create(paquete);
 
 	int bytes = send(socket,a_enviar,paquete->buffer->size + sizeof(uint32_t) + sizeof(op_code),0);
@@ -158,16 +158,20 @@ int enviar_hanshake(int socket,char* nom_cliente){
 	return bytes;
 }
 
-t_buffer* recibir_todo_elbuffer(int socket_conexion ){
+t_buffer* recibir_todo_elbuffer(int socket_conexion){
 	uint32_t size;
-	if(recv(socket_conexion, &size, sizeof(uint32_t), MSG_WAITALL)> 0){
+
+	if(recv(socket_conexion, &size, sizeof(uint32_t), MSG_WAITALL) > 0){
 		t_buffer* buffer = buffer_create(size);
-		if(recv(socket_conexion, buffer->stream, buffer->size,MSG_WAITALL )>0){
+
+		if(recv(socket_conexion, buffer->stream, buffer->size,MSG_WAITALL ) > 0){
 			return buffer;
-		
-		}}else{
+		}
+	}else{
 		printf("Pifiaste negro");
 		exit(EXIT_FAILURE);
-		}return NULL;
+	}
+	
+	return NULL;
 }
 
