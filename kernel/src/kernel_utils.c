@@ -83,15 +83,15 @@ void procesar_conexion(void* void_args) {
             return;
         }
 
-        switch (cop)
-        {
+        switch (cop){
         case CONTEXTO_EXEC:
-        recibir_contexto_exec(pcb_en_ejecucion);
-        break;
+            recibir_contexto_exec(pcb_en_ejecucion);
+            break;
 
         case ENTRADASALIDA:
             recibir_info_io(cliente_socket);
             break;
+            
         default:
             log_info(logger_conexiones,"no estas mandando nada");
             break;

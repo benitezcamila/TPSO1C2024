@@ -115,6 +115,34 @@ void recibir_contexto_ejecucion(){
     }
 }
 
+//NO SÉ SI ESTÁ BIEN. CHECKEAR.
+void recibir_interrupcion_de_kernel(){
+    recv(sockets.socket_server_I, &(motivo_interrupcion), sizeof(tipo_de_interrupcion), MSG_WAITALL);
+    ind_contexto_kernel = 0;
+}
+
+void enviar_contexto_a_kernel(motivo_desalojo motivo){
+    ind_contexto_kernel = 0;
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(registros_CPU) + sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
+
+    enviar_paquete(paquete, sockets.socket_server_D);
+}
+
+void enviar_std_a_kernel(motivo_desalojo motivo, char* nombre_interfaz,
+                                void* tamanio_std, uint32_t tamanio_buffer, uint32_t dir_logica){
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
+                                        + string_length(nombre_interfaz)+1 + tamanio_buffer + sizeof(uint32_t));
+    buffer_add(paquete->buffer, INST_IO_STDIN_READ, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
+    buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
+    buffer_add(paquete->buffer, tamanio_std, tamanio_buffer);
+    buffer_add_uint32(paquete->buffer, dir_logica);
+
+    enviar_paquete(paquete, sockets.socket_server_D);
+}
+
 void solicitar_instruccion_a_memoria(){
     t_paquete* paquete = crear_paquete(SOLICITUD_INSTRUCCION, sizeof(uint32_t));
     buffer_add_uint32(paquete->buffer, contexto_registros->PC);
@@ -196,21 +224,6 @@ int solicitar_marco_a_memoria(uint32_t numero_pagina){
 
         return buffer_read_uint32(buffer_memoria);
     }
-}
-
-//NO SÉ SI ESTÁ BIEN. CHECKEAR.
-void recibir_interrupcion_de_kernel(){
-    recv(sockets.socket_server_I, &(motivo_interrupcion), sizeof(tipo_de_interrupcion), MSG_WAITALL);
-    ind_contexto_kernel = 0;
-}
-
-void enviar_contexto_a_kernel(motivo_desalojo motivo){
-    ind_contexto_kernel = 0;
-    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(registros_CPU) + sizeof(motivo_desalojo));
-    buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
-    buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
-
-    enviar_paquete(paquete, sockets.socket_server_D);
 }
 
 /*

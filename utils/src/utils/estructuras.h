@@ -21,7 +21,6 @@ typedef enum {
     DESALOJO_QUANTUM,
     INTERRUPT_PROC,
     SOLICITUD_INSTRUCCION,
-    IO_GEN_SLEEP,
     ENTRADASALIDA,
     LIBERAR_PROCESO,
     ENVIAR_INSTRUCCION, //memoria a cpu
@@ -43,6 +42,9 @@ typedef enum {
     PETICION_IO,
     PETICION_RECURSO,
     SIGNAL_RECURSO,
+    INST_IO_GEN_SLEEP,
+    INST_IO_STDIN_READ,
+    INST_IO_STDOUT_WRITE,
     FIN_QUANTUM,
     //
 }motivo_desalojo;

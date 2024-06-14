@@ -35,56 +35,56 @@ void decode(){
 void execute(){
     //Revisar si esta comparación está bien hecha.
     if(strcmp(linea_de_instruccion_tokenizada[0], "SET") == 0){
-        loggear_instruccion(length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
         uint32_t valor = atoi(linea_de_instruccion_tokenizada[2]);
         set(linea_de_instruccion_tokenizada[1], valor);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "MOV_IN") == 0){
-        loggear_instruccion(length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
 	    mov_in(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "MOV_OUT") == 0){
-        loggear_instruccion(length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
 	    mov_out(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "SUM") == 0){
-        loggear_instruccion(length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
         sum(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "SUB") == 0){
-        loggear_instruccion(length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
         sub(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "JNZ") == 0){
-        loggear_instruccion(length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
         uint32_t proxInstruccion = atoi(linea_de_instruccion_tokenizada[2]);
         jump_no_zero(linea_de_instruccion_tokenizada[1], proxInstruccion);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "RESIZE") == 0){
-        loggear_instruccion(length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
 		uint tamanio = atoi(linea_de_instruccion_tokenizada[1]);
 		resize(tamanio);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "COPY_STRING") == 0){
-        loggear_instruccion(length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
 		uint32_t tamanio = atoi(linea_de_instruccion_tokenizada[1]);
 		copy_string(tamanio);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_GEN_SLEEP") == 0){
-        loggear_instruccion(length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
         uint32_t unidades_de_trabajo = atoi(linea_de_instruccion_tokenizada[2])
         io_gen_sleep(linea_de_instruccion_tokenizada[1], unidades_de_trabajo);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_STDIN_READ") == 0){
-        loggear_instruccion(length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
 		io_stdin_read(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_STDOUT_WRITE") == 0){
-        loggear_instruccion(length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
 		io_stdout_write(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "EXIT") == 0){
-        loggear_instruccion(length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
 		exit_process();
 	}
     //Y así...
@@ -354,21 +354,59 @@ void signal(char* nombre_recurso){
 
 void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
     ind_contexto_kernel = 0;
-    t_paquete* paquete = crear_paquete(IO_GEN_SLEEP, sizeof(registros_CPU) + sizeof(motivo_desalojo));
+
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
+                                        + string_length(nombre_interfaz)+1 + sizeof(uint32_t));
+    buffer_add(paquete->buffer, INST_IO_GEN_SLEEP, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_uint32(paquete->buffer, unidades_de_trabajo);
 
     enviar_paquete(paquete, sockets.socket_server_D);
 }
 
-//COMPLETAR.
-void io_stdin_read(){
-    //
+void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* registro_tamanio){
+    ind_contexto_kernel = 0;
+    dir_logica = (uint32_t) obtener_contenido_registro(registro_direccion);
+
+    if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
+        void* tamanio = malloc(sizeof(uint32_t));
+        tamanio = obtener_contenido_registro(registro_tamanio);
+
+        enviar_stdin_stdout_a_kernel(INST_IO_STDIN_READ, nombre_interfaz, tamanio, sizeof(uint32_t), dir_logica);
+
+        free(tamanio);
+    }
+    else{
+        void* tamanio = malloc(sizeof(uint8_t));
+        tamanio = obtener_contenido_registro(registro_tamanio);
+
+        enviar_stdin_stdout_a_kernel(INST_IO_STDIN_READ, nombre_interfaz, tamanio, sizeof(uint8_t), dir_logica);
+
+        free(tamanio);
+    }
 }
 
-//COMPLETAR.
-void io_stdout_write(){
-    //
+void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* registro_tamanio){
+    ind_contexto_kernel = 0;
+    dir_logica = (uint32_t) obtener_contenido_registro(registro_direccion);
+
+    if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
+        void* tamanio = malloc(sizeof(uint32_t));
+        tamanio = obtener_contenido_registro(registro_tamanio);
+
+        enviar_stdin_stdout_a_kernel(INST_IO_STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint32_t), dir_logica);
+
+        free(tamanio);
+    }
+    else{
+        void* tamanio = malloc(sizeof(uint8_t));
+        tamanio = obtener_contenido_registro(registro_tamanio);
+
+        enviar_stdin_stdout_a_kernel(INST_IO_STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint8_t), dir_logica);
+
+        free(tamanio);
+    }
 }
 
 //COMPLETAR.

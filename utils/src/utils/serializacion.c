@@ -58,7 +58,7 @@ uint8_t buffer_read_uint8(t_buffer *buffer){
 
 // Agrega string al buffer con un uint32_t adelante indicando su longitud
 void buffer_add_string(t_buffer *buffer, uint32_t length, char *string){
-	buffer_add_uint32(buffer,length);
+	buffer_add_uint32(buffer, length);
 	buffer_add(buffer, string, length);
 }
 

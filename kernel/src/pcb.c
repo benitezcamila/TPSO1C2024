@@ -114,58 +114,58 @@ void crear_paquete_contexto_exec(t_pcb* pcb){
 
 void recibir_contexto_exec(t_pcb* pcb){
     uint64_t quantum_a_asignar = configuracion.QUANTUM;
+
     if(strcmp(configuracion.ALGORITMO_PLANIFICACION, "VRR") == 0 || strcmp(configuracion.ALGORITMO_PLANIFICACION, "RR") == 0){
-    quantum_a_asignar = pcb->quantum - temporal_gettime(temp_quantum);
-    temporal_destroy(temp_quantum);
+        quantum_a_asignar = pcb->quantum - temporal_gettime(temp_quantum);
+        temporal_destroy(temp_quantum);
     }
     
     motivo_desalojo mot_desalojo;
     uint32_t buffer_size;
-    recv(sockets.socket_CPU_D,&buffer_size,sizeof(uint32_t),MSG_WAITALL);
+    recv(sockets.socket_CPU_D, &buffer_size, sizeof(uint32_t), MSG_WAITALL);
     t_buffer* buffer = buffer_create(buffer_size);
     recv(sockets.socket_CPU_D, buffer->stream, buffer->size, MSG_WAITALL);
-    buffer_read(buffer,&mot_desalojo,sizeof(motivo_desalojo));
-    if(mot_desalojo != SIGNAL_RECURSO){
-    sem_post(&proceso_ejecutando);
-    }
-    buffer_read(buffer,pcb->registros,sizeof(registros_CPU));
-    
+    buffer_read(buffer,&mot_desalojo, sizeof(motivo_desalojo));
 
-    switch (mot_desalojo)
-    {
+    if(mot_desalojo != SIGNAL_RECURSO){
+        sem_post(&proceso_ejecutando);
+    }
+    buffer_read(buffer,pcb->registros, sizeof(registros_CPU));
+    
+    switch (mot_desalojo){
     case PROCESS_EXIT:
         pcb->estado = EXIT;
-        queue_push(cola_a_liberar,pcb);
+        queue_push(cola_a_liberar, pcb);
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: SUCESS", pcb->pid);
         break;
     
     case PROCESS_ERROR:
         pcb->estado = EXIT;
-        queue_push(cola_a_liberar,pcb);
+        queue_push(cola_a_liberar, pcb);
         uint32_t len_motivo;
-        char* motivo_error = buffer_read_string(buffer,&len_motivo);
+        char* motivo_error = buffer_read_string(buffer, &len_motivo);
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: %s", pcb->pid,motivo_error);
         free(motivo_error);
         break;
 
     case INTERRUPCION:
         pcb->estado = EXIT;
-        queue_push(cola_a_liberar,pcb);
+        queue_push(cola_a_liberar, pcb);
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER");
         break;
 
     case PETICION_RECURSO: {
         if(strcmp(configuracion.ALGORITMO_PLANIFICACION, "VRR") == 0){
-        pcb->quantum = quantum_a_asignar;
-        queue_push(cola_prioritaria_VRR,pcb);
+            pcb->quantum = quantum_a_asignar;
+            queue_push(cola_prioritaria_VRR, pcb);
         }
         uint32_t len;
-        char* recurso = buffer_read_string(buffer,&len);
+        char* recurso = buffer_read_string(buffer, &len);
         log_info(logger_kernel, "PID: %d - Estado Anterior: EXEC - Estado Actual: BLOCKED", pcb->pid);
-        log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb->pid,recurso);
+        log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb->pid, recurso);
         pcb->estado = BLOCKED;
-        str_recursos* str_rec = dictionary_get(recursos,recurso);
-        queue_push(str_rec->cola,pcb);
+        str_recursos* str_rec = dictionary_get(recursos, recurso);
+        queue_push(str_rec->cola, pcb);
         free(recurso);
         break;
     }
@@ -205,11 +205,10 @@ void recibir_contexto_exec(t_pcb* pcb){
     */
 
     case FIN_QUANTUM:
-    pcb->estado = READY;
-    queue_push(cola_ready,pcb);
-    log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb->pid);
-
-    break;
+        pcb->estado = READY;
+        queue_push(cola_ready,pcb);
+        log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb->pid);
+        break;
     
     default:
         break;
