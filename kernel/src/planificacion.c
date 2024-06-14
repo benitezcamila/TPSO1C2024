@@ -55,7 +55,7 @@ void liberar_pcb(t_pcb* pcb){
 }
 
 void crear_proceso(t_pcb* pcb){
-    uint32_t tam_string = string_length(pcb->pathOperaciones);
+    uint32_t tam_string = string_length(pcb->pathOperaciones)+1;
     t_paquete* paquete = crear_paquete(INICIAR_PROCESO,sizeof(uint32_t)*2+tam_string);
     buffer_add_uint32(paquete->buffer,pcb->pid);
     buffer_add_string(paquete->buffer,tam_string,pcb->pathOperaciones);
