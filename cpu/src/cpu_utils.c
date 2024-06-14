@@ -134,7 +134,7 @@ void enviar_std_a_kernel(motivo_desalojo motivo, char* nombre_interfaz,
                                 void* tamanio_std, uint32_t tamanio_buffer, uint32_t dir_logica){
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
                                         + string_length(nombre_interfaz)+1 + tamanio_buffer + sizeof(uint32_t));
-    buffer_add(paquete->buffer, INST_IO_STDIN_READ, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, motivo, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add(paquete->buffer, tamanio_std, tamanio_buffer);
