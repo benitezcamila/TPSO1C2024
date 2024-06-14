@@ -344,6 +344,14 @@ void copy_string(uint32_t tamanio){
     solicitar_escribir_en_memoria(dir_fisica, datos_de_memoria, tamanio);
 }
 
+void wait(char* nombre_recurso){
+    //
+}
+
+void signal(char* nombre_recurso){
+    //
+}
+
 void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
     ind_contexto_kernel = 0;
     t_paquete* paquete = crear_paquete(IO_GEN_SLEEP, sizeof(registros_CPU) + sizeof(motivo_desalojo));
