@@ -36,6 +36,7 @@ void signal(char*);
 void io_gen_sleep(char*, uint32_t);
 void io_stdin_read(char*, char*, char*);
 void io_stdout_write(char*, char*, char*);
+void exit_process()
 
 //Funciones auxiliares.
 void sumar_contenido_registro(char*, uint32_t);

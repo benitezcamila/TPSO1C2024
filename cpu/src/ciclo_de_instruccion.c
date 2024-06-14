@@ -32,6 +32,7 @@ void decode(){
     linea_de_instruccion_tokenizada = string_n_split(linea_de_instruccion, max_long_instruccion, " ");
 }
 
+//Cambiar else if por switch case.
 void execute(){
     //Revisar si esta comparación está bien hecha.
     if(strcmp(linea_de_instruccion_tokenizada[0], "SET") == 0){
@@ -345,11 +346,27 @@ void copy_string(uint32_t tamanio){
 }
 
 void wait(char* nombre_recurso){
-    //
+    ind_contexto_kernel = 0;
+
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
+                                        + string_length(nombre_recurso)+1);
+    buffer_add(paquete->buffer, PETICION_RECURSO, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
+    buffer_add_string(paquete->buffer, string_length(nombre_recurso)+1, nombre_recurso);
+
+    enviar_paquete(paquete, sockets.socket_server_D);
 }
 
 void signal(char* nombre_recurso){
-    //
+    ind_contexto_kernel = 0;
+
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
+                                        + string_length(nombre_recurso)+1);
+    buffer_add(paquete->buffer, SIGNAL_RECURSO, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
+    buffer_add_string(paquete->buffer, string_length(nombre_recurso)+1, nombre_recurso);
+
+    enviar_paquete(paquete, sockets.socket_server_D);
 }
 
 void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
@@ -368,6 +385,7 @@ void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
 void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* registro_tamanio){
     ind_contexto_kernel = 0;
     dir_logica = (uint32_t) obtener_contenido_registro(registro_direccion);
+    //Posiblemente necesite pasarle a Kernel la dir_fisica
 
     if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
         void* tamanio = malloc(sizeof(uint32_t));
@@ -390,6 +408,7 @@ void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* regist
 void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* registro_tamanio){
     ind_contexto_kernel = 0;
     dir_logica = (uint32_t) obtener_contenido_registro(registro_direccion);
+    //Posiblemente necesite pasarle a Kernel la dir_fisica
 
     if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
         void* tamanio = malloc(sizeof(uint32_t));
@@ -409,9 +428,10 @@ void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* regi
     }
 }
 
-//COMPLETAR.
 void exit_process(){
-    //
+    ind_contexto_kernel = 0;
+
+    enviar_contexto_a_kernel(PROCESS_EXIT);
 }
 
 //FUNCIONES AUXILIARES.

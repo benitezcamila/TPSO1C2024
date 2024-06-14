@@ -18,7 +18,7 @@ typedef struct{
     int socket_memoria;
 }str_sockets;
 
-extern int ind_contexto_kernel;
+extern int ind_contexto_kernel = 0;
 extern int llego_interrupcion;
 extern str_sockets sockets;
 
