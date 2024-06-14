@@ -82,21 +82,20 @@ void* a_enviar_create(t_paquete* paquete){
 	return a_enviar;
 }
 
-t_paquete* crear_paquete(op_code code, uint32_t size_buff)
-{
+t_paquete* crear_paquete(op_code code, uint32_t size_buff){
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->codigo_operacion = code;
 	paquete->buffer = buffer_create(size_buff);
 	return paquete;
 }
 
-void eliminar_paquete(t_paquete* paquete) {
+void eliminar_paquete(t_paquete* paquete){
     free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
 }
 
-void enviar_paquete(t_paquete* paquete, int socket_cliente) {
+void enviar_paquete(t_paquete* paquete, int socket_cliente){
     int bytes = paquete->buffer->size + 2 * sizeof(int);
     void* a_enviar = a_enviar_create(paquete);
     send(socket_cliente, a_enviar, paquete->buffer->size + sizeof(uint32_t) + sizeof(op_code), 0);

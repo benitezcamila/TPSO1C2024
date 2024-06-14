@@ -140,28 +140,62 @@ void recibir_instruccion_de_memoria(){
     }
 }
 
-void solicitar_leer_en_memoria(uint32_t dir_fisica, bool es_registro_4_bytes){
-    t_paquete* paquete = crear_paquete(SOLICITUD_LECTURA_MEM, sizeof(uint32_t));
-    buffer_add_uint32(paquete->buffer, PID);
-    buffer_add_uint32(paquete->buffer, dir_fisica);
+void solicitar_leer_en_memoria(uint32_t dir_fisica, uint32_t tamanio){
+    t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_CPU, sizeof(uint32_t) * 4);
 
-    if(!es_registro_4_bytes){
-        buffer_add_uint32(paquete->buffer, sizeof(uint8_t));
-    }
-    else{
-        buffer_add_uint32(paquete->buffer, sizeof(uint32_t));
-    }
+    buffer_add_uint32(paquete->buffer, PID);
+    buffer_add_uint32(paquete->buffer, (uint32_t) 0 ); // 1 escribir, 0 leer
+    buffer_add_uint32(paquete->buffer, dir_fisica);
+    buffer_add_uint32(paquete->buffer, tamanio);
 
     enviar_paquete(paquete, sockets.socket_memoria);
 }
 
-void solicitar_escribir_en_memoria(uint32_t dir_fisica, uint32_t datos_de_registro){
-    t_paquete* paquete = crear_paquete(SOLICITUD_ESCRITURA_MEM, sizeof(uint32_t));
+void* leer_de_memoria(uint32_t tamanio){
+    void* datos_de_memoria = malloc(tamanio);
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    recv(sockets.socket_memoria, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
+
+    if(paquete->codigo_operacion == RESPUESTA_LECTURA_MEMORIA){
+        recv(sockets.socket_memoria, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+        paquete->buffer->stream = malloc(paquete->buffer->size);
+
+        recv(sockets.socket_memoria, paquete->buffer->stream, tamanio, MSG_WAITALL);
+        buffer_read_uint32(paquete->buffer, datos_de_memoria);
+
+        return datos_de_memoria;
+    }
+    else{
+      //Loggear error.
+    }
+}
+
+void solicitar_escribir_en_memoria(uint32_t dir_fisica, void* datos_de_registro, uint32_t tamanio){
+    t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_CPU, sizeof(uint32_t) * 4);
+
     buffer_add_uint32(paquete->buffer, PID);
+    buffer_add_uint32(paquete->buffer, (uint32_t) 1 ); // 1 escribir, 0 leer
     buffer_add_uint32(paquete->buffer, dir_fisica);
-    buffer_add_uint32(paquete->buffer, datos_de_registro);
+    buffer_add_uint32(paquete->buffer, tamanio);
+    buffer_add(paquete->buffer, datos_de_registro, tamanio);
 
     enviar_paquete(paquete, sockets.socket_memoria);
+}
+
+int solicitar_marco_a_memoria(uint32_t numero_pagina){
+    t_paquete* paquete = crear(ACCESO_TABLA_PAGINAS, sizeof(uint32_t) * 2);
+    buffer_add_uint32(paquete->buffer, PID);
+    buffer_add_uint32(paquete->buffer, numero_pagina);
+
+    enviar_paquete(paquete, sockets.socket_memoria);
+    
+    int op_code = recibir_operacion(sockets.socket_memoria);
+    
+    if(op_code == MARCO_BUSCADO ){
+        t_buffer* buffer_memoria = recibir_todo_elbuffer(sockets.socket_memoria);
+
+        return buffer_read_uint32(buffer_memoria);
+    }
 }
 
 //NO SÉ SI ESTÁ BIEN. CHECKEAR.

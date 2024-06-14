@@ -33,8 +33,6 @@ typedef enum {
     RESPUESTA_LECTURA_MEMORIA,
     ACCESO_TABLA_PAGINAS, 
     MARCO_BUSCADO,
-    SOLICITUD_LECTURA_MEM,
-    SOLICITUD_ESCRITURA_MEM,
 } op_code;
 
 typedef enum {
@@ -48,7 +46,6 @@ typedef enum {
     FIN_QUANTUM,
     //
 }motivo_desalojo;
-
 
 typedef enum{
     DESALOJOQUANTUM

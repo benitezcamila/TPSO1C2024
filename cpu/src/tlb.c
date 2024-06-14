@@ -1,6 +1,8 @@
 #include <tlb.h>
 #include <cpu_utils.h>
 
+t_TLB* tlb;
+
 //Función para buscar en la TLB.
 int buscar_en_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina){
     for (int i = 0; i < tlb->count; ++i) {
@@ -9,6 +11,7 @@ int buscar_en_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina){
                 tlb->entradas[i].uso = tlb->tiempo_actual++;
             }
     
+        log_info(logger_cpu, "PID: %d - TLB HIT - Pagina: %d", PID, pagina);
         return tlb->entradas[i].marco; // TLB Hit
         }
     }
@@ -17,7 +20,7 @@ int buscar_en_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina){
 }
 
 //Función para agregar entrada a la TLB.
-void agregar_entrada_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina, uint32_t marco) {
+void actualizar_TLB_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina, uint32_t marco) {
     t_entrada_TLB nueva_entrada = {pid, pagina, marco, 0, tlb->tiempo_actual++};
 
     if (tlb->count < tlb->capacidad) {

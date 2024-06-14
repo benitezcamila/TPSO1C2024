@@ -94,7 +94,7 @@ void* access_espacio_usuario(t_buffer* buffer) {
     
     }
     if(accion == 1){
-    log_info(logger_memoria, "PID %d - accion leer - direc_fisica %d - tamanio %d ",pid, direc_fisica, tamanio );  
+    log_info(logger_memoria, "PID %d - accion escribir - direc_fisica %d - tamanio %d ",pid, direc_fisica, tamanio );  
     return  escribir_espacio_usuario(pid, direc_fisica, tamanio, buffer);
 
     }
