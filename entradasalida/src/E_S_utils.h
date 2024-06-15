@@ -23,4 +23,15 @@ extern str_sockets sockets;
 void establecer_conexion_memoria();
 void establecer_conexion_kernel();
 //void iniciar_interfaz();
+
+void procesar_io_gen_sleep (t_buffer* );
+
+void enviar_info_io_a_kernel();
+
+void procesar_io_stdin_read(t_buffer* , uint32_t );
+char* leer_consola();
+void escribir_en_memoria(char* ,uint32_t ,uint32_t ) ;
+void procesar_io_stdout_write(t_buffer* , uint32_t );
+void recibir_instrucciones ();
+char* string_de_instruccion (t_instruccion);
 #endif

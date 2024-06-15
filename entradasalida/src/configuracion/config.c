@@ -19,6 +19,7 @@ t_interfaz config_string_a_enum(char* str){
     else if (strcmp(str,"DIALFS")== 0 ){
         return DIALFS;
     }
+
 }
 
 void obtener_config(char* path_config){

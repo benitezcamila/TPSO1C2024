@@ -406,7 +406,7 @@ void signal(char* nombre_recurso){
 
 void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
     ind_contexto_kernel = 0;
-
+    // si le saco 8 a motivo de desalojo se traduce la isntruccion (por el enum)
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
                                         + string_length(nombre_interfaz)+1 + sizeof(uint32_t));
     motivo_desalojo mot = IO_GEN_SLEEP;                                    

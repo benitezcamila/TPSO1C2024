@@ -57,9 +57,11 @@ typedef enum {
     //
 }motivo_desalojo;
 
-typedef enum{
+
+/*typedef enum{
     DESALOJO_QUANTUM
 } tipo_de_interrupcion;
+*/
 
 typedef struct {
     uint32_t PC; // Program Counter
@@ -100,5 +102,21 @@ typedef enum {
     DIALFS
 } t_interfaz;
 
+typedef enum {
+    GEN_SLEEP, 
+    STDIN_READ, 
+    STDOUT_WRITE, 
+    FS_CREATE, 
+    FS_DELETE, 
+    FS_TRUNCATE, 
+    FS_WRITE, 
+    FS_READ, 
+} t_instruccion;
+
+typedef struct {
+    int gen_sleep_milisegundos;
+    uint32_t direccion_fisica_memoria_read;
+    uint32_t direccion_fisica_memoria_write;
+} t_parametros;
 
 #endif
