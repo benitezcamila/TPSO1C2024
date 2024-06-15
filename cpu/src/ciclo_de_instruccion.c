@@ -120,7 +120,7 @@ void check_interrupt(){
             break;
 
         default:
-            //Loggear error.
+            log_info(logger_errores_cpu, "Ups! Pasó algo raro. El motivo de interrupción obtenido es: %d", motivo_interrupcion);
             break;
         }
     }
@@ -134,7 +134,12 @@ uint32_t mmu(t_TLB* tlb, uint32_t pid){
 
     if (marco == -1) { //TLB Miss
         log_info(logger_cpu, "PID: %d - TLB MISS - Pagina: %d", PID, numero_pagina);
-        marco = solicitar_marco_a_memoria(numero_pagina); 
+        marco = solicitar_marco_a_memoria(numero_pagina);
+
+        if(marco == -1){
+            log_info(logger_errores_cpu, "La memoria no envió el MARCO_BUSCADO.");
+            //DEBERÍA HACER UN RETURN, PERO RARO. REVISAR.ss
+        }
     }
 
     //No sé si este log está bien puesto acá
@@ -740,6 +745,7 @@ void loggear_instruccion(int cant_parametros){
                 linea_de_instruccion_tokenizada[5]);
 
         default:
-        //Loggear error.
+        log_info(logger_errores_cpu, "Hubo un problema obteniendo la instrucción. Cantidad
+                de parámetros obtenida: %d", cant_parametros);
     }
 }

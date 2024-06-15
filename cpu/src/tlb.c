@@ -51,7 +51,7 @@ void reemplazo_FIFO(t_TLB* tlb, t_entrada_TLB nueva_entrada) {
 
 void reemplazo_LRU(t_TLB* tlb, t_entrada_TLB nueva_entrada) {
     int idx = 0;
-    int uso_min = 1;
+    int uso_min = 1; //REVISAR
 
     for (int i = 0; i < tlb->count; ++i) {
         if (tlb->entradas[i].uso < uso_min) {
