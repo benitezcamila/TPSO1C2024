@@ -3,6 +3,7 @@
 
 #include <utils/estructuras.h>
 #include <commons/string.h>
+#include <stdint.h>
 
 // Estructura de entrada de la TLB
 typedef struct {
@@ -25,7 +26,7 @@ typedef struct {
 extern t_TLB* tlb;
 
 int buscar_en_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina);
-void agregar_entrada_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina, uint32_t marco);
+void actualizar_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina, uint32_t marco);
 void reemplazo_FIFO(t_TLB* tlb, t_entrada_TLB nueva_entrada);
 void reemplazo_LRU(t_TLB* tlb, t_entrada_TLB nueva_entrada);
 

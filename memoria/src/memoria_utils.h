@@ -21,7 +21,6 @@ typedef struct {
     int socket_cliente_E_S;
 }str_sockets;
 
-extern char* path_kernel;
 
 extern str_sockets sockets;
 extern sem_t sem_escuchar;
@@ -33,8 +32,8 @@ void escuchar_instrucciones();
 int server_escuchar();
 void procesar_conexion(void*);
 int enviar_log(int, int);
+void finalizar_proceso(t_buffer*);
 t_list* leer_instrucciones_del_path();
-
 typedef struct {
     int pid;
     t_list* instruccionesParaCpu;
@@ -44,6 +43,7 @@ struct paquetePcb{
     int pid;
 };
 
+extern char* path_kernel;
 extern struct paquetePcb kernelPcb;
 extern t_list* listaDeProcesos;
 

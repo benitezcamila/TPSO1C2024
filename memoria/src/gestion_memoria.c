@@ -2,8 +2,12 @@
 #include <math.h>
 #define min(a,b) (a<b?a:b)
 
+t_dictionary* tabla_global;
+void* espacio_usuario;
+int cantFrames;
+int* bitMap;
 
-void crearTablaPagina(int pid){
+void crear_tabla_de_paginas(int pid){
     tabla_pagina* tabPagina = malloc(sizeof(tabla_pagina));
     tabPagina->pid = pid;
     tabPagina->paginas = list_create();    
@@ -20,11 +24,7 @@ void ajustar_tam_proceso(t_buffer* buffer_cpu){
     tabla_pagina* paginas_del_proceso = dictionary_get(tabla_global, string_itoa(pid));
 
     int tam_actual = list_size( paginas_del_proceso->paginas);
-    if(tam_actual == 0 ) {
-        asignar_id_pagina(paginas_del_proceso);
-        cantFrames--;
-        tam_actual= 0;// para el log de ampliar
-    }
+    
 
     if(tam_actual > cantFrames) {
         log_info(logger_memoria, "PID %d - tamanio actual %d - tamanio a reducir %d",pid, tam_actual, cantFrames );
@@ -33,6 +33,22 @@ void ajustar_tam_proceso(t_buffer* buffer_cpu){
 
 
     if(tam_actual <= cantFrames) {
+
+       if( hay_espacio(tam_actual , cantFrames)){
+
+        if(tam_actual == 0 ) {
+        asignar_id_pagina(paginas_del_proceso);
+        cantFrames--;
+        tam_actual= 0;// para el log de ampliar
+        }else{
+            void* a_enviar = malloc(sizeof(motivo_desalojo));
+            motivo_desalojo mot = OUT_OF_MEMORY;
+            memcpy(a_enviar,&mot,sizeof(motivo_desalojo));
+            send(sockets.socket_cliente_CPU, a_enviar, sizeof(motivo_desalojo), MSG_WAITALL);
+            free(a_enviar);
+        return ;
+        }
+    }
 
         log_info(logger_memoria, "PID %d - tamanio actual %d - tamanio a ampliar %d",pid, tam_actual, cantFrames );
 
@@ -43,10 +59,28 @@ void ajustar_tam_proceso(t_buffer* buffer_cpu){
 
 }
 
+
+bool hay_espacio(uint32_t espacioActualUsado, uint32_t cantFramesQueSeNecesitan){
+
+    if(cantFramesDisponibles() >= (cantFramesQueSeNecesitan - espacioActualUsado)){
+        return true;
+    }
+    return false;
+}
+
+
+int cantFramesDisponibles(){
+    int contador =0 ;
+    for(int i=0; i == (cantFrames -1); i++){
+        if(bitMap[i] == 0) contador++;
+    }
+    return contador;
+}
+
 void asignar_id_pagina(tabla_pagina* tabla_proceso ){
     t_pagina* primer_pagina = malloc(sizeof(t_pagina)); 
     primer_pagina->pid_pagina = 0;
-    primer_pagina->numero_marco = marcoDisponible();
+    primer_pagina->numero_marco = marco_disponible();
     list_add(tabla_proceso->paginas, primer_pagina);
     free(primer_pagina);
 
@@ -65,7 +99,7 @@ void reduccion_del_proceso(tabla_pagina* tabla_proceso, int marcos_final){
 void ampliacion_del_proceso(tabla_pagina* tabla_proceso, int marcos_final){ 
     for(int i = list_size(tabla_proceso->paginas); i<marcos_final; i++){
         t_pagina* entrada = malloc(sizeof(t_pagina));
-        entrada->numero_marco = marcoDisponible();
+        entrada->numero_marco = marco_disponible();
         entrada->offSet = 0;
         entrada->escrita = false;
 
@@ -74,7 +108,7 @@ void ampliacion_del_proceso(tabla_pagina* tabla_proceso, int marcos_final){
 }
 
 
-int marcoDisponible(){
+int marco_disponible(){
     for(int i=0; i< cantFrames ; i++){
         if(bitMap[i] == 0) return i;
     }
@@ -214,17 +248,3 @@ t_paquete* buscar_marco_pagina (t_buffer* buffer_de_cpu){
 }
 
 
-void finalizar_proceso(t_buffer* buffer_kernel){
-    
-    uint32_t pid = buffer_read_uint32(buffer_kernel);
-    
-    tabla_pagina* paginas_del_proceso = dictionary_get(tabla_global, string_itoa(pid));
-    uint32_t tam_tab_pagina = list_size(paginas_del_proceso->paginas);
-
-    reduccion_del_proceso(paginas_del_proceso, 0); // marco bits en 0 y saco paginas de la lista
-
-    dictionary_remove(tabla_global, string_itoa(pid));// saco del proceso.
-
-    log_info(logger_memoria, "PID %d -  tamanio %d", pid, tam_tab_pagina);
-
-}

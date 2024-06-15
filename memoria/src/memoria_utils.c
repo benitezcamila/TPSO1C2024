@@ -3,19 +3,19 @@
 str_sockets sockets;
 sem_t sem_escuchar;
 t_list* listaDeProcesos;
+char* path_kernel;
+struct paquetePcb kernelPcb;
+
+
 
 void inicializar_memoria(){
     sockets.socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
     log_info(logger_conexiones, "Memoria esta escuchando");
     espacio_usuario = malloc(sizeof(configuracion.TAM_MEMORIA));
-    
     cantFrames = configuracion.TAM_MEMORIA/ configuracion.TAM_PAGINA;
-    
-  
-
+    bitMap = (int *)malloc(cantFrames * sizeof(int));
     memset(bitMap, 0 , sizeof(int) * cantFrames);
     tabla_global = dictionary_create();
-
 } 
 
 void iniciar_proceso(t_buffer* bufferDeKernel){
@@ -29,9 +29,8 @@ void iniciar_proceso(t_buffer* bufferDeKernel){
 // ------------ leo archivo instrucciones ---------//    
     procesos->instruccionesParaCpu = leer_instrucciones_del_path(buffer_read_string(bufferDeKernel,&sizeDelProceso));
 
-    cargarEnTablaDePaginas(procesos->pid);
+    crear_tabla_de_paginas(procesos->pid);
     agregarProcesoALaCola(procesos);
-
 
     free(procesos);
 }
@@ -68,7 +67,7 @@ void procesar_conexion(void* void_args) {
     char* nombre_cliente = args->cliente_name;
     free(args);
     void* a_enviar;//espacio_usuario
-     op_code cop;
+    op_code cop;
     while (cliente_socket != -1) {
 
         if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
@@ -124,6 +123,7 @@ void procesar_conexion(void* void_args) {
             break;
         }
     }
+    usleep(configuracion.RETARDO_RESPUESTA *1000);
     free(nombre_cliente);
 }
 
@@ -164,12 +164,26 @@ void agregarProcesoALaCola(procesoListaInst* proceso){
 
 
 procesoListaInst* buscar_procesoPorId(int pid){
-        bool pidIguales(  procesoListaInst* proceso){
+    bool pidIguales(  procesoListaInst* proceso){
    return proceso->pid == pid;
 }
-        return list_find(listaDeProcesos, (void*) pidIguales);       
+    return list_find(listaDeProcesos, (void*) pidIguales);       
 }
 
+void finalizar_proceso(t_buffer* buffer_kernel){
+    
+    uint32_t pid = buffer_read_uint32(buffer_kernel);
+    
+    tabla_pagina* paginas_del_proceso = dictionary_get(tabla_global, string_itoa(pid));
+    uint32_t tam_tab_pagina = list_size(paginas_del_proceso->paginas);
+
+    reduccion_del_proceso(paginas_del_proceso, 0); // marco bits en 0 y saco paginas de la lista
+
+    dictionary_remove(tabla_global, string_itoa(pid));// saco del proceso.
+
+    log_info(logger_memoria, "PID %d -  tamanio %d", pid, tam_tab_pagina);
+
+}
 
 char* instruccionActual (procesoListaInst* proceso, int ip ){
 

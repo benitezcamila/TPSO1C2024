@@ -3,16 +3,16 @@
 
 #include <utils/estructuras.h>
 #include <commons/string.h>
+#include "tlb.h"
 
 extern uint32_t PID;
 extern registros_CPU* contexto_registros;
 extern char* linea_de_instruccion;
-extern const short max_long_instruccion = 6;
-extern char* linea_de_instruccion_tokenizada[max_long_instruccion];
-extern int llego_interrupcion;
+extern const short max_long_instruccion;
+extern char** linea_de_instruccion_tokenizada;
 extern tipo_de_interrupcion motivo_interrupcion;
-extern int dir_logica = 0;
-extern uint32_t dir_fisica = 0;
+extern uint32_t dir_logica;
+extern uint32_t dir_fisica;
 
 //Funciones principales.
 void fetch_instruction();
@@ -41,7 +41,7 @@ void io_fs_delete(char*, char*);
 void io_fs_truncate(char*, char*, char*);
 void io_fs_write(char*, char*, char*, char*, char*);
 void io_fs_read(char*, char*, char*, char*, char*);
-void exit_process()
+void exit_process();
 
 //Funciones auxiliares.
 void sumar_contenido_registro(char*, uint32_t);

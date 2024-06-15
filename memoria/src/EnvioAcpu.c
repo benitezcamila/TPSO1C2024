@@ -12,8 +12,6 @@ char* instruccionAEnviar = malloc (sizeof(char)* maxiumLineLength);
 instruccionAEnviar = instruccionActual(proceso, ip);
 
 enviar_instruccion(instruccionAEnviar);
-sleep(configuracion.RETARDO_RESPUESTA);
-
 }
 
 void enviar_instruccion(char* instruccionAEnviar) {

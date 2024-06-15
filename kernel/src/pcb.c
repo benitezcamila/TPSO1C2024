@@ -84,9 +84,9 @@ void crear_paquete_pcb(t_pcb* pcb) {
     buffer_add(paquete->buffer,pcb->registros,sizeof(pcb->registros));
     buffer_add_uint32(paquete->buffer,pcb->estado);
     buffer_add_uint32(paquete->buffer,pcb->ticket);
-    buffer_add_string(paquete->buffer,string_length(pcb->pathOperaciones),pcb->pathOperaciones);
+    buffer_add_string(paquete->buffer,string_length(pcb->pathOperaciones)+1,pcb->pathOperaciones);
 
-    send(sockets.socket_CPU_D, paquete->buffer->stream, paquete->buffer->size + sizeof(uint32_t)*3 + string_length(pcb->pathOperaciones), 0);
+    send(sockets.socket_CPU_D, paquete->buffer->stream, paquete->buffer->size + sizeof(uint32_t)*3 + string_length(pcb->pathOperaciones)+1, 0);
     
     free(paquete->buffer->stream);
     free(paquete->buffer);
@@ -105,7 +105,8 @@ void desempaquetar_pcb(t_buffer* buffer,t_pcb* pcb){
 
 void crear_paquete_contexto_exec(t_pcb* pcb){
 
-    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC,sizeof(registros_CPU));
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC,sizeof(registros_CPU)+sizeof(uint32_t));
+    buffer_add_uint32(paquete->buffer,pcb->pid);
     buffer_add(paquete->buffer,pcb->registros,sizeof(registros_CPU));
     enviar_paquete(paquete,sockets.socket_CPU_D);
     pcb_en_ejecucion = pcb;
@@ -185,24 +186,6 @@ void recibir_contexto_exec(t_pcb* pcb){
         sem_post(&str_rec->cantidad_recursos);
         break;
     }
-/*
-    case ENTRADASALIDA:
-        if(strcmp(configuracion.ALGORITMO_PLANIFICACION, "VRR" == 0)){
-        pcb->quantum = quantum_a_asignar;
-        queue_push(cola_prioritaria_VRR,pcb);
-        };
-        uint32_t len;
-        char* motivo = buffer_read_string(paquete->buffer,&len);
-        log_info(logger_kernel, "PID: %d - Estado Anterior: EXEC - Estado Actual: BLOCKED", pcb->pid);
-        log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb->pid,motivo);
-        free(motivo);
-        pcb->estado = BLOCKED;
-        queue_push(bloqueado,pcb);
-        break;      
-
-    case LLAMADO_KERNEL:
-    break;
-    */
 
     case FIN_QUANTUM:
         pcb->estado = READY;
@@ -216,23 +199,5 @@ void recibir_contexto_exec(t_pcb* pcb){
     buffer_destroy(buffer);
 
 }
-
-/*
-void serializar_registros(t_buffer* buffer,t_pcb* pcb){
-
-    buffer_add_uint32(buffer,&pcb->registros->PC);
-    buffer_add_uint8(buffer,&pcb->registros->AX);
-    buffer_add_uint8(buffer,&pcb->registros->BX);
-    buffer_add_uint8(buffer,&pcb->registros->CX);
-    buffer_add_uint8(buffer,&pcb->registros->DX);
-    buffer_add_uint32(buffer,&pcb->registros->EAX);
-    buffer_add_uint32(buffer,&pcb->registros->EBX);
-    buffer_add_uint32(buffer,&pcb->registros->ECX);
-    buffer_add_uint32(buffer,&pcb->registros->EDX);
-    buffer_add_uint32(buffer,&pcb->registros->SI);
-    buffer_add_uint32(buffer,&pcb->registros->DI);
-}
-*/
-
 
 

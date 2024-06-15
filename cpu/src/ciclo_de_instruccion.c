@@ -7,8 +7,8 @@ uint32_t PID;
 registros_CPU* contexto_registros;
 char* linea_de_instruccion;
 const short max_long_instruccion = 6;
-char* linea_de_instruccion_tokenizada[max_long_instruccion];
-int llego_interrupcion;
+char** linea_de_instruccion_tokenizada;
+uint32_t* longitud_linea_instruccion;
 tipo_de_interrupcion motivo_interrupcion;
 uint32_t dir_logica = 0;
 uint32_t dir_fisica = 0;
@@ -28,7 +28,7 @@ void fetch_instruction(){
 }
 
 void decode(){
-    recibir_instruccion_de_memoria();
+    recibir_instruccion_de_memoria(longitud_linea_instruccion);
     linea_de_instruccion_tokenizada = string_n_split(linea_de_instruccion, max_long_instruccion, " ");
 }
 
@@ -71,7 +71,7 @@ void execute(){
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_GEN_SLEEP") == 0){
         loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
-        uint32_t unidades_de_trabajo = atoi(linea_de_instruccion_tokenizada[2])
+        uint32_t unidades_de_trabajo = atoi(linea_de_instruccion_tokenizada[2]);
         io_gen_sleep(linea_de_instruccion_tokenizada[1], unidades_de_trabajo);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_STDIN_READ") == 0){
@@ -190,7 +190,8 @@ void mov_in(char* registro_datos, char* registro_direccion){
         datos_de_memoria = leer_de_memoria(sizeof(uint32_t));
         
         set(registro_datos, datos_de_memoria);
-        log_info("PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, dir_fisica, (uint32_t)datos_de_memoria);
+        log_info(logger_cpu, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, dir_fisica, (uint32_t)datos_de_memoria);
+        free(datos_de_memoria);
     }
     else{
         solicitar_leer_en_memoria(dir_fisica, sizeof(uint8_t));
@@ -199,7 +200,8 @@ void mov_in(char* registro_datos, char* registro_direccion){
         datos_de_memoria = leer_de_memoria(sizeof(uint8_t));
         
         set(registro_datos, datos_de_memoria);
-        log_info("PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, dir_fisica, (uint8_t)datos_de_memoria);
+        log_info(logger_cpu, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, dir_fisica, (uint8_t)datos_de_memoria);
+        free(datos_de_memoria);
     }
 }
 
@@ -377,7 +379,8 @@ void wait(char* nombre_recurso){
 
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
                                         + string_length(nombre_recurso)+1);
-    buffer_add(paquete->buffer, PETICION_RECURSO, sizeof(motivo_desalojo));
+    motivo_desalojo mot = PETICION_RECURSO;
+    buffer_add(paquete->buffer, &mot, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_recurso)+1, nombre_recurso);
 
@@ -389,7 +392,8 @@ void signal(char* nombre_recurso){
 
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
                                         + string_length(nombre_recurso)+1);
-    buffer_add(paquete->buffer, SIGNAL_RECURSO, sizeof(motivo_desalojo));
+    motivo_desalojo mot = SIGNAL_RECURSO;
+    buffer_add(paquete->buffer, &mot, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_recurso)+1, nombre_recurso);
 
@@ -401,7 +405,8 @@ void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
 
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
                                         + string_length(nombre_interfaz)+1 + sizeof(uint32_t));
-    buffer_add(paquete->buffer, IO_GEN_SLEEP, sizeof(motivo_desalojo));
+    motivo_desalojo mot = IO_GEN_SLEEP;                                    
+    buffer_add(paquete->buffer, &mot, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_uint32(paquete->buffer, unidades_de_trabajo);
@@ -702,7 +707,7 @@ void* obtener_contenido_registro(char* registro){
     else if(strcmp(registro, "EDX") == 0){
         return contexto_registros->EDX;
     }
-void* leer_de_memoria_y_registrar(char* registro_datos){
+    else if(strcmp(registro, "SI") == 0){
         return contexto_registros->SI;
     }
     else if(strcmp(registro, "DI") == 0){
@@ -713,23 +718,23 @@ void* leer_de_memoria_y_registrar(char* registro_datos){
 void loggear_instruccion(int cant_parametros){
     switch(cant_parametros){
         case 0:
-        log_info("PID: %d - Ejecutando: %s", linea_de_instruccion_tokenizada[0]);
+        log_info(logger_cpu, "PID: %d - Ejecutando: %s", PID,linea_de_instruccion_tokenizada[0]);
 
         case 1:
-        log_info("PID: %d - Ejecutando: %s - %s", linea_de_instruccion_tokenizada[0],
+        log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", PID, linea_de_instruccion_tokenizada[0],
                 linea_de_instruccion_tokenizada[1]);
 
         case 2:
-        log_info("PID: %d - Ejecutando: %s - %s %s", linea_de_instruccion_tokenizada[0],
+        log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", PID, linea_de_instruccion_tokenizada[0],
                 linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
 
         case 3:
-        log_info("PID: %d - Ejecutando: %s - %s %s %s", linea_de_instruccion_tokenizada[0],
+        log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s %s", PID, linea_de_instruccion_tokenizada[0],
                 linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2],
                 linea_de_instruccion_tokenizada[3]);
 
         case 5:
-        log_info("PID: %d - Ejecutando: %s - %s %s %s %s %s", linea_de_instruccion_tokenizada[0],
+        log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s %s %s %s", PID, linea_de_instruccion_tokenizada[0],
                 linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2],
                 linea_de_instruccion_tokenizada[3], linea_de_instruccion_tokenizada[4],
                 linea_de_instruccion_tokenizada[5]);

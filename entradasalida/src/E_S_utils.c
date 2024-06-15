@@ -32,6 +32,7 @@ void procesar_io_gen_sleep (int milisegundos_de_espera) {
 void enviar_info_io_a_kernel(){
     t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_interfaz) + string_length(nombre_interfaz)+1+sizeof(uint32_t));
     buffer_add(paquete->buffer, &configuracion.TIPO_INTERFAZ, sizeof(t_interfaz));
+    
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     enviar_paquete(paquete, sockets.socket_kernel);
 }

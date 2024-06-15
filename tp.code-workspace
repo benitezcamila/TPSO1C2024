@@ -11,7 +11,13 @@
 			"limits": "c",
 			"cstdlib": "c",
 			"random": "c",
-			"*.tcc": "c"
+			"*.tcc": "c",
+			"bit": "c",
+			"compare": "c",
+			"cstddef": "c",
+			"memory": "c",
+			"new": "c",
+			"functional": "c"
 		},
 		"C_Cpp.errorSquiggles": "disabled",
 	},

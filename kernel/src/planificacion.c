@@ -162,11 +162,11 @@ void esperar_interrupcion_quantum(t_pcb *a_ejecutar){
     int ticket_referencia = a_ejecutar->ticket;
     usleep(a_ejecutar->quantum * 1000);
     if(ticket_referencia == a_ejecutar->ticket && a_ejecutar->estado == EXEC){
-        void* a_enviar = malloc(sizeof(op_code));
-        op_code cod = DESALOJO_QUANTUM;
+        void* a_enviar = malloc(sizeof(tipo_de_interrupcion));
+        tipo_de_interrupcion inter = DESALOJO_QUANTUM;
         a_ejecutar->quantum = configuracion.QUANTUM;
-        memcpy(a_enviar,&(cod),sizeof(op_code));
-        send(sockets.socket_CPU_I, a_enviar, sizeof(op_code), 0);
+        memcpy(a_enviar,&(inter),sizeof(tipo_de_interrupcion));
+        send(sockets.socket_CPU_I, a_enviar, sizeof(tipo_de_interrupcion), 0);
         free (a_enviar);
     }
 

@@ -2,6 +2,7 @@
 #define ESTRUCTURAS_H_
 
 #include <commons/log.h>
+#include <stdint.h>
 
 
 typedef enum {
@@ -18,7 +19,6 @@ typedef enum {
     PAQUETE,
     INSTRUCCION,
     CONTEXTO_EXEC,
-    DESALOJO_QUANTUM,
     INTERRUPT_PROC,
     SOLICITUD_INSTRUCCION,
     ENTRADASALIDA,

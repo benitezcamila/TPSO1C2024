@@ -32,8 +32,8 @@ void establecer_conexion_memoria(){
 
 void atender_conexiones(){
     pthread_t ki, kd;
-    pthread_create(&ki,NULL,(void*)server_escuchar,(void*)sockets.socket_server_I);
-    pthread_create(&kd,NULL,(void*)server_escuchar,(void*)sockets.socket_server_D);
+    pthread_create(&ki,NULL,(void*)server_escuchar,(void*)(sockets.socket_server_I));
+    pthread_create(&kd,NULL,(void*)server_escuchar,(void*)(sockets.socket_server_D));
     pthread_join(ki,NULL);
     pthread_join(kd,NULL);
 }
@@ -105,9 +105,9 @@ void recibir_contexto_ejecucion(){
         paquete->buffer->stream = malloc(paquete->buffer->size);
 
         recv(sockets.socket_server_D, paquete->buffer->stream, sizeof(uint32_t), MSG_WAITALL);
-        buffer_read_uint32(paquete->buffer, &PID);
+        PID =  buffer_read_uint32(paquete->buffer);
 
-        recv(sockets.socket_CPU_D, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
+        recv(sockets.socket_server_D, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
         buffer_read(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     }
     else{
@@ -179,7 +179,7 @@ void solicitar_write_read_fs_a_kernel(motivo_desalojo motivo, char* nombre_inter
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_string(paquete->buffer, string_length(nombre_archivo)+1, nombre_archivo);
     buffer_add(paquete->buffer, tamanio_fs, tamanio_data1);
-    buffer_add_uint32(dir_fisica);
+    buffer_add_uint32(paquete->buffer, dir_fisica);
     buffer_add(paquete->buffer, puntero_archivo, tamanio_data2);
 
     enviar_paquete(paquete, sockets.socket_server_D);
@@ -192,7 +192,7 @@ void solicitar_instruccion_a_memoria(){
     enviar_paquete(paquete, sockets.socket_memoria);
 }
 
-void recibir_instruccion_de_memoria(){
+void recibir_instruccion_de_memoria(uint32_t* longitud_linea_instruccion){
     t_paquete* paquete = malloc(sizeof(t_paquete));
     recv(sockets.socket_memoria, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
 
@@ -200,10 +200,8 @@ void recibir_instruccion_de_memoria(){
         recv(sockets.socket_memoria, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
         paquete->buffer->stream = malloc(paquete->buffer->size);
 
-        uint32_t longitud_linea_instruccion = 0;
-
         recv(sockets.socket_memoria, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
-        linea_de_instruccion = buffer_read_string(paquete->buffer, &longitud_linea_instruccion);
+        linea_de_instruccion = buffer_read_string(paquete->buffer, longitud_linea_instruccion);
     }
     else{
         //Loggear error.
@@ -219,7 +217,7 @@ void recibir_respuesta_resize_memoria(uint32_t PID){
         break;
     
     case RESIZE_SUCCESS:
-        log_info("El resize del proceso %d fue exitoso.", PID);
+        log_info(logger_cpu, "El resize del proceso %d fue exitoso.", PID);
         break;
 
     default:
@@ -239,8 +237,9 @@ void solicitar_leer_en_memoria(uint32_t dir_fisica, uint32_t tamanio){
     enviar_paquete(paquete, sockets.socket_memoria);
 }
 
+//Si hay un error con la lectura de memoria, revisar acá.
 void* leer_de_memoria(uint32_t tamanio){
-    void* datos_de_memoria = malloc(tamanio);
+    uint32_t* datos_de_memoria = malloc(tamanio);
     t_paquete* paquete = malloc(sizeof(t_paquete));
     recv(sockets.socket_memoria, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
 
@@ -249,13 +248,14 @@ void* leer_de_memoria(uint32_t tamanio){
         paquete->buffer->stream = malloc(paquete->buffer->size);
 
         recv(sockets.socket_memoria, paquete->buffer->stream, tamanio, MSG_WAITALL);
-        buffer_read_uint32(paquete->buffer, datos_de_memoria);
+        *datos_de_memoria = buffer_read_uint32(paquete->buffer);
 
-        return datos_de_memoria;
+        return (void*) datos_de_memoria;
     }
     else{
       //Loggear error.
     }
+    return NULL;
 }
 
 void solicitar_escribir_en_memoria(uint32_t dir_fisica, void* datos_de_registro, uint32_t tamanio){
@@ -271,7 +271,7 @@ void solicitar_escribir_en_memoria(uint32_t dir_fisica, void* datos_de_registro,
 }
 
 int solicitar_marco_a_memoria(uint32_t numero_pagina){
-    t_paquete* paquete = crear(ACCESO_TABLA_PAGINAS, sizeof(uint32_t) * 2);
+    t_paquete* paquete = crear_paquete(ACCESO_TABLA_PAGINAS, sizeof(uint32_t) * 2);
     buffer_add_uint32(paquete->buffer, PID);
     buffer_add_uint32(paquete->buffer, numero_pagina);
 
@@ -284,6 +284,7 @@ int solicitar_marco_a_memoria(uint32_t numero_pagina){
 
         return buffer_read_uint32(buffer_memoria);
     }
+    return -1;
 }
 
 /*
