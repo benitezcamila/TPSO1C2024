@@ -3,12 +3,15 @@
 str_sockets sockets;
 char* nombre_interfaz;
 
+
 void establecer_conexion_kernel(){
+    motivo_desalojo instruccion_a_procesar;
     int fd_kernel = crear_conexion(configuracion.IP_KERNEL ,string_itoa(configuracion.PUERTO_KERNEL),logger_conexiones,"Entrada Salida");
     sockets.socket_kernel = fd_kernel;
     log_info(logger_conexiones, "Conectado Entrada/Salida-Kernel");
     enviar_info_io_a_kernel();
     log_info(logger_conexiones, "Info enviada");
+    esperar_intrucciones(&instruccion_a_procesar);
     // agregar loop para atender conexion
     //procesar_io_gen_sleep(3000);
 }
@@ -38,6 +41,44 @@ void enviar_info_io_a_kernel(){
 }
 
 
+
+void esperar_instrucciones (&instruccion){
+    if (recv(sockets.socket_kernel, &instruccion, sizeof(motivo_desalojo), 0) != sizeof(motivo_desalojo)) {
+            log_info(logger_conexiones, "Instruccion invalida");
+            free(nombre_cliente);
+            return;
+        }
+    switch (instruccion) {
+        case IO_GEN_SLEEP:
+        procesar_io_gen_sleep();
+        break;
+        case IO_STDIN_READ:
+        //procesar_io_stdin_read();
+        break;
+        case IO_STDOUT_WRITE:
+        //procesar_io_stdout_write();
+        break;
+        case IO_FS_CREATE:
+        //procesar_io_fs_create();
+        break;
+        case IO_FS_DELETE:
+        //procesar_io_fs_delete();
+        break;
+        case IO_FS_TRUNCATE:
+        //procesar_io_fs_truncate();
+        break;
+        case IO_FS_WRITE:
+        //procesar_io_fs_write();
+        break;
+        case IO_FS_READ:
+        //procesar_io_fs_read();
+        break;
+        else:
+        log_info(logger_conexiones, "Instruccion invalida");
+        break;
+    }
+    return;
+}
 
 /*void proceso_E_S(){
     pthread_t hilo_kernel, hilo_memoria;

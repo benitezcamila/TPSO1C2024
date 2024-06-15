@@ -100,4 +100,5 @@ typedef enum {
     DIALFS
 } t_interfaz;
 
+
 #endif

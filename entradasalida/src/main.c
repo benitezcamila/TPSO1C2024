@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     */
     pthread_create(&memoria,NULL,(void*)establecer_conexion_memoria,NULL);
     pthread_create(&kernel,NULL,(void*)establecer_conexion_kernel,NULL);
-
+    
     pthread_join(memoria,NULL);
     pthread_join(kernel,NULL);
     return 0;
