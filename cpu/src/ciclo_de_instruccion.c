@@ -6,7 +6,6 @@
 uint32_t PID;
 registros_CPU* contexto_registros;
 char* linea_de_instruccion;
-const short max_long_instruccion = 6;
 char** linea_de_instruccion_tokenizada;
 uint32_t* longitud_linea_instruccion;
 tipo_de_interrupcion motivo_interrupcion;
@@ -29,83 +28,83 @@ void fetch_instruction(){
 
 void decode(){
     recibir_instruccion_de_memoria(longitud_linea_instruccion);
-    linea_de_instruccion_tokenizada = string_n_split(linea_de_instruccion, max_long_instruccion, " ");
+    linea_de_instruccion_tokenizada = string_n_split(linea_de_instruccion, *longitud_linea_instruccion, " ");
 }
 
 void execute(){
     if(strcmp(linea_de_instruccion_tokenizada[0], "SET") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
         uint32_t valor = atoi(linea_de_instruccion_tokenizada[2]);
         set(linea_de_instruccion_tokenizada[1], valor);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "MOV_IN") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
 	    mov_in(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "MOV_OUT") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
 	    mov_out(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "SUM") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
         sum(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "SUB") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
         sub(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "JNZ") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
         uint32_t proxInstruccion = atoi(linea_de_instruccion_tokenizada[2]);
         jump_no_zero(linea_de_instruccion_tokenizada[1], proxInstruccion);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "RESIZE") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
 		uint tamanio = atoi(linea_de_instruccion_tokenizada[1]);
 		resize(tamanio);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "COPY_STRING") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
 		uint32_t tamanio = atoi(linea_de_instruccion_tokenizada[1]);
 		copy_string(tamanio);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_GEN_SLEEP") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
         uint32_t unidades_de_trabajo = atoi(linea_de_instruccion_tokenizada[2]);
         io_gen_sleep(linea_de_instruccion_tokenizada[1], unidades_de_trabajo);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_STDIN_READ") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
 		io_stdin_read(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_STDOUT_WRITE") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
 		io_stdout_write(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_CREATE") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
 		io_fs_create(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_DELETE") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
 		io_fs_delete(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_TRUNCATE") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
 		io_fs_truncate(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_WRITE") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
 		io_fs_write(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3],
                      linea_de_instruccion_tokenizada[4], linea_de_instruccion_tokenizada[5]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_READ") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
 		io_fs_read(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3],
                      linea_de_instruccion_tokenizada[4], linea_de_instruccion_tokenizada[5]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "EXIT") == 0){
-        loggear_instruccion(string_length(linea_de_instruccion_tokenizada));
+        loggear_instruccion(*longitud_linea_instruccion);
 		exit_process();
 	}
 }
@@ -682,6 +681,7 @@ void restar_contenido_registro(char* registro, uint32_t valor){
     }
 }
 
+//Esto puede explotar.
 void* obtener_contenido_registro(char* registro){
     if(strcmp(registro, "AX") == 0){
         return contexto_registros->AX;
@@ -718,7 +718,7 @@ void* obtener_contenido_registro(char* registro){
 void loggear_instruccion(int cant_parametros){
     switch(cant_parametros){
         case 0:
-        log_info(logger_cpu, "PID: %d - Ejecutando: %s", PID,linea_de_instruccion_tokenizada[0]);
+        log_info(logger_cpu, "PID: %d - Ejecutando: %s", PID, linea_de_instruccion_tokenizada[0]);
 
         case 1:
         log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", PID, linea_de_instruccion_tokenizada[0],
