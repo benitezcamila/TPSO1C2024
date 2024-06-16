@@ -132,3 +132,13 @@ void recibir_info_io(int cliente_socket){
     //dictionary_put(dicc_io,string_itoa(nombre_interfaz),tipo_interfaz);
 
 }
+
+void agregar_PID(void* value){
+    t_pcb* pcb = (t_pcb*)value;
+    string_append_with_format(&mensaje_listado, " %d ", pcb->pid);
+}
+
+void agregar_PID_ready(void* value){
+    t_pcb* pcb = (t_pcb*)value;
+    string_append_with_format(&mensaje_ingreso_ready, " %d ", pcb->pid);
+}

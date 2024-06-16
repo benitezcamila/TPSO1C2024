@@ -3,84 +3,91 @@
 sem_t sem_grado_multiprogramacion;
 sem_t proceso_ejecutando;
 sem_t hay_procesos_nuevos;
+sem_t sem_pausa_planificacion_largo_plazo;
+sem_t sem_pausa_planificacion_corto_plazo;
 pthread_t temporizador_quantum;
+bool pausar_planificacion = false;
+char* mensaje_ingreso_ready;
+
 //colas de estado
 t_queue *cola_new;
 t_queue *cola_ready;
 t_queue *cola_prioritaria_VRR;
-t_queue *bloqueado;
+t_list *bloqueado;
 t_queue *suspendido_bloqueado;
 t_queue *suspendido_listo; 
-//ver si puede ser lista 
-t_queue *cola_a_liberar;
 t_temporal* temp_quantum;
 
-//t_list *lista_ejecutando;
-//es necesario el lista ejecutando?? 
 
 void iniciar_semaforos_planificacion(){
     int grado_multiprogramacion = configuracion.GRADO_MULTIPROGRAMACION;
     sem_init(&hay_procesos_nuevos, 0, 0);
     sem_init(&sem_grado_multiprogramacion, 0, grado_multiprogramacion);
     sem_init(&proceso_ejecutando, 0, 1);
+    sem_init(&sem_pausa_planificacion_corto_plazo,0,0);
+    sem_init(&sem_pausa_planificacion_largo_plazo,0,0);
 }
 
 void iniciar_colas(){
     cola_new = queue_create(); // cambio
     cola_ready = queue_create();
     cola_prioritaria_VRR = queue_create();
-    bloqueado = queue_create();
+    bloqueado = list_create();
     suspendido_bloqueado = queue_create();
     suspendido_listo = queue_create();
-    cola_a_liberar = queue_create();
     //lista_ejecutando = list_create();
 }
 
-void liberar_procesos(){
 
-    for(int i = 0; i < queue_size(cola_a_liberar); i++){
-        t_pcb* pcb_a_liberar = queue_pop(cola_a_liberar);
-        liberar_pcb(pcb_a_liberar);
-        sem_post(&sem_grado_multiprogramacion);
-    }
-    
-}
-
-void liberar_pcb(t_pcb* pcb){
+void liberar_proceso(uint32_t pid){
     t_paquete* paquete = crear_paquete(LIBERAR_PROCESO,sizeof(uint32_t));
-    buffer_add_uint32(paquete->buffer,pcb->pid);
+    buffer_add_uint32(paquete->buffer,pid);
     enviar_paquete(paquete,sockets.socket_memoria);
-    
-    eliminar_pcb(string_itoa(pcb->pid));
+    eliminar_pcb(string_itoa(pid));
+
+    sem_post(&sem_grado_multiprogramacion);
 }
 
-void crear_proceso(t_pcb* pcb){
+void crear_proceso(char* path){
+    t_pcb* pcb = crear_pcb(path);
+    queue_push(cola_new,pcb);
+    sem_post(&hay_procesos_nuevos);
     uint32_t tam_string = string_length(pcb->pathOperaciones)+1;
     t_paquete* paquete = crear_paquete(INICIAR_PROCESO,sizeof(uint32_t)*2+tam_string);
     buffer_add_uint32(paquete->buffer,pcb->pid);
     buffer_add_string(paquete->buffer,tam_string,pcb->pathOperaciones);
+    enviar_paquete(paquete,sockets.socket_memoria);
+    log_info(logger_kernel,"Se crea el proceso %d en NEW",pcb->pid);
 }
 
 void planificar_a_largo_plazo(){
     while(1){
+        sem_wait(&hay_procesos_nuevos);
         sem_wait(&sem_grado_multiprogramacion);
+        if(pausar_planificacion){
+            sem_wait(&sem_pausa_planificacion_largo_plazo);
+            reanudar_planificacion();
+        }
         t_pcb* proceso_para_ready = queue_pop(cola_new);
         queue_push(cola_ready, proceso_para_ready);
-        crear_proceso(proceso_para_ready);
-
-        if(!queue_is_empty(cola_a_liberar)){
-        liberar_procesos();
-        }
+        mensaje_ingreso_ready = string_new();
+        list_iterate(cola_ready->elements,agregar_PID_ready);
+        log_info(logger_ingresos_ready,"Proceso %d ingreso a READY - Cola Ready: %s",pcb->pid, mensaje_ingreso_ready);
+        free(mensaje_ingreso_ready);
     }
 
 }
 
-//Es capaz de crear un PCB y planificarlo por FIFO y RR.
 void planificar_a_corto_plazo_segun_algoritmo(){
     char *algoritmo_planificador = configuracion.ALGORITMO_PLANIFICACION;
     while(1){
+    if(pausar_planificacion){
+            sem_wait(&sem_pausa_planificacion_corto_plazo);
+            reanudar_planificacion();
+        }
+
     if(strcmp(algoritmo_planificador,"FIFO")){ 
-        //se podria usar proximoAEjecutarFIFO
+        
         t_pcb *a_ejecutar = proximo_ejecutar_FIFO();
         ejecutar_FIFO(a_ejecutar);
         }
@@ -114,12 +121,10 @@ t_pcb* proximo_ejecutar_VRR(){
 }
 
 void ejecutar_FIFO(t_pcb *a_ejecutar){
-  //sem_wait(&hayProcesosReady);
 
     sem_wait(&proceso_ejecutando);
     a_ejecutar->estado = EXEC;
     log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
-    //creo y envio el contexto de ejecucion
     crear_paquete_contexto_exec(a_ejecutar);
 
 
@@ -172,7 +177,15 @@ void esperar_interrupcion_quantum(t_pcb *a_ejecutar){
 
 }
 
+void pausar_planificacion() {
+    pausar_planificacion = true;
+    log_info(logger_kernel, "Planificación pausada");
+}
 
+void reanudar_planificacion() {
+    pausar_planificacion = false;
+    log_info(logger_kernel, "Planificación reanudada");
+}
 
 
 
@@ -181,9 +194,4 @@ void esperar_interrupcion_quantum(t_pcb *a_ejecutar){
     crear_paquete_pcb(*proceso);
 //Escuchar por el contexto actualizado luego de la ejecución
 */
-
-/*Una vez seleccionado el siguiente proceso a ejecutar, se lo transicionara al estado EXEC y se enviara
-su Contexto de Ejecucion al CPU a traves del puerto de dispatch, quedando a la espera de recibir 
-dicho contexto actualizado despues de la ejecucion, junto con un motivo de desalojo por el cual fue 
-desplazado a manejar. */
 

@@ -13,19 +13,21 @@
 
 extern sem_t sem_grado_multiprogramacion;
 extern sem_t proceso_ejecutando;
+extern sem_t hay_procesos_nuevos;
+extern sem_t sem_pausa_planificacion_largo_plazo;
+extern sem_t sem_pausa_planificacion_corto_plazo;
+extern char* mensaje_ingreso_ready;
 extern t_queue *cola_new;
 extern t_queue *cola_ready;
 extern t_queue *cola_prioritaria_VRR;
-extern t_queue *bloqueado;
+extern t_list *bloqueado;
 extern t_queue *suspendido_bloqueado;
 extern t_queue *suspendido_listo; 
-extern t_queue *cola_a_liberar;
 extern t_temporal* temp_quantum;
 
 void iniciar_colas();
-void liberar_procesos();
-void liberar_pcb(t_pcb*);
-void crear_proceso(t_pcb*);
+void liberar_proceso(uint32_t);
+void crear_proceso(char*);
 void planificar_a_largo_plazo();
 void planificar_a_corto_plazo_segun_algoritmo();
 t_pcb* proximo_ejecutar_FIFO();

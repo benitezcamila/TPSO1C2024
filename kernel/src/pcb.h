@@ -18,8 +18,9 @@ extern t_dictionary* dicc_pcb;
 extern int current_pid;
 extern registros_CPU* registros;
 extern t_pcb* pcb_en_ejecucion;
+extern sem_t sem_detener_desalojo;
 
-t_pcb* crear_pcb();
+t_pcb* crear_pcb(char*);
 void eliminar_pcb(char*);
 registros_CPU* crear_registros();
 int siguiente_PID();

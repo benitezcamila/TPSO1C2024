@@ -58,10 +58,10 @@ typedef enum {
 }motivo_desalojo;
 
 
-/*typedef enum{
+typedef enum{
     DESALOJO_QUANTUM
 } tipo_de_interrupcion;
-*/
+
 
 typedef struct {
     uint32_t PC; // Program Counter

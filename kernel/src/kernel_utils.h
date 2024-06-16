@@ -39,4 +39,6 @@ void atender_escuchas();
 void establecer_conexiones();
 int server_escuchar();
 void procesar_conexion(void*);
+void agregar_PID(void*);
+void agregar_PID_ready(void*);
 #endif

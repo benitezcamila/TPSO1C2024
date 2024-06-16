@@ -4,7 +4,10 @@
 #include <string.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include "kernel_utils.h"
+#include "planificacion.h"
 
+char* mensaje_listado;
 
 void ejecutar_consola_kernel() {
     char *input;
@@ -60,23 +63,24 @@ void ejecutar_script(const char *path) {
 }
 
 void iniciar_proceso(const char *path) {
-    printf("Iniciando proceso con archivo: %s\n", path);
-    // Add your process initialization logic here
+    crear_proceso(path);
 }
 
-void finalizar_proceso(int pid) {
-    printf("Finalizando proceso con PID: %d\n", pid);
-    // Add your process termination logic here
+void finalizar_proceso(char* pid) {
+    unsigned long int aux = strtoul(pid, NULL, 10);
+    liberar_procesos((uint32_t)aux);
+    log_info(logger_kernel,"Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER",aux,);
 }
 
 void detener_planificacion() {
-    printf("Deteniendo planificación\n");
-    // Add your logic to stop scheduling here
+    pausar_planificacion();   
 }
 
+
 void iniciar_planificacion() {
-    printf("Iniciando planificación\n");
-    // Add your logic to start scheduling here
+    sem_post(&sem_pausa_planificacion_largo_plazo);
+    sem_post(&sem_pausa_planificacion_corto_plazo);
+    sem_post(&sem_detener_desalojo);
 }
 
 void modificar_multiprogramacion(int valor) {
@@ -85,8 +89,7 @@ void modificar_multiprogramacion(int valor) {
 }
 
 void listar_procesos_por_estado() {
-    printf("Listando procesos por estado\n");
-    // Add your logic to list processes by state here
+    listar_procesos_por_estado();
 }
 
 // Helper function to get command type
@@ -109,3 +112,19 @@ int get_tipo_comando(const char *input) {
         return COMANDO_DESCONOCIDO;
     }
 }
+
+listar_procesos_por_estado(){
+    listar_proceso(cola_new->elements,"NEW");
+    listar_proceso(cola_ready->elements,"READY");
+    listar_proceso(bloqueado,"BLOQUEADO");
+    log_info(logger_kernel, "El siguientes proceso estan en la cola de EXEC: %d", pcb_en_ejecucion->pid);
+}
+
+listar_proceso(t_list* lista, char* estado){
+    mensaje_listado = string_new();
+    list_iterate(lista, agregarPID);
+    log_info(logger_kernel,"Los siguientes proceso estan en la cola %s: ", estado);
+    log_info(logger_kernel,mensaje_listado);
+    free(mensaje_listado);
+}
+

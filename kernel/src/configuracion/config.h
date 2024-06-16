@@ -30,6 +30,8 @@ void obtener_config();
 
 extern t_log* logger_kernel;
 extern t_log* logger_conexiones;
+extern t_log* logger_recurso_ES;
+extern t_log* logger_ingresos_ready;
 
 
 void iniciar_logger();

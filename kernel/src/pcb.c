@@ -3,6 +3,7 @@
 t_dictionary* dicc_pcb;
 int current_pid = 0;
 t_pcb* pcb_en_ejecucion;
+sem_t sem_detener_desalojo;
 
 
 registros_CPU* crear_registros(){
@@ -35,8 +36,6 @@ t_pcb* crear_pcb(char* path){
     strcpy(pcb_creado->pathOperaciones,path);
 
     dictionary_put(dicc_pcb,string_itoa(pcb_creado->pid),pcb_creado);
-
-    log_info(logger_kernel,"Se crea el proceso %d en NEW",pcb_creado->pid);
     return pcb_creado;
 }
 
@@ -63,6 +62,7 @@ void liberar_recursos(t_pcb* pcb){
 
 void eliminar_pcb(char* pid){
     t_pcb* pcb = dictionary_remove(dicc_pcb,pid);
+    pcb->estado = EXIT;
     liberar_recursos(pcb);
     free(pcb->registros);
     free(pcb->pathOperaciones);
@@ -120,7 +120,9 @@ void recibir_contexto_exec(t_pcb* pcb){
         quantum_a_asignar = pcb->quantum - temporal_gettime(temp_quantum);
         temporal_destroy(temp_quantum);
     }
-    
+    if(pausar_planificacion()){
+        sem_wait(sem_detener_desalojo);
+    }
     motivo_desalojo mot_desalojo;
     uint32_t buffer_size;
     recv(sockets.socket_CPU_D, &buffer_size, sizeof(uint32_t), MSG_WAITALL);
@@ -135,14 +137,12 @@ void recibir_contexto_exec(t_pcb* pcb){
     
     switch (mot_desalojo){
     case PROCESS_EXIT:
-        pcb->estado = EXIT;
-        queue_push(cola_a_liberar, pcb);
+        liberar_proceso(pcb->pid);
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: SUCESS", pcb->pid);
         break;
     
     case PROCESS_ERROR:
-        pcb->estado = EXIT;
-        queue_push(cola_a_liberar, pcb);
+        liberar_proceso(pcb->pid);
         uint32_t len_motivo;
         char* motivo_error = buffer_read_string(buffer, &len_motivo);
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: %s", pcb->pid,motivo_error);
@@ -150,22 +150,24 @@ void recibir_contexto_exec(t_pcb* pcb){
         break;
 
     case INTERRUPCION:
-        pcb->estado = EXIT;
-        queue_push(cola_a_liberar, pcb);
+        liberar_proceso(pcb->pid);
         log_info(logger_kernel, "Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER");
         break;
 
     case PETICION_RECURSO: {
-        if(strcmp(configuracion.ALGORITMO_PLANIFICACION, "VRR") == 0){
-            pcb->quantum = quantum_a_asignar;
-            queue_push(cola_prioritaria_VRR, pcb);
-        }
+        pcb->quantum = quantum_a_asignar;
         uint32_t len;
         char* recurso = buffer_read_string(buffer, &len);
-        log_info(logger_kernel, "PID: %d - Estado Anterior: EXEC - Estado Actual: BLOCKED", pcb->pid);
-        log_info(logger_kernel, "PID: %d - Bloqueado por: %s", pcb->pid, recurso);
-        pcb->estado = BLOCKED;
         str_recursos* str_rec = dictionary_get(recursos, recurso);
+        log_info(logger_recurso_ES,"El proceso %d solicito el recurso %s",pcb->pid, recurso);
+        int cant_recurso;
+        sem_getvalue(str_rec->cantidad_recursos,&cant_recurso);
+        if(cant_recurso > 0){
+        log_info(logger_kernel, "PID: %d - Estado Anterior: EXEC - Estado Actual: BLOCKED", pcb->pid);
+        log_info(logger_recurso_ES, "PID: %d - Bloqueado por: %s", pcb->pid, recurso);
+        pcb->estado = BLOCKED;
+        list_add(bloqueado, pcb);
+        }
         queue_push(str_rec->cola, pcb);
         free(recurso);
         break;
@@ -182,6 +184,7 @@ void recibir_contexto_exec(t_pcb* pcb){
         uint32_t len = 0;
         char* recurso = buffer_read_string(buffer,&len);
         str_recursos* str_rec = dictionary_get(recursos,recurso);
+        log_info(logger_recurso_ES,"El proceso %d libero el recurso %s",pcb->pid, recurso);
         list_remove_element(str_rec->procesos_okupas,&pcb->pid);
         sem_post(&str_rec->cantidad_recursos);
         break;
@@ -189,8 +192,12 @@ void recibir_contexto_exec(t_pcb* pcb){
 
     case FIN_QUANTUM:
         pcb->estado = READY;
-        queue_push(cola_ready,pcb);
         log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb->pid);
+        queue_push(cola_ready,pcb);
+        mensaje_ingreso_ready = string_new();
+        list_iterate(cola_ready->elements,agregar_PID_ready);
+        log_info(logger_ingresos_ready,"Proceso %d ingreso a READY - Cola Ready: %s",pcb->pid, mensaje_ingreso_ready);
+        free(mensaje_ingreso_ready);
         break;
     
     default:
