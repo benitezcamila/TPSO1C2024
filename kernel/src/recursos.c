@@ -28,19 +28,19 @@ void gestionar_recurso(str_recursos* recurso){
         queue_push(cola_ready,pcb);
         list_remove_element(bloqueado, pcb);
         pcb->estado = READY;
-        log_info(logger_recurso_ES,"El proceso %d tomo el recurso %s",pcb->pid, recurso);
+        log_info(logger_recurso_ES,"El proceso %u tomo el recurso %s",pcb->pid, recurso);
         if(strcmp(configuracion.ALGORITMO_PLANIFICACION,"VRR")==0 && pcb->quantum < configuracion.QUANTUM){
             queue_push(cola_prioritaria_VRR,pcb);
             mensaje_ingreso_ready = string_new();
             list_iterate(cola_prioritaria_VRR->elements,agregar_PID_ready);
-            log_info(logger_ingresos_ready,"Proceso %d ingreso a READY - Ready Prioridad: %s",pcb->pid, mensaje_ingreso_ready);
+            log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Ready Prioridad: %s",pcb->pid, mensaje_ingreso_ready);
             free(mensaje_ingreso_ready);
         }
         else{
             queue_push(cola_ready,pcb);
             mensaje_ingreso_ready = string_new();
             list_iterate(cola_ready->elements,agregar_PID_ready);
-            log_info(logger_ingresos_ready,"Proceso %d ingreso a READY - Cola Ready: %s",pcb->pid, mensaje_ingreso_ready);
+            log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Cola Ready: %s",pcb->pid, mensaje_ingreso_ready);
             free(mensaje_ingreso_ready);
         }
     }

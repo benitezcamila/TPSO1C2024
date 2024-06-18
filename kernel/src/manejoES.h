@@ -3,6 +3,15 @@
 
 #include "kernel_utils.h"
 
-void procesar_peticion_IO(char*,t_instruccion*,uint32_t);
+typedef struct{
+    t_interfaz tipo_interfaz;
+    sem_t esta_libre;
+    int socket;
+}dispositivo_IO;
+
+extern t_dictionary* dicc_IO;
+
+void recibir_info_io(int);
+void procesar_peticion_IO(char*,t_instruccion*,uint32_t, t_buffer*);
 
 #endif

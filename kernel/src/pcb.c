@@ -138,20 +138,20 @@ void recibir_contexto_exec(t_pcb* pcb){
     switch (mot_desalojo){
     case PROCESS_EXIT:
         liberar_proceso(pcb->pid);
-        log_info(logger_kernel, "Finaliza el proceso %d - Motivo: SUCESS", pcb->pid);
+        log_info(logger_kernel, "Finaliza el proceso %u - Motivo: SUCESS", pcb->pid);
         break;
     
     case PROCESS_ERROR:
         liberar_proceso(pcb->pid);
         uint32_t len_motivo;
         char* motivo_error = buffer_read_string(buffer, &len_motivo);
-        log_info(logger_kernel, "Finaliza el proceso %d - Motivo: %s", pcb->pid,motivo_error);
+        log_info(logger_kernel, "Finaliza el proceso %u - Motivo: %s", pcb->pid,motivo_error);
         free(motivo_error);
         break;
 
     case INTERRUPCION:
         liberar_proceso(pcb->pid);
-        log_info(logger_kernel, "Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER");
+        log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INTERRUPTED_BY_USER");
         break;
 
     case PETICION_RECURSO: {
@@ -159,12 +159,12 @@ void recibir_contexto_exec(t_pcb* pcb){
         uint32_t len;
         char* recurso = buffer_read_string(buffer, &len);
         str_recursos* str_rec = dictionary_get(recursos, recurso);
-        log_info(logger_recurso_ES,"El proceso %d solicito el recurso %s",pcb->pid, recurso);
+        log_info(logger_recurso_ES,"El proceso %u solicito el recurso %s",pcb->pid, recurso);
         int cant_recurso;
         sem_getvalue(str_rec->cantidad_recursos,&cant_recurso);
         if(cant_recurso > 0){
-        log_info(logger_kernel, "PID: %d - Estado Anterior: EXEC - Estado Actual: BLOCKED", pcb->pid);
-        log_info(logger_recurso_ES, "PID: %d - Bloqueado por: %s", pcb->pid, recurso);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: BLOCKED", pcb->pid);
+        log_info(logger_recurso_ES, "PID: %u - Bloqueado por: %s", pcb->pid, recurso);
         pcb->estado = BLOCKED;
         list_add(bloqueado, pcb);
         }
@@ -184,7 +184,7 @@ void recibir_contexto_exec(t_pcb* pcb){
         uint32_t len = 0;
         char* recurso = buffer_read_string(buffer,&len);
         str_recursos* str_rec = dictionary_get(recursos,recurso);
-        log_info(logger_recurso_ES,"El proceso %d libero el recurso %s",pcb->pid, recurso);
+        log_info(logger_recurso_ES,"El proceso %u libero el recurso %s",pcb->pid, recurso);
         list_remove_element(str_rec->procesos_okupas,&pcb->pid);
         sem_post(&str_rec->cantidad_recursos);
         break;
@@ -192,26 +192,26 @@ void recibir_contexto_exec(t_pcb* pcb){
 
     case FIN_QUANTUM:
         pcb->estado = READY;
-        log_info(logger_kernel, "PID: %d - Desalojado por fin de Quantum", pcb->pid);
+        log_info(logger_kernel, "PID: %u - Desalojado por fin de Quantum", pcb->pid);
         queue_push(cola_ready,pcb);
         mensaje_ingreso_ready = string_new();
         list_iterate(cola_ready->elements,agregar_PID_ready);
-        log_info(logger_ingresos_ready,"Proceso %d ingreso a READY - Cola Ready: %s",pcb->pid, mensaje_ingreso_ready);
+        log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Cola Ready: %s",pcb->pid, mensaje_ingreso_ready);
         free(mensaje_ingreso_ready);
         break;
 
     case PETICION_IO:
-        t_instruccion* tipo_interfaz = malloc(sizeof(t_instruccion));
-        buffer_read(buffer,tipo_interfaz,sizeof(t_instruccion));
+        t_instruccion* tipo_instruccion = malloc(sizeof(t_instruccion));
+        buffer_read(buffer,tipo_instruccion,sizeof(t_instruccion));
         uint32_t len = 0;
         char* io = buffer_read_string(buffer,&len);
-        log_info(logger_kernel, "PID: %d - Estado Anterior: EXEC - Estado Actual: BLOCKED", pcb->pid);
-        log_info(logger_recurso_ES, "PID: %d - Bloqueado por: %s", pcb->pid, io);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: BLOCKED", pcb->pid);
+        log_info(logger_recurso_ES, "PID: %u - Bloqueado por: %s", pcb->pid, io);
         pcb->estado = BLOCKED;
         list_add(bloqueado, pcb);
-        procesar_peticion_IO(io,tipo_interfaz,pcb->pid,t_buffer* buffer);
+        procesar_peticion_IO(io,tipo_instruccion,pcb->pid,t_buffer* buffer);
         free(io);
-        free(tipo_interfaz);
+        free(tipo_instruccion);
         break;
     
     default:

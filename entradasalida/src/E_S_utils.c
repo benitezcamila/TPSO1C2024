@@ -21,8 +21,8 @@ void establecer_conexion_memoria(){
 
 
 void procesar_io_gen_sleep (t_buffer* buffer_kernel) {
-    int milisegundos_de_espera;
-    buffer_read (buffer_kernel,&milisegundos_de_espera, sizeof(int));
+    uint32_t milisegundos_de_espera;
+    buffer_read (buffer_kernel,&milisegundos_de_espera, sizeof(uint32_t));
     t_temporal *temporal = temporal_create();
 	usleep(milisegundos_de_espera*1000);
 	temporal_stop(temporal);

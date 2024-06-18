@@ -2,7 +2,7 @@
 
 str_sockets sockets;
 sem_t sem_escuchar;
-t_dictionary* dicc_io;
+
 
 pthread_t conexion_CPU_I,conexion_CPU_D, conexion_memoria;
 
@@ -106,41 +106,13 @@ void establecer_conexiones(){
     establecer_conexion_memoria();
 }
 
-void recibir_info_io(int cliente_socket){
-    log_info(logger_conexiones,"me mandaste la info de entradasalida");
-    /* agregar la info al diccionario (con mutex?) */            
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    paquete->buffer= malloc(sizeof(t_buffer));
-    recv(cliente_socket, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
-    paquete->buffer->stream = malloc(paquete->buffer->size);
-    recv(cliente_socket, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
-    /*serializo*/
-    t_interfaz tipo_interfaz;
-    buffer_read(paquete->buffer,&tipo_interfaz,sizeof(t_interfaz));
-    uint32_t long_nombre;
-    char* nombre_interfaz = buffer_read_string(paquete->buffer,&long_nombre);
-    char* tipo_inter[]= {
-        "Generica", "STDIN", "STDOUT", "DIALFS"
-    };
-    log_info(logger_conexiones,"Tipo de interfaz recibida %s", tipo_inter[tipo_interfaz]);
-    log_info(logger_conexiones,"Nombre de interfaz recibida %s", nombre_interfaz);
-
-    free(tipo_inter);
-    free(long_nombre);
-    free(nombre_interfaz);
-    free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
-    //dictionary_put(dicc_io,string_itoa(nombre_interfaz),tipo_interfaz);
-
-}
 
 void agregar_PID(void* value){
     t_pcb* pcb = (t_pcb*)value;
-    string_append_with_format(&mensaje_listado, " %d ", pcb->pid);
+    string_append_with_format(&mensaje_listado, " %u ", pcb->pid);
 }
 
 void agregar_PID_ready(void* value){
     t_pcb* pcb = (t_pcb*)value;
-    string_append_with_format(&mensaje_ingreso_ready, " %d ", pcb->pid);
+    string_append_with_format(&mensaje_ingreso_ready, " %u ", pcb->pid);
 }

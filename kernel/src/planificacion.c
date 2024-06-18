@@ -57,7 +57,7 @@ void crear_proceso(char* path){
     buffer_add_uint32(paquete->buffer,pcb->pid);
     buffer_add_string(paquete->buffer,tam_string,pcb->pathOperaciones);
     enviar_paquete(paquete,sockets.socket_memoria);
-    log_info(logger_kernel,"Se crea el proceso %d en NEW",pcb->pid);
+    log_info(logger_kernel,"Se crea el proceso %u en NEW",pcb->pid);
 }
 
 void planificar_a_largo_plazo(){
@@ -72,7 +72,7 @@ void planificar_a_largo_plazo(){
         queue_push(cola_ready, proceso_para_ready);
         mensaje_ingreso_ready = string_new();
         list_iterate(cola_ready->elements,agregar_PID_ready);
-        log_info(logger_ingresos_ready,"Proceso %d ingreso a READY - Cola Ready: %s",pcb->pid, mensaje_ingreso_ready);
+        log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Cola Ready: %s",pcb->pid, mensaje_ingreso_ready);
         free(mensaje_ingreso_ready);
     }
 
@@ -124,7 +124,7 @@ void ejecutar_FIFO(t_pcb *a_ejecutar){
 
     sem_wait(&proceso_ejecutando);
     a_ejecutar->estado = EXEC;
-    log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
+    log_info(logger_kernel, "PID: %u - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
     crear_paquete_contexto_exec(a_ejecutar);
 
 
@@ -134,7 +134,7 @@ void ejecutar_RR(t_pcb *a_ejecutar){
 
     sem_wait(&proceso_ejecutando);
     a_ejecutar->estado = EXEC;
-    log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
+    log_info(logger_kernel, "PID: %u - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
     //creo y envio el contexto de ejecucion
     ejecutar_con_quantum(a_ejecutar);
     
@@ -146,7 +146,7 @@ void ejecutar_VRR(t_pcb *a_ejecutar){
 
     sem_wait(&proceso_ejecutando);
     a_ejecutar->estado = EXEC;
-    log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
+    log_info(logger_kernel, "PID: %u - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
     //creo y envio el contexto de ejecucion
     ejecutar_con_quantum(a_ejecutar);
 

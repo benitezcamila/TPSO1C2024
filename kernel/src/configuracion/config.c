@@ -6,6 +6,7 @@ t_log* logger_kernel;
 t_log* logger_conexiones;
 t_log* logger_recurso_ES;
 t_log* logger_ingresos_ready;
+t_log* logger_error;
 
 void obtener_config(){
     config = config_create("cfg/kernel.config");
@@ -36,4 +37,5 @@ void iniciar_logger(){
     logger_conexiones = log_create("logs/conexiones.log","Conexion",1,LOG_LEVEL_INFO);
     logger_recurso_ES = log_create("logs/recursos_e_es.log","Recurso o E/S",1,LOG_LEVEL_INFO);
     logger_ingresos_ready = log_create("logs/ingreso_ready.log","Ingreso a ready",1,LOG_LEVEL_INFO);
+    logger_error = log_create("logs/errores.log","Error",1,LOG_LEVEL_INFO);
 }

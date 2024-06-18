@@ -11,6 +11,7 @@
 #include <semaphore.h>
 #include "pcb.h"
 #include "consola.h"
+#include "manejoES.h"
 
 
 
@@ -25,7 +26,6 @@ typedef struct {
 
 extern str_sockets sockets;
 extern sem_t sem_escuchar;
-extern t_dictionary* dicc_io;
 extern pthread_t conexion_CPU_I,conexion_CPU_D, conexion_memoria;
 
 void establecer_conexion_cpu_D();
