@@ -119,11 +119,13 @@ void recibir_info_io(int cliente_socket){
     buffer_read(paquete->buffer,&tipo_interfaz,sizeof(t_interfaz));
     uint32_t long_nombre;
     char* nombre_interfaz = buffer_read_string(paquete->buffer,&long_nombre);
-    log_info(logger_conexiones,"Tipo de interfaz recibida");
-    log_info(logger_conexiones,string_itoa(tipo_interfaz));
-    log_info(logger_conexiones,"Nombre de interfaz recibida");
-    log_info(logger_conexiones,nombre_interfaz);
+    char* tipo_inter[]= {
+        "Generica", "STDIN", "STDOUT", "DIALFS"
+    };
+    log_info(logger_conexiones,"Tipo de interfaz recibida %s", tipo_inter[tipo_interfaz]);
+    log_info(logger_conexiones,"Nombre de interfaz recibida %s", nombre_interfaz);
 
+    free(tipo_inter);
     free(long_nombre);
     free(nombre_interfaz);
     free(paquete->buffer->stream);
