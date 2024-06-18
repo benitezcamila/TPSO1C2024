@@ -10,6 +10,7 @@
 #include "utils/serializacion.h"
 #include <semaphore.h>
 #include "pcb.h"
+#include "consola.h"
 
 
 
