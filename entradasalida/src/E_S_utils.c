@@ -117,7 +117,7 @@ void procesar_io_stdout_write(t_buffer* buffer_kernel, uint32_t pid) {
 void recibir_instrucciones (){
     t_instruccion instruccion_a_procesar;
     uint32_t pid ;
-    if (recv(sockets.socket_kernel, &instruccion_a_procesar, sizeof(instruccion_a_procesar), 0) != sizeof(instruccion_a_procesar)) {
+    if (recv(sockets.socket_kernel, &instruccion_a_procesar, sizeof(t_instruccion), 0) != sizeof(t_instruccion)) {
             log_info(logger_entrada_salida, "Instruccion invalida");
             return;
         }
@@ -156,6 +156,9 @@ void recibir_instrucciones (){
         log_info(logger_entrada_salida, "Instruccion invalida");
         break;
     }
+    free(informar_pid);
+    free(instruccion_string);
+    buffer_destroy(buffer_kernel);
     return;
 }
 

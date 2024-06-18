@@ -45,14 +45,7 @@ typedef enum {
     OUT_OF_MEMORY,
     PETICION_RECURSO, //wait
     SIGNAL_RECURSO, //signal
-    IO_GEN_SLEEP, //cpu a kernel
-    IO_STDIN_READ, //cpu a kernel
-    IO_STDOUT_WRITE, //cpu a kernel
-    IO_FS_CREATE, //cpu a kernel
-    IO_FS_DELETE, //cpu a kernel
-    IO_FS_TRUNCATE, //cpu a kernel
-    IO_FS_WRITE, //cpu a kernel
-    IO_FS_READ, //cpu a kernel
+    PETICION_IO,
     FIN_QUANTUM,
     //
 }motivo_desalojo;

@@ -199,6 +199,20 @@ void recibir_contexto_exec(t_pcb* pcb){
         log_info(logger_ingresos_ready,"Proceso %d ingreso a READY - Cola Ready: %s",pcb->pid, mensaje_ingreso_ready);
         free(mensaje_ingreso_ready);
         break;
+
+    case PETICION_IO:
+        t_instruccion* tipo_interfaz = malloc(sizeof(t_instruccion));
+        buffer_read(buffer,tipo_interfaz,sizeof(t_instruccion));
+        uint32_t len = 0;
+        char* io = buffer_read_string(buffer,&len);
+        log_info(logger_kernel, "PID: %d - Estado Anterior: EXEC - Estado Actual: BLOCKED", pcb->pid);
+        log_info(logger_recurso_ES, "PID: %d - Bloqueado por: %s", pcb->pid, io);
+        pcb->estado = BLOCKED;
+        list_add(bloqueado, pcb);
+        procesar_peticion_IO(io,tipo_interfaz,pcb->pid,t_buffer* buffer);
+        free(io);
+        free(tipo_interfaz);
+        break;
     
     default:
         break;

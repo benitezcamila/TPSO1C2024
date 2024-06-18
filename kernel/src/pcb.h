@@ -11,6 +11,7 @@
 #include "kernel_utils.h"
 #include "planificacion.h"
 #include "recursos.h"
+#include "manejoES.h"
 
 
 
