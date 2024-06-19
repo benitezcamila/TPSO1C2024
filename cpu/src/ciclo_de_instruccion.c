@@ -407,10 +407,10 @@ void signal(char* nombre_recurso){
 void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
     ind_contexto_kernel = 0;
     // si le saco 8 a motivo de desalojo se traduce la isntruccion (por el enum)
-    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(t_instruccion) + sizeof(registros_CPU)
                                         + string_length(nombre_interfaz)+1 + sizeof(uint32_t));
-    motivo_desalojo mot = IO_GEN_SLEEP;                                    
-    buffer_add(paquete->buffer, &mot, sizeof(motivo_desalojo));
+    t_instruccion mot_io = GEN_SLEEP;                                    
+    buffer_add(paquete->buffer, &mot_io, sizeof(t_instruccion));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_uint32(paquete->buffer, unidades_de_trabajo);
@@ -427,7 +427,7 @@ void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* regist
         void* tamanio = malloc(sizeof(uint32_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        enviar_std_a_kernel(IO_STDIN_READ, nombre_interfaz, tamanio, sizeof(uint32_t), dir_fisica);
+        enviar_std_a_kernel(STDIN_READ, nombre_interfaz, tamanio, sizeof(uint32_t), dir_fisica);
 
         free(tamanio);
     }
@@ -435,7 +435,7 @@ void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* regist
         void* tamanio = malloc(sizeof(uint8_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        enviar_std_a_kernel(IO_STDIN_READ, nombre_interfaz, tamanio, sizeof(uint8_t), dir_fisica);
+        enviar_std_a_kernel(STDIN_READ, nombre_interfaz, tamanio, sizeof(uint8_t), dir_fisica);
 
         free(tamanio);
     }
@@ -450,7 +450,7 @@ void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* regi
         void* tamanio = malloc(sizeof(uint32_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        enviar_std_a_kernel(IO_STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint32_t), dir_fisica);
+        enviar_std_a_kernel(STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint32_t), dir_fisica);
 
         free(tamanio);
     }
@@ -458,7 +458,7 @@ void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* regi
         void* tamanio = malloc(sizeof(uint8_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        enviar_std_a_kernel(IO_STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint8_t), dir_fisica);
+        enviar_std_a_kernel(STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint8_t), dir_fisica);
 
         free(tamanio);
     }
@@ -467,13 +467,13 @@ void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* regi
 void io_fs_create(char* nombre_interfaz, char* nombre_archivo){
     ind_contexto_kernel = 0;
 
-    solicitar_create_delete_fs_a_kernel(IO_FS_CREATE, nombre_interfaz, nombre_archivo);
+    solicitar_create_delete_fs_a_kernel(FS_CREATE, nombre_interfaz, nombre_archivo);
 }
 
 void io_fs_delete(char* nombre_interfaz, char* nombre_archivo){
     ind_contexto_kernel = 0;
 
-    solicitar_create_delete_fs_a_kernel(IO_FS_DELETE, nombre_interfaz, nombre_archivo);
+    solicitar_create_delete_fs_a_kernel(FS_DELETE, nombre_interfaz, nombre_archivo);
 }
 
 void io_fs_truncate(char* nombre_interfaz, char* nombre_archivo, char* registro_tamanio){
@@ -483,7 +483,7 @@ void io_fs_truncate(char* nombre_interfaz, char* nombre_archivo, char* registro_
         void* tamanio = malloc(sizeof(uint32_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        solicitar_truncate_fs_a_kernel(IO_FS_TRUNCATE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t));
+        solicitar_truncate_fs_a_kernel(FS_TRUNCATE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t));
 
         free(tamanio);
     }
@@ -491,7 +491,7 @@ void io_fs_truncate(char* nombre_interfaz, char* nombre_archivo, char* registro_
         void* tamanio = malloc(sizeof(uint8_t));
         tamanio = obtener_contenido_registro(registro_tamanio);
 
-        solicitar_truncate_fs_a_kernel(IO_FS_TRUNCATE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t));
+        solicitar_truncate_fs_a_kernel(FS_TRUNCATE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t));
 
         free(tamanio);
     }
@@ -511,7 +511,7 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
             void* puntero_registro = malloc(sizeof(uint32_t));
             puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(IO_FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
+            solicitar_write_read_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
                                             dir_fisica, puntero_registro, sizeof(uint32_t));
         
             free(puntero_registro);
@@ -520,7 +520,7 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
             void* puntero_registro = malloc(sizeof(uint8_t));
             puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(IO_FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
+            solicitar_write_read_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
                                             dir_fisica, puntero_registro, sizeof(uint8_t));
         
             free(puntero_registro);
@@ -536,7 +536,7 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
             void* puntero_registro = malloc(sizeof(uint32_t));
             puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(IO_FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
+            solicitar_write_read_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
                                             dir_fisica, puntero_registro, sizeof(uint32_t));
         
             free(puntero_registro);
@@ -545,7 +545,7 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
             void* puntero_registro = malloc(sizeof(uint8_t));
             puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(IO_FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
+            solicitar_write_read_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
                                             dir_fisica, puntero_registro, sizeof(uint8_t));
 
             free(puntero_registro);
@@ -569,7 +569,7 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
             void* puntero_registro = malloc(sizeof(uint32_t));
             puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(IO_FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
+            solicitar_write_read_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
                                             dir_fisica, puntero_registro, sizeof(uint32_t));
         
             free(puntero_registro);
@@ -578,7 +578,7 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
             void* puntero_registro = malloc(sizeof(uint8_t));
             puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(IO_FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
+            solicitar_write_read_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
                                             dir_fisica, puntero_registro, sizeof(uint8_t));
         
             free(puntero_registro);
@@ -594,7 +594,7 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
             void* puntero_registro = malloc(sizeof(uint32_t));
             puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(IO_FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
+            solicitar_write_read_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
                                             dir_fisica, puntero_registro, sizeof(uint32_t));
         
             free(puntero_registro);
@@ -603,7 +603,7 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
             void* puntero_registro = malloc(sizeof(uint8_t));
             puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(IO_FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
+            solicitar_write_read_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
                                             dir_fisica, puntero_registro, sizeof(uint8_t));
 
             free(puntero_registro);

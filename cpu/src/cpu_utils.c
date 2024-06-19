@@ -81,13 +81,14 @@ void procesar_conexion(void* void_args) {
             break;
 
         case INTERRUPT_PROC:
-            //Loggear.
+            log_info(logger_cpu, "Se recibió una interrupción de proceso de parte del Kernel.");
             llego_interrupcion = 1;
             recibir_interrupcion_de_kernel();
             break;
         
         default:
-            //Loggear un error.
+            log_info(logger_errores_cpu, "Se recibió un código de operación incorrecto de parte del
+                    Kernel. El mismo fue: %d", codigo_op);
             break;
         }
         
@@ -111,7 +112,8 @@ void recibir_contexto_ejecucion(){
         buffer_read(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     }
     else{
-        //Loggear error?
+        log_info(logger_errores_cpu, "El contexto de ejecución no fue recibido correctamente. El
+                código de operación recibido fue: %d", paquete->codigo_operacion);
     }
 }
 
@@ -130,11 +132,11 @@ void enviar_contexto_a_kernel(motivo_desalojo motivo){
     enviar_paquete(paquete, sockets.socket_server_D);
 }
 
-void enviar_std_a_kernel(motivo_desalojo motivo, char* nombre_interfaz,
+void enviar_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
                                 void* tamanio_std, uint32_t tamanio_data, uint32_t dir_fisica){
-    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(t_instruccion) + sizeof(registros_CPU)
                                         + string_length(nombre_interfaz)+1 + tamanio_data + sizeof(uint32_t));
-    buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, &motivo_io, sizeof(t_instruccion));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add(paquete->buffer, tamanio_std, tamanio_data);
@@ -143,10 +145,10 @@ void enviar_std_a_kernel(motivo_desalojo motivo, char* nombre_interfaz,
     enviar_paquete(paquete, sockets.socket_server_D);
 }
 
-void solicitar_create_delete_fs_a_kernel(motivo_desalojo motivo, char* nombre_interfaz, char* nombre_archivo){
-    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
+void solicitar_create_delete_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo){
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(t_instruccion) + sizeof(registros_CPU)
                                         + string_length(nombre_interfaz)+1 + string_length(nombre_archivo)+1);
-    buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, &motivo_io, sizeof(t_instruccion));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_string(paquete->buffer, string_length(nombre_archivo)+1, nombre_archivo);
@@ -154,12 +156,12 @@ void solicitar_create_delete_fs_a_kernel(motivo_desalojo motivo, char* nombre_in
     enviar_paquete(paquete, sockets.socket_server_D);
 }
 
-void solicitar_truncate_fs_a_kernel(motivo_desalojo motivo, char* nombre_interfaz, char* nombre_archivo,
+void solicitar_truncate_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo,
                                     void* tamanio_fs, uint32_t tamanio_data){
-    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(t_instruccion) + sizeof(registros_CPU)
                                         + string_length(nombre_interfaz)+1 + string_length(nombre_archivo)+1
                                         + tamanio_data);
-    buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, &motivo_io, sizeof(t_instruccion));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_string(paquete->buffer, string_length(nombre_archivo)+1, nombre_archivo);
@@ -168,13 +170,13 @@ void solicitar_truncate_fs_a_kernel(motivo_desalojo motivo, char* nombre_interfa
     enviar_paquete(paquete, sockets.socket_server_D);
 }
 
-void solicitar_write_read_fs_a_kernel(motivo_desalojo motivo, char* nombre_interfaz, char* nombre_archivo,
+void solicitar_write_read_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo,
                                         void* tamanio_fs, uint32_t tamanio_data1, uint32_t dir_fisica,
                                         void* puntero_archivo, uint32_t tamanio_data2){
-    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(t_instruccion) + sizeof(registros_CPU)
                                         + string_length(nombre_interfaz)+1 + string_length(nombre_archivo)+1
                                         + sizeof(uint32_t) + tamanio_data1 + tamanio_data2);
-    buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, &motivo_io, sizeof(t_instruccion));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_string(paquete->buffer, string_length(nombre_archivo)+1, nombre_archivo);
@@ -204,7 +206,8 @@ void recibir_instruccion_de_memoria(uint32_t* longitud_linea_instruccion){
         linea_de_instruccion = buffer_read_string(paquete->buffer, longitud_linea_instruccion);
     }
     else{
-        //Loggear error.
+        log_info(logger_errores_cpu, "El código de operación recibido de Memoria no fue una instrucción.
+                El código de operación recibido fue: %d", paquete->codigo_operacion);
     }
 }
 
@@ -221,7 +224,8 @@ void recibir_respuesta_resize_memoria(uint32_t PID){
         break;
 
     default:
-        //Loggear error.
+        log_info(logger_errores_cpu, "Ocurrió un error recibiendo la respuesta de Memoria tras Resize.
+                El código de operación recibido fue: %d", paquete->codigo_operacion);
         break;
     }
 }
@@ -239,7 +243,7 @@ void solicitar_leer_en_memoria(uint32_t dir_fisica, uint32_t tamanio){
 
 //Si hay un error con la lectura de memoria, revisar acá.
 void* leer_de_memoria(uint32_t tamanio){
-    uint32_t* datos_de_memoria = malloc(tamanio);
+    void* datos_de_memoria = malloc(tamanio);
     t_paquete* paquete = malloc(sizeof(t_paquete));
     recv(sockets.socket_memoria, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
 
@@ -247,15 +251,22 @@ void* leer_de_memoria(uint32_t tamanio){
         recv(sockets.socket_memoria, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
         paquete->buffer->stream = malloc(paquete->buffer->size);
 
-        recv(sockets.socket_memoria, paquete->buffer->stream, tamanio, MSG_WAITALL);
-        *datos_de_memoria = buffer_read_uint32(paquete->buffer);
+        if(tamanio == sizeof(uint32_t)){
+            recv(sockets.socket_memoria, paquete->buffer->stream, tamanio, MSG_WAITALL);
+            *datos_de_memoria = buffer_read_uint32(paquete->buffer);
+        }
+        else if(tamanio == sizeof(uint8_t)){
+            recv(sockets.socket_memoria, paquete->buffer->stream, tamanio, MSG_WAITALL);
+            *datos_de_memoria = buffer_read_uint8(paquete->buffer);
+        }
 
         return (void*) datos_de_memoria;
     }
     else{
-      //Loggear error.
+        log_info(logger_errores_cpu, "Ocurrió un error tras realizar una lectura de Memoria.
+                El código de operación recibido fue: %d", paquete->codigo_operacion);
+        return NULL;
     }
-    return NULL;
 }
 
 void solicitar_escribir_en_memoria(uint32_t dir_fisica, void* datos_de_registro, uint32_t tamanio){

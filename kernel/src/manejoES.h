@@ -11,7 +11,7 @@ typedef struct{
 
 extern t_dictionary* dicc_IO;
 
-void recibir_info_io(int);
+void recibir_info_io(int, t_buffer*);
 void procesar_peticion_IO(char*,t_instruccion*,uint32_t, t_buffer*);
 
 #endif

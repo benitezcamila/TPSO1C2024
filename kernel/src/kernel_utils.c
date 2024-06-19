@@ -89,7 +89,11 @@ void procesar_conexion(void* void_args) {
             break;
 
         case ENTRADASALIDA:
-            recibir_info_io(cliente_socket);
+            uint32_t size_buf = 0;
+            recv(cliente_socket, &(size_buf), sizeof(uint32_t), MSG_WAITALL);
+            t_buffer* buffer = buffer_create(size_buf);
+            recv(cliente_socket, buffer->stream, buffer->size, MSG_WAITALL);
+            recibir_info_io(cliente_socket,buffer);
             break;
 
         default:
