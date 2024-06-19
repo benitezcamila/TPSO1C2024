@@ -138,6 +138,7 @@ void recibir_contexto_exec(t_pcb* pcb){
     switch (mot_desalojo){
     case PROCESS_EXIT:
         liberar_proceso(pcb->pid);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pcb->pid);
         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: SUCESS", pcb->pid);
         break;
     
@@ -145,12 +146,14 @@ void recibir_contexto_exec(t_pcb* pcb){
         liberar_proceso(pcb->pid);
         uint32_t len_motivo;
         char* motivo_error = buffer_read_string(buffer, &len_motivo);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pcb->pid);
         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: %s", pcb->pid,motivo_error);
         free(motivo_error);
         break;
 
     case INTERRUPCION:
         liberar_proceso(pcb->pid);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pcb->pid);
         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INTERRUPTED_BY_USER");
         break;
 
@@ -193,6 +196,7 @@ void recibir_contexto_exec(t_pcb* pcb){
     case FIN_QUANTUM:
         pcb->estado = READY;
         log_info(logger_kernel, "PID: %u - Desalojado por fin de Quantum", pcb->pid);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: READY", pcb->pid);
         queue_push(cola_ready,pcb);
         mensaje_ingreso_ready = string_new();
         list_iterate(cola_ready->elements,agregar_PID_ready);
@@ -212,6 +216,7 @@ void recibir_contexto_exec(t_pcb* pcb){
         procesar_peticion_IO(io,tipo_instruccion,pcb->pid,t_buffer* buffer);
         free(io);
         free(tipo_instruccion);
+        
         break;
     
     default:
