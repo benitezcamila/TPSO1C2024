@@ -407,11 +407,13 @@ void signal(char* nombre_recurso){
 void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
     ind_contexto_kernel = 0;
     // si le saco 8 a motivo de desalojo se traduce la isntruccion (por el enum)
-    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(t_instruccion) + sizeof(registros_CPU)
-                                        + string_length(nombre_interfaz)+1 + sizeof(uint32_t));
+    t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(t_instruccion) +
+                                        sizeof(registros_CPU) + string_length(nombre_interfaz)+1 + sizeof(uint32_t));
+    motivo_desalojo mot_des = PETICION_IO;
+    buffer_add(paquete->buffer, &mot_des, sizeof(motivo_desalojo));
+    buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     t_instruccion mot_io = GEN_SLEEP;                                    
     buffer_add(paquete->buffer, &mot_io, sizeof(t_instruccion));
-    buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_uint32(paquete->buffer, unidades_de_trabajo);
 
