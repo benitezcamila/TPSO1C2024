@@ -35,7 +35,7 @@ t_pcb* crear_pcb(char* path){
     pcb_creado->pathOperaciones = malloc(string_length(path));
     strcpy(pcb_creado->pathOperaciones,path);
 
-    dictionary_put(dicc_pcb,string_itoa(pcb_creado->pid),pcb_creado);
+    dictionary_put(dicc_pcb, string_from_format("%u", (pcb_creado->pid)), pcb_creado);
     return pcb_creado;
 }
 

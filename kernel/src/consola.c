@@ -122,7 +122,7 @@ listar_procesos_por_estado(){
 
 listar_proceso(t_list* lista, char* estado){
     mensaje_listado = string_new();
-    list_iterate(lista, agregarPID);
+    list_iterate(lista, agregar_PID);
     log_info(logger_kernel,"Los siguientes proceso estan en la cola %s: ", estado);
     log_info(logger_kernel,mensaje_listado);
     free(mensaje_listado);

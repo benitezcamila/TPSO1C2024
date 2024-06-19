@@ -43,7 +43,7 @@ void liberar_proceso(uint32_t pid){
     t_paquete* paquete = crear_paquete(LIBERAR_PROCESO,sizeof(uint32_t));
     buffer_add_uint32(paquete->buffer,pid);
     enviar_paquete(paquete,sockets.socket_memoria);
-    eliminar_pcb(string_itoa(pid));
+    eliminar_pcb(string_from_format("%u", pid));
 
     sem_post(&sem_grado_multiprogramacion);
 }

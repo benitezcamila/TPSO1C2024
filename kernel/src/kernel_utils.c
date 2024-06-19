@@ -97,7 +97,30 @@ void procesar_conexion(void* void_args) {
             break;
 
         case ENTRADASALIDA_LIBERADO:
-            
+            uint32_t size_buf = 0;
+            recv(cliente_socket, &(size_buf), sizeof(uint32_t), MSG_WAITALL);
+            t_buffer* buffer = buffer_create(size_buf);
+            recv(cliente_socket, buffer->stream, buffer->size, MSG_WAITALL);
+            uint32_t len = 0;
+            char* io = buffer_read_string(buffer,len);
+            dispositivo_IO* interfaz = dictionary_get(dicc_IO, io);
+            list_remove_element(bloqueado, interfaz->proceso_okupa);
+            if(strcmp(configuracion.ALGORITMO_PLANIFICACION,"VRR")== 0 && interfaz->proceso_okupa->quantum < configuracion.QUANTUM){
+            queue_push(cola_prioritaria_VRR,interfaz->proceso_okupa);
+            mensaje_ingreso_ready = string_new();
+            list_iterate(cola_prioritaria_VRR->elements,agregar_PID_ready);
+            log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Ready Prioridad: %s",interfaz->proceso_okupa->pid, mensaje_ingreso_ready);
+            free(mensaje_ingreso_ready);
+            }
+            else{
+            queue_push(cola_ready,interfaz->proceso_okupa);
+            mensaje_ingreso_ready = string_new();
+            list_iterate(cola_ready->elements,agregar_PID_ready);
+            log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Cola Ready: %s", interfaz->proceso_okupa->pid, mensaje_ingreso_ready);
+            free(mensaje_ingreso_ready);
+            }
+            sem_post(&interfaz->esta_libre);
+            free(io);
 
             break;
 
@@ -118,10 +141,10 @@ void establecer_conexiones(){
 
 void agregar_PID(void* value){
     t_pcb* pcb = (t_pcb*)value;
-    string_append_with_format(&mensaje_listado, " %u ", pcb->pid);
+    string_append_with_format(&mensaje_listado, "PID: %u ", pcb->pid);
 }
 
 void agregar_PID_ready(void* value){
     t_pcb* pcb = (t_pcb*)value;
-    string_append_with_format(&mensaje_ingreso_ready, " %u ", pcb->pid);
+    string_append_with_format(&mensaje_ingreso_ready, "PID: %u ", pcb->pid);
 }

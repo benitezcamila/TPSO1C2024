@@ -49,8 +49,9 @@ void destruir_dispositivo_IO(char* nombre_interfaz){
         proceso_en_cola* proceso = queue_pop(interfaz->cola);
         eliminar_paquete(proceso->paquete);
         log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE", proceso->proceso->pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: Bloqueado - Estado Actual: EXIT", proceso->proceso->pid);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", proceso->proceso->pid);
         eliminar_pcb(proceso->proceso);
+        free(proceso);
     }
     free(interfaz->nombre);
     sem_destroy(interfaz->esta_libre);
@@ -60,16 +61,16 @@ void destruir_dispositivo_IO(char* nombre_interfaz){
     free(interfaz);
 }
 
-void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid, t_buffer* buffer){
+void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pid, t_buffer* buffer){
 
     dispositivo_IO interfaz;
     //verifico la interfaz exista y este conectada
     if(interfaz = dictionary_get(dicc_IO,io) == NULL){
-        list_remove_element(bloqueado,dictionary_get(dicc_pcb,string_itoa(pid)));
+        
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no existe o no esta conectada", io);
         log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: Bloqueado - Estado Actual: EXIT", pid);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
     }
     switch (*tipo_instruccion)
@@ -77,11 +78,11 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
     case GEN_SLEEP:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
         if(interfaz.tipo_interfaz != GENERICA){
-        list_remove_element(bloqueado,dictionary_get(dicc_pcb,string_itoa(pid)));
+        
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
         log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: Bloqueado - Estado Actual: EXIT", pid);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
         //preparo y envio el paquete a la interfaz
@@ -93,7 +94,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add_uint32(paquete->buffer,u_trabajo);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
-        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
         queue_push(interfaz.cola,procs);
 
 
@@ -103,11 +104,11 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
     case STDIN_READ:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
         if(interfaz.tipo_interfaz != STDIN){
-        list_remove_element(bloqueado,dictionary_get(dicc_pcb,string_itoa(pid)));
+        
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
         log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: Bloqueado - Estado Actual: EXIT", pid);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
         
@@ -125,7 +126,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add(paquete->buffer,tamanio_std,tamanio_data);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
-        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
         queue_push(interfaz.cola,procs);
         free(tamanio_std);
 
@@ -134,11 +135,11 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
     case STDOUT_WRITE:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
         if(interfaz.tipo_interfaz != STDOUT){
-        list_remove_element(bloqueado,dictionary_get(dicc_pcb,string_itoa(pid)));
+        
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
         log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: Bloqueado - Estado Actual: EXIT", pid);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
 
@@ -157,7 +158,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add(paquete->buffer,tamanio_std,tamanio_data);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
-        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
         queue_push(interfaz.cola,procs);
         free(tamanio_std);
     }        
@@ -166,11 +167,11 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
     case FS_CREATE:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
         if(interfaz.tipo_interfaz != DIALFS){
-        list_remove_element(bloqueado,dictionary_get(dicc_pcb,string_itoa(pid)));
+
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
         log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: Bloqueado - Estado Actual: EXIT", pid);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
         uint32_t len = 0;
@@ -181,7 +182,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add_string(paquete->buffer,len,nom_archivo);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
-        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
         queue_push(interfaz.cola,procs);
         free(nom_archivo);
         break;
@@ -190,11 +191,11 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
     case FS_DELETE:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
         if(interfaz.tipo_interfaz != DIALFS){
-        list_remove_element(bloqueado,dictionary_get(dicc_pcb,string_itoa(pid)));
+        
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
         log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: Bloqueado - Estado Actual: EXIT", pid);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
         uint32_t len = 0;
@@ -205,7 +206,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add_string(paquete->buffer,len,nom_archivo);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
-        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
         queue_push(interfaz.cola,procs);
         free(nom_archivo);
         break;
@@ -214,11 +215,11 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
     case FS_TRUNCATE:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
         if(interfaz.tipo_interfaz != DIALFS){
-        list_remove_element(bloqueado,dictionary_get(dicc_pcb,string_itoa(pid)));
+        
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
         log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: Bloqueado - Estado Actual: EXIT", pid);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
         uint32_t len = 0;
@@ -235,7 +236,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add(paquete->buffer,tamanio_fs, tamanio_data);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
-        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
         queue_push(interfaz.cola,procs);
         free(nombre_archivo);
         free(tamanio_fs);
@@ -245,11 +246,11 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
     case FS_WRITE:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
         if(interfaz.tipo_interfaz != DIALFS){
-        list_remove_element(bloqueado,dictionary_get(dicc_pcb,string_itoa(pid)));
+        
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
         log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: Bloqueado - Estado Actual: EXIT", pid);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
         uint32_t len = 0;
@@ -271,7 +272,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add(paquete->buffer, puntero_archivo, tamanio_data2);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
-        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
         queue_push(interfaz.cola,procs);
         free(nombre_archivo);
         free(tamanio_fs);
@@ -284,11 +285,11 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
     case FS_READ:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
         if(interfaz.tipo_interfaz != DIALFS){
-        list_remove_element(bloqueado,dictionary_get(dicc_pcb,string_itoa(pid)));
+        
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
         log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: Bloqueado - Estado Actual: EXIT", pid);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
         uint32_t len = 0;
@@ -310,7 +311,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add(paquete->buffer, puntero_archivo, tamanio_data2);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
-        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
         queue_push(interfaz.cola,procs);
         free(nombre_archivo);
         free(tamanio_fs);
@@ -323,22 +324,31 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
     default:
         break;
     }
-
-    
+    list_add(bloqueado, dictionary_get(dicc_pcb, string_from_format("%u", pid)));
+    log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: BLOQUEADO", pid);
+    log_info(logger_recurso_ES, "PID: %u - Bloqueado por: %s", pid, io);
+    buffer_destroy(buffer);
 }
 
 void gestionar_interfaces(dispositivo_IO* interfaz){
-    pthread_t thread_id;
-    if (pthread_create(&thread_id, NULL, monitor_desconexion, (void*)interfaz) != 0) {
+    pthread_t hilo;
+    if (pthread_create(&hilo, NULL, monitor_desconexion, (void*)interfaz) != 0) {
         perror("Failed to create thread");
         return NULL;
     }
+    pthread_detach(hilo);
     while(1){
         sem_wait(&interfaz->esta_libre);
         if(interfaz->socket == -1){
             destruir_dispositivo_IO(interfaz->nombre);
             break;
         }
+        proceso_en_cola* proceso = queue_pop(interfaz->cola);
+        enviar_paquete(proceso->paquete, interfaz->socket);
+        interfaz->proceso_okupa = proceso->proceso;
+        
+        free(proceso);
+
 
     }
 }
@@ -352,7 +362,7 @@ void monitor_desconexion(dispositivo_IO* interfaz){
             log_info(logger_conexiones, "Se desconecto la interfaz %s", interfaz->nombre);
             break;
         }
-  
+
     }
 
     interfaz->socket = -1;
