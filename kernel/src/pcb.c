@@ -212,6 +212,7 @@ void recibir_contexto_exec(t_pcb* pcb){
         procesar_peticion_IO(io,tipo_instruccion,pcb->pid,t_buffer* buffer);
         free(io);
         free(tipo_instruccion);
+        
         break;
     
     default:

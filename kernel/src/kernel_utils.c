@@ -96,6 +96,11 @@ void procesar_conexion(void* void_args) {
             recibir_info_io(cliente_socket,buffer);
             break;
 
+        case ENTRADASALIDA_LIBERADO:
+            
+
+            break;
+
         default:
             log_info(logger_conexiones,"no estas mandando nada");
             break;

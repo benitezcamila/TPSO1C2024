@@ -16,17 +16,31 @@ void recibir_info_io(int cliente_socket, t_buffer* buffer){
     log_info(logger_conexiones,"Tipo de interfaz recibida %s", tipo_inter[tipo_interfaz]);
     log_info(logger_conexiones,"Nombre de interfaz recibida %s", nombre_interfaz);
     //Inicializo la interfaz
-    dispositivo_IO* interfaz = malloc(sizeof(dispositivo_IO));
-    sem_init(&interfaz->esta_libre,0,1);
-    interfaz->socket = cliente_socket;
-    interfaz->tipo_interfaz = tipo_interfaz;
-    dictionary_put(dicc_IO,nombre_interfaz, interfaz);
+    dispositivo_IO* interfaz = crear_dispositivo_IO(cliente_socket, tipo_interfaz, nombre_interfaz);
+    pthread_t hilo;
+    pthread_create(&hilo, NULL, (void*) gestionar_interfaces, (void*)interfaz);
+    pthread_detach(hilo);
     //libero estructuras
     free(tipo_inter);
     free(long_nombre);
-    free(nombre_interfaz);
+    //free(nombre_interfaz);
     buffer_destroy(buffer);
     
+}
+
+dispositivo_IO* crear_dispositivo_IO(int cliente_socket, t_interfaz tipo_interfaz, char* nombre){
+    dispositivo_IO* interfaz = malloc(sizeof(dispositivo_IO));
+    interfaz->nombre = nombre;
+    interfaz->socket = cliente_socket;
+    interfaz->tipo_interfaz = tipo_interfaz;
+    sem_init(&interfaz->esta_libre,0,1);
+    interfaz->proceso_okupa = NULL;
+    interfaz->cola = queue_create();
+    struct pollfd fds[1];
+    fds[0].fd = cliente_socket;
+    fds[0].events = POLLIN | POLLHUP;
+    interfaz->fds = fds;
+    dictionary_put(dicc_IO,nombre, interfaz);
 }
 
 //pensar funcion para destruir un IO
@@ -55,8 +69,6 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         log_info(logger_kernel, "PID: %u - Estado Anterior: Bloqueado - Estado Actual: EXIT", pid);
         return;
         }
-        //espero a que este desocupada la interfaz
-        sem_wait(&interfaz.esta_libre);
         //preparo y envio el paquete a la interfaz
         uint32_t u_trabajo = 0;
         buffer_read(buffer, &u_trabajo, sizeof(int));
@@ -64,7 +76,11 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add(paquete->buffer,tipo_instruccion,sizeof(t_instruccion));
         buffer_add_uint32(paquete->buffer,pid);
         buffer_add_uint32(paquete->buffer,u_trabajo);
-        enviar_paquete(paquete,interfaz.socket);
+        proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
+        procs->paquete=paquete;
+        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        queue_push(interfaz.cola,procs);
+
 
         break;
     }
@@ -79,8 +95,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         log_info(logger_kernel, "PID: %u - Estado Anterior: Bloqueado - Estado Actual: EXIT", pid);
         return;
         }
-        //espero a que este desocupada la interfaz
-        sem_wait(&interfaz.esta_libre);
+        
         //preparo y envio el paquete a la interfaz
         uint32_t tamanio_data = buffer_read_uint32(buffer);
         void * tamanio_std = malloc(tamanio_data);
@@ -93,7 +108,10 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add_uint32(paquete->buffer,dir_fisica);
         buffer_add_uint32(paquete->buffer,tamanio_data);
         buffer_add(paquete->buffer,tamanio_std,tamanio_data);
-        enviar_paquete(paquete,interfaz.socket);
+        proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
+        procs->paquete=paquete;
+        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        queue_push(interfaz.cola,procs);
         free(tamanio_std);
 
         break;
@@ -109,8 +127,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         return;
         }
 
-        //espero a que este desocupada la interfaz
-        sem_wait(&interfaz.esta_libre);
+        
         //preparo y envio el paquete a la interfaz
         uint32_t tamanio_data = buffer_read_uint32(buffer);
         void * tamanio_std = malloc(tamanio_data);
@@ -123,7 +140,10 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add_uint32(paquete->buffer,dir_fisica);
         buffer_add_uint32(paquete->buffer,tamanio_data);
         buffer_add(paquete->buffer,tamanio_std,tamanio_data);
-        enviar_paquete(paquete,interfaz.socket);
+        proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
+        procs->paquete=paquete;
+        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        queue_push(interfaz.cola,procs);
         free(tamanio_std);
     }        
     break;
@@ -144,7 +164,10 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add(paquete->buffer,tipo_instruccion,sizeof(t_instruccion));
         buffer_add_uint32(paquete->buffer,pid);
         buffer_add_string(paquete->buffer,len,nom_archivo);
-        enviar_paquete(paquete);
+        proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
+        procs->paquete=paquete;
+        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        queue_push(interfaz.cola,procs);
         free(nom_archivo);
         break;
     }
@@ -165,7 +188,10 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add(paquete->buffer,tipo_instruccion,sizeof(t_instruccion));
         buffer_add_uint32(paquete->buffer,pid);
         buffer_add_string(paquete->buffer,len,nom_archivo);
-        enviar_paquete(paquete);
+        proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
+        procs->paquete=paquete;
+        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        queue_push(interfaz.cola,procs);
         free(nom_archivo);
         break;
     }
@@ -192,7 +218,10 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add_string(paquete->buffer, len, nombre_archivo);
         buffer_add_uint32(paquete->buffer, tamanio_data);
         buffer_add(paquete->buffer,tamanio_fs, tamanio_data);
-        enviar_paquete(paquete);
+        proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
+        procs->paquete=paquete;
+        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        queue_push(interfaz.cola,procs);
         free(nombre_archivo);
         free(tamanio_fs);
         break;
@@ -225,7 +254,10 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add(paquete->buffer,tamanio_fs, tamanio_data);
         buffer_add_uint32(paquete->buffer, tamanio_data2);
         buffer_add(paquete->buffer, puntero_archivo, tamanio_data2);
-        enviar_paquete(paquete);
+        proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
+        procs->paquete=paquete;
+        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        queue_push(interfaz.cola,procs);
         free(nombre_archivo);
         free(tamanio_fs);
         free(puntero_archivo);
@@ -261,7 +293,10 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
         buffer_add(paquete->buffer,tamanio_fs, tamanio_data);
         buffer_add_uint32(paquete->buffer, tamanio_data2);
         buffer_add(paquete->buffer, puntero_archivo, tamanio_data2);
-        enviar_paquete(paquete);
+        proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
+        procs->paquete=paquete;
+        procs->proceso = dictionary_get(dicc_pcb, string_itoa(pid));
+        queue_push(interfaz.cola,procs);
         free(nombre_archivo);
         free(tamanio_fs);
         free(puntero_archivo);
@@ -277,3 +312,9 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion,uint32_t pid
     
 }
 
+void gestionar_interfaces(dispositivo_IO* interfaz){
+    
+    while(1){
+        
+    }
+}

@@ -33,7 +33,8 @@ typedef enum {
     ACCESO_TABLA_PAGINAS, 
     MARCO_BUSCADO,
     NO_RESIZE,
-    RESIZE_SUCCESS
+    RESIZE_SUCCESS,
+    ENTRADASALIDA_LIBERADO
 } op_code;
 
 typedef enum {

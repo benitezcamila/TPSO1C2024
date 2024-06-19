@@ -26,8 +26,7 @@ void procesar_io_gen_sleep (t_buffer* buffer_kernel) {
     t_temporal *temporal = temporal_create();
 	usleep(milisegundos_de_espera*1000);
 	temporal_stop(temporal);
-    log_info(logger_entrada_salida, "Tiempo esperado:");
-    log_info(logger_entrada_salida,  string_itoa(temporal_gettime(temporal)));
+    log_info(logger_entrada_salida, "Tiempo esperado: %u". temporal_gettime(temporal));
     temporal_destroy(temporal);
 }
 

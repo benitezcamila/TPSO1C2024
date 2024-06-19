@@ -24,6 +24,7 @@ typedef struct {
     int socket_cliente_E_S;
 }str_sockets;
 
+
 extern str_sockets sockets;
 extern sem_t sem_escuchar;
 extern pthread_t conexion_CPU_I,conexion_CPU_D, conexion_memoria;
