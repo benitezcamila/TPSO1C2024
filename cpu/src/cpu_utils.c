@@ -139,6 +139,7 @@ void enviar_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
     buffer_add(paquete->buffer, &motivo_io, sizeof(t_instruccion));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
+    //agregar tamanio_data
     buffer_add(paquete->buffer, tamanio_std, tamanio_data);
     buffer_add_uint32(paquete->buffer, dir_fisica);
 
@@ -165,6 +166,7 @@ void solicitar_truncate_fs_a_kernel(t_instruccion motivo_io, char* nombre_interf
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_string(paquete->buffer, string_length(nombre_archivo)+1, nombre_archivo);
+    //agregar tamanio_data
     buffer_add(paquete->buffer, tamanio_fs, tamanio_data);
 
     enviar_paquete(paquete, sockets.socket_server_D);
@@ -180,8 +182,10 @@ void solicitar_write_read_fs_a_kernel(t_instruccion motivo_io, char* nombre_inte
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_string(paquete->buffer, string_length(nombre_archivo)+1, nombre_archivo);
+    //agregar tamanio_data
     buffer_add(paquete->buffer, tamanio_fs, tamanio_data1);
     buffer_add_uint32(paquete->buffer, dir_fisica);
+    //agregar tamanio_data2
     buffer_add(paquete->buffer, puntero_archivo, tamanio_data2);
 
     enviar_paquete(paquete, sockets.socket_server_D);
