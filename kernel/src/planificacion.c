@@ -6,8 +6,10 @@ sem_t hay_procesos_nuevos;
 sem_t sem_pausa_planificacion_largo_plazo;
 sem_t sem_pausa_planificacion_corto_plazo;
 pthread_t temporizador_quantum;
-bool pausar_plani = false;
+bool pausar_plani;
 char* mensaje_ingreso_ready;
+int cont_salteo_signal;
+
 
 //colas de estado
 t_queue *cola_new;
@@ -17,6 +19,7 @@ t_list *bloqueado;
 t_queue *suspendido_bloqueado;
 t_queue *suspendido_listo; 
 t_temporal* temp_quantum;
+
 
 
 void iniciar_semaforos_planificacion(){
@@ -45,7 +48,12 @@ void liberar_proceso(uint32_t pid){
     enviar_paquete(paquete,sockets.socket_memoria);
     eliminar_pcb(string_from_format("%u", pid));
 
+    if(cont_salteo_signal > 0){
+        cont_salteo_signal--;
+    }
+    else{
     sem_post(&sem_grado_multiprogramacion);
+    }
 }
 
 void crear_proceso(char* path){

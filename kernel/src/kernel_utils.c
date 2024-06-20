@@ -104,7 +104,7 @@ void procesar_conexion(void* void_args) {
             t_buffer* buffer = buffer_create(size_buf);
             recv(cliente_socket, buffer->stream, buffer->size, MSG_WAITALL);
             uint32_t len = 0;
-            char* io = buffer_read_string(buffer,len);
+            char* io = buffer_read_string(buffer,&len);
             dispositivo_IO* interfaz = dictionary_get(dicc_IO, io);
             list_remove_element(bloqueado, interfaz->proceso_okupa);
             if(strcmp(configuracion.ALGORITMO_PLANIFICACION,"VRR")== 0 && interfaz->proceso_okupa->quantum < configuracion.QUANTUM){

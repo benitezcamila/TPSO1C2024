@@ -1,7 +1,7 @@
 #include <pcb.h>
 
 t_dictionary* dicc_pcb;
-int current_pid = 0;
+int current_pid;
 t_pcb* pcb_en_ejecucion;
 sem_t sem_detener_desalojo;
 
@@ -169,9 +169,9 @@ void recibir_contexto_exec(t_pcb* pcb){
         break;
 
     case INTERRUPCION:
-        liberar_proceso(pcb->pid);
         log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pcb->pid);
-        log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INTERRUPTED_BY_USER");
+        log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INTERRUPTED_BY_USER",pcb->pid);
+        liberar_proceso(pcb->pid);
         break;
 
     case PETICION_RECURSO: {

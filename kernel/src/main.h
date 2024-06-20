@@ -11,7 +11,15 @@
 #include "kernel_utils.h"
 #include "pcb.h"
 #include "recursos.h"
+#include "consola.h"
+#include "manejoES.h"
 
-extern pthread_t levantar_kernel, escuchar_conexiones, establecer_conexion, planificador_corto_plazo, planificador_largo_plazo;
+extern pthread_t levantar_kernel, escuchar_conexiones, 
+                 establecer_conexion, planificador_corto_plazo, 
+                 planificador_largo_plazo, consola, gestion_interfaces, gestion_recursos;
+
+void iniciar_semaforos();
+void iniciar_estructuras();
+void inicializar_variables();
 
 #endif

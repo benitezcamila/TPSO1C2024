@@ -9,9 +9,12 @@ void crear_colas_bloqueo(){
     {
     str_recursos* recurso = malloc(sizeof(str_recursos));
     recurso->cola = queue_create();
+    recurso->procesos_okupas = list_create();
     int cant = atoi(list_get(configuracion.INSTANCIAS_RECURSOS, i));
-    sem_init(&recurso->cantidad_recursos, 0, cant);
-    dictionary_put(recursos, list_get(configuracion.RECURSOS, i), recurso);
+    sem_init(&(recurso->cantidad_recursos), 0, cant);
+    sem_init(&(recurso->recurso_solicitado),0,0);
+    recurso->nombre = list_get(configuracion.RECURSOS, i);
+    dictionary_put(recursos, recurso->nombre, recurso);
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void*) gestionar_recurso, (void*) recurso);
     pthread_detach(hilo);
@@ -28,7 +31,7 @@ void gestionar_recurso(str_recursos* recurso){
         queue_push(cola_ready,pcb);
         list_remove_element(bloqueado, pcb);
         pcb->estado = READY;
-        log_info(logger_recurso_ES,"El proceso %u tomo el recurso %s",pcb->pid, recurso);
+        log_info(logger_recurso_ES,"El proceso %u tomo el recurso %s",pcb->pid, recurso->nombre);
         if(strcmp(configuracion.ALGORITMO_PLANIFICACION,"VRR")==0 && pcb->quantum < configuracion.QUANTUM){
             queue_push(cola_prioritaria_VRR,pcb);
             mensaje_ingreso_ready = string_new();

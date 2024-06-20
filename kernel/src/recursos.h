@@ -10,6 +10,7 @@ typedef struct{
     sem_t cantidad_recursos;
     sem_t recurso_solicitado;
     t_list* procesos_okupas;
+    char* nombre;
 }str_recursos;
 
 extern int cantidad_recursos;

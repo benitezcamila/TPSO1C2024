@@ -23,7 +23,7 @@ void ejecutar_consola_kernel() {
                 iniciar_proceso(input + 16);
                 break;
             case FINALIZAR_PROCESO:
-                finalizar_proceso(atoi(input + 18));
+                finalizar_proceso(input + 18);
                 break;
             case DETENER_PLANIFICACION:
                 detener_planificacion();
@@ -69,7 +69,7 @@ void iniciar_proceso(const char *path) {
 void finalizar_proceso(char* pid) {
     unsigned long int aux = strtoul(pid, NULL, 10);
     liberar_proceso((uint32_t)aux);
-    log_info(logger_kernel,"Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER",aux);
+    log_info(logger_kernel,"Finaliza el proceso %lu - Motivo: INTERRUPTED_BY_USER",aux);
 }
 
 void detener_planificacion() {
@@ -84,8 +84,15 @@ void iniciar_planificacion() {
 }
 
 void modificar_multiprogramacion(int valor) {
-    printf("Modificando multiprogramación a: %d\n", valor);
-    // Add your logic to modify multiprogramming degree here
+    if(valor > configuracion.GRADO_MULTIPROGRAMACION){
+        for(int i = 0; i < (valor - configuracion.GRADO_MULTIPROGRAMACION);i++){
+            sem_post(&sem_grado_multiprogramacion);
+        }
+        cont_salteo_signal = 0;
+    }
+    else if(valor < configuracion.GRADO_MULTIPROGRAMACION){
+        cont_salteo_signal = configuracion.GRADO_MULTIPROGRAMACION - valor;
+    }
 }
 
 

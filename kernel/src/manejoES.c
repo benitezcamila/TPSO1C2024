@@ -21,8 +21,6 @@ void recibir_info_io(int cliente_socket, t_buffer* buffer){
     pthread_create(&hilo, NULL, (void*) gestionar_interfaces, (void*)interfaz);
     pthread_detach(hilo);
     //libero estructuras
-    free(tipo_inter);
-    free(long_nombre);
     //free(nombre_interfaz);
     buffer_destroy(buffer);
     
@@ -41,6 +39,7 @@ dispositivo_IO* crear_dispositivo_IO(int cliente_socket, t_interfaz tipo_interfa
     fds[0].events = POLLIN | POLLHUP;
     interfaz->fds = fds;
     dictionary_put(dicc_IO,nombre, interfaz);
+    return interfaz;
 }
 
 void destruir_dispositivo_IO(char* nombre_interfaz){
@@ -50,13 +49,13 @@ void destruir_dispositivo_IO(char* nombre_interfaz){
         eliminar_paquete(proceso->paquete);
         log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE", proceso->proceso->pid);
         log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", proceso->proceso->pid);
-        eliminar_pcb(proceso->proceso->pid);
+        liberar_proceso(proceso->proceso->pid);
         free(proceso);
     }
     free(interfaz->nombre);
     sem_destroy(&(interfaz->esta_libre));
     if(interfaz->proceso_okupa != NULL){
-        eliminar_pcb(interfaz->proceso_okupa);
+        liberar_proceso(interfaz->proceso_okupa->pid);
     }
     free(interfaz);
 }
@@ -333,9 +332,9 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
 
 void gestionar_interfaces(dispositivo_IO* interfaz){
     pthread_t hilo;
-    if (pthread_create(&hilo, NULL, monitor_desconexion, (void*)interfaz) != 0) {
+    if (pthread_create(&hilo, NULL, (void*)monitor_desconexion, (void*)interfaz) != 0) {
         perror("Failed to create thread");
-        return NULL;
+        return;
     }
     pthread_detach(hilo);
     while(1){
@@ -357,7 +356,12 @@ void gestionar_interfaces(dispositivo_IO* interfaz){
 
 void monitor_desconexion(dispositivo_IO* interfaz){
         while (1) {
-        int ret = poll(&interfaz->fds, 1, -1); // Espera indefinida
+        int ret = poll((interfaz->fds), 1, -1); // Espera indefinida
+
+        if (ret == -1) {
+            perror("poll failed");
+            break;
+        }
 
         if (interfaz->fds->revents & POLLHUP) {
             log_info(logger_conexiones, "Se desconecto la interfaz %s", interfaz->nombre);
@@ -368,5 +372,5 @@ void monitor_desconexion(dispositivo_IO* interfaz){
 
     interfaz->socket = -1;
     sem_post(&interfaz->esta_libre); // Liberar el semáforo para indicar que la interfaz está libre
-    return NULL;
+    return ;
 }
