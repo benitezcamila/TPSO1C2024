@@ -16,6 +16,7 @@ extern sem_t proceso_ejecutando;
 extern sem_t hay_procesos_nuevos;
 extern sem_t sem_pausa_planificacion_largo_plazo;
 extern sem_t sem_pausa_planificacion_corto_plazo;
+extern bool pausar_plani;
 extern char* mensaje_ingreso_ready;
 extern t_queue *cola_new;
 extern t_queue *cola_ready;
@@ -37,6 +38,8 @@ void ejecutar_con_quantum(t_pcb *);
 void ejecutar_FIFO(t_pcb *);
 void ejecutar_RR(t_pcb *);
 void esperar_interrupcion_quantum(t_pcb *);
+void pausar_planificacion();
+void reanudar_planificacion();
 
 
 #endif

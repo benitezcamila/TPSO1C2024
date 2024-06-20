@@ -68,8 +68,8 @@ void iniciar_proceso(const char *path) {
 
 void finalizar_proceso(char* pid) {
     unsigned long int aux = strtoul(pid, NULL, 10);
-    liberar_procesos((uint32_t)aux);
-    log_info(logger_kernel,"Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER",aux,);
+    liberar_proceso((uint32_t)aux);
+    log_info(logger_kernel,"Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER",aux);
 }
 
 void detener_planificacion() {
@@ -88,9 +88,7 @@ void modificar_multiprogramacion(int valor) {
     // Add your logic to modify multiprogramming degree here
 }
 
-void listar_procesos_por_estado() {
-    listar_procesos_por_estado();
-}
+
 
 // Helper function to get command type
 int get_tipo_comando(const char *input) {
@@ -113,14 +111,14 @@ int get_tipo_comando(const char *input) {
     }
 }
 
-listar_procesos_por_estado(){
+void listar_procesos_por_estado(){
     listar_proceso(cola_new->elements,"NEW");
     listar_proceso(cola_ready->elements,"READY");
     listar_proceso(bloqueado,"BLOQUEADO");
     log_info(logger_kernel, "El siguientes proceso estan en la cola de EXEC: %d", pcb_en_ejecucion->pid);
 }
 
-listar_proceso(t_list* lista, char* estado){
+void listar_proceso(t_list* lista, char* estado){
     mensaje_listado = string_new();
     list_iterate(lista, agregar_PID);
     log_info(logger_kernel,"Los siguientes proceso estan en la cola %s: ", estado);

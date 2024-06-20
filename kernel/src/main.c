@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
     pthread_t levantar_kernel, escuchar_conexiones, establecer_conexion;
     sem_init(&sem_escuchar, 0, 1); //inicializo escuchando
     dicc_pcb = dictionary_create();
-    dicc_io = dictionary_create();
+    dicc_IO = dictionary_create();
     current_pid = 0;
     
 

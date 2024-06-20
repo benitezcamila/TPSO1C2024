@@ -57,6 +57,23 @@ void liberar_recursos(t_pcb* pcb){
         }
         
     }
+    t_list* lista_keys_IO = dictionary_keys(dicc_IO);
+    for(int i = 0, j = list_size(lista_keys_IO); i < j;i++){
+        dispositivo_IO* interfaz = dictionary_get(dicc_IO,list_get(lista_keys_IO,i));
+        while(list_remove_element(interfaz->cola->elements,pcb)){
+
+        }
+        if(interfaz->proceso_okupa == pcb){
+            op_code cod = LIBERAR_PROCESO;
+            void* a_enviar = malloc(sizeof(op_code));
+	        int offset = 0;
+	        memcpy(a_enviar + offset, &(cod), sizeof(op_code));
+	        offset += sizeof(op_code);
+            send(interfaz->socket, a_enviar, sizeof(op_code),0);
+            sem_post(&(interfaz->esta_libre));
+        }
+    }
+    list_destroy(lista_keys_IO);
     list_destroy(lista_keys);
 }
 
@@ -120,8 +137,8 @@ void recibir_contexto_exec(t_pcb* pcb){
         quantum_a_asignar = pcb->quantum - temporal_gettime(temp_quantum);
         temporal_destroy(temp_quantum);
     }
-    if(pausar_planificacion()){
-        sem_wait(sem_detener_desalojo);
+    if(pausar_plani){
+        sem_wait(&sem_detener_desalojo);
     }
     motivo_desalojo mot_desalojo;
     uint32_t buffer_size;
@@ -164,7 +181,7 @@ void recibir_contexto_exec(t_pcb* pcb){
         str_recursos* str_rec = dictionary_get(recursos, recurso);
         log_info(logger_recurso_ES,"El proceso %u solicito el recurso %s",pcb->pid, recurso);
         int cant_recurso;
-        sem_getvalue(str_rec->cantidad_recursos,&cant_recurso);
+        sem_getvalue(&(str_rec->cantidad_recursos),&cant_recurso);
         if(cant_recurso > 0){
         log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: BLOCKED", pcb->pid);
         log_info(logger_recurso_ES, "PID: %u - Bloqueado por: %s", pcb->pid, recurso);
@@ -213,7 +230,7 @@ void recibir_contexto_exec(t_pcb* pcb){
         log_info(logger_recurso_ES, "PID: %u - Bloqueado por: %s", pcb->pid, io);
         pcb->estado = BLOCKED;
         list_add(bloqueado, pcb);
-        procesar_peticion_IO(io,tipo_instruccion,pcb->pid,t_buffer* buffer);
+        procesar_peticion_IO(io,tipo_instruccion,pcb->pid, buffer);
         free(io);
         free(tipo_instruccion);
         

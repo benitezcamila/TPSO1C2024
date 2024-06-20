@@ -50,11 +50,11 @@ void destruir_dispositivo_IO(char* nombre_interfaz){
         eliminar_paquete(proceso->paquete);
         log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE", proceso->proceso->pid);
         log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", proceso->proceso->pid);
-        eliminar_pcb(proceso->proceso);
+        eliminar_pcb(proceso->proceso->pid);
         free(proceso);
     }
     free(interfaz->nombre);
-    sem_destroy(interfaz->esta_libre);
+    sem_destroy(&(interfaz->esta_libre));
     if(interfaz->proceso_okupa != NULL){
         eliminar_pcb(interfaz->proceso_okupa);
     }
@@ -63,9 +63,10 @@ void destruir_dispositivo_IO(char* nombre_interfaz){
 
 void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pid, t_buffer* buffer){
 
-    dispositivo_IO interfaz;
+    dispositivo_IO* interfaz;
+    interfaz = dictionary_get(dicc_IO,io);
     //verifico la interfaz exista y este conectada
-    if(interfaz = dictionary_get(dicc_IO,io) == NULL){
+    if( interfaz == NULL){
         
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no existe o no esta conectada", io);
@@ -77,7 +78,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
     {
     case GEN_SLEEP:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
-        if(interfaz.tipo_interfaz != GENERICA){
+        if(interfaz->tipo_interfaz != GENERICA){
         
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
@@ -95,7 +96,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
         procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
-        queue_push(interfaz.cola,procs);
+        queue_push(interfaz->cola,procs);
 
 
         break;
@@ -103,7 +104,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
     
     case STDIN_READ:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
-        if(interfaz.tipo_interfaz != STDIN){
+        if(interfaz->tipo_interfaz != STDIN){
         
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
@@ -116,7 +117,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         uint32_t tamanio_data = buffer_read_uint32(buffer);
         void * tamanio_std = malloc(tamanio_data);
         buffer_read(buffer,tamanio_std,tamanio_data);
-        uint32_t dir_fisica = buffer_add_uint32(buffer);
+        uint32_t dir_fisica = buffer_read_uint32(buffer);
 
         t_paquete* paquete = crear_paquete(ENTRADASALIDA,sizeof(t_instruccion)+ sizeof(uint32_t)*3 + tamanio_data);
         buffer_add(paquete->buffer,tipo_instruccion,sizeof(t_instruccion));
@@ -127,14 +128,14 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
         procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
-        queue_push(interfaz.cola,procs);
+        queue_push(interfaz->cola,procs);
         free(tamanio_std);
 
         break;
     }
     case STDOUT_WRITE:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
-        if(interfaz.tipo_interfaz != STDOUT){
+        if(interfaz->tipo_interfaz != STDOUT){
         
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
@@ -148,7 +149,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         uint32_t tamanio_data = buffer_read_uint32(buffer);
         void * tamanio_std = malloc(tamanio_data);
         buffer_read(buffer,tamanio_std,tamanio_data);
-        uint32_t dir_fisica = buffer_add_uint32(buffer);
+        uint32_t dir_fisica = buffer_read_uint32(buffer);
         
         t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_instruccion)+sizeof(uint32_t)*3 + tamanio_data);
         buffer_add(paquete->buffer,tipo_instruccion,sizeof(t_instruccion));
@@ -159,14 +160,14 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
         procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
-        queue_push(interfaz.cola,procs);
+        queue_push(interfaz->cola,procs);
         free(tamanio_std);
     }        
     break;
 
     case FS_CREATE:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
-        if(interfaz.tipo_interfaz != DIALFS){
+        if(interfaz->tipo_interfaz != DIALFS){
 
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
@@ -183,14 +184,14 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
         procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
-        queue_push(interfaz.cola,procs);
+        queue_push(interfaz->cola,procs);
         free(nom_archivo);
         break;
     }
 
     case FS_DELETE:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
-        if(interfaz.tipo_interfaz != DIALFS){
+        if(interfaz->tipo_interfaz != DIALFS){
         
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
@@ -207,14 +208,14 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
         procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
-        queue_push(interfaz.cola,procs);
+        queue_push(interfaz->cola,procs);
         free(nom_archivo);
         break;
     }
     
     case FS_TRUNCATE:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
-        if(interfaz.tipo_interfaz != DIALFS){
+        if(interfaz->tipo_interfaz != DIALFS){
         
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
@@ -237,7 +238,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
         procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
-        queue_push(interfaz.cola,procs);
+        queue_push(interfaz->cola,procs);
         free(nombre_archivo);
         free(tamanio_fs);
         break;
@@ -245,7 +246,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
 
     case FS_WRITE:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
-        if(interfaz.tipo_interfaz != DIALFS){
+        if(interfaz->tipo_interfaz != DIALFS){
         
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
@@ -273,7 +274,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
         procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
-        queue_push(interfaz.cola,procs);
+        queue_push(interfaz->cola,procs);
         free(nombre_archivo);
         free(tamanio_fs);
         free(puntero_archivo);
@@ -284,7 +285,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
 
     case FS_READ:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
-        if(interfaz.tipo_interfaz != DIALFS){
+        if(interfaz->tipo_interfaz != DIALFS){
         
         liberar_proceso(pid);
         log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
@@ -312,7 +313,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
         procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
-        queue_push(interfaz.cola,procs);
+        queue_push(interfaz->cola,procs);
         free(nombre_archivo);
         free(tamanio_fs);
         free(puntero_archivo);
@@ -358,7 +359,7 @@ void monitor_desconexion(dispositivo_IO* interfaz){
         while (1) {
         int ret = poll(&interfaz->fds, 1, -1); // Espera indefinida
 
-        if (interfaz->fds.revents & POLLHUP) {
+        if (interfaz->fds->revents & POLLHUP) {
             log_info(logger_conexiones, "Se desconecto la interfaz %s", interfaz->nombre);
             break;
         }

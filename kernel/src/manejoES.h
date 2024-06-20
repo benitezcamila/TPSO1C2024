@@ -3,6 +3,7 @@
 
 #include "kernel_utils.h"
 #include <poll.h>
+#include <commons/collections/queue.h>
 
 typedef struct{
     char* nombre;
@@ -11,7 +12,7 @@ typedef struct{
     int socket;
     t_pcb* proceso_okupa;
     t_queue* cola;
-    struct pollfd fds;
+    struct pollfd* fds;
 }dispositivo_IO;
 
 typedef struct 
@@ -28,6 +29,6 @@ dispositivo_IO* crear_dispositivo_IO(int, t_interfaz, char*);
 void procesar_peticion_IO(char*,t_instruccion*,uint32_t, t_buffer*);
 void destruir_dispositivo_IO(char*);
 void gestionar_interfaces();
-void monitor_desconexion(dispositivo_IO*):
+void monitor_desconexion(dispositivo_IO*);
 
 #endif

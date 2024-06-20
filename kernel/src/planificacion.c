@@ -6,7 +6,7 @@ sem_t hay_procesos_nuevos;
 sem_t sem_pausa_planificacion_largo_plazo;
 sem_t sem_pausa_planificacion_corto_plazo;
 pthread_t temporizador_quantum;
-bool pausar_planificacion = false;
+bool pausar_plani = false;
 char* mensaje_ingreso_ready;
 
 //colas de estado
@@ -64,7 +64,7 @@ void planificar_a_largo_plazo(){
     while(1){
         sem_wait(&hay_procesos_nuevos);
         sem_wait(&sem_grado_multiprogramacion);
-        if(pausar_planificacion){
+        if(pausar_plani){
             sem_wait(&sem_pausa_planificacion_largo_plazo);
             reanudar_planificacion();
         }
@@ -72,7 +72,7 @@ void planificar_a_largo_plazo(){
         queue_push(cola_ready, proceso_para_ready);
         mensaje_ingreso_ready = string_new();
         list_iterate(cola_ready->elements,agregar_PID_ready);
-        log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Cola Ready: %s",pcb->pid, mensaje_ingreso_ready);
+        log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Cola Ready: %s",proceso_para_ready->pid, mensaje_ingreso_ready);
         free(mensaje_ingreso_ready);
     }
 
@@ -81,7 +81,7 @@ void planificar_a_largo_plazo(){
 void planificar_a_corto_plazo_segun_algoritmo(){
     char *algoritmo_planificador = configuracion.ALGORITMO_PLANIFICACION;
     while(1){
-    if(pausar_planificacion){
+    if(pausar_plani){
             sem_wait(&sem_pausa_planificacion_corto_plazo);
             reanudar_planificacion();
         }
@@ -178,12 +178,12 @@ void esperar_interrupcion_quantum(t_pcb *a_ejecutar){
 }
 
 void pausar_planificacion() {
-    pausar_planificacion = true;
+    pausar_plani = true;
     log_info(logger_kernel, "Planificación pausada");
 }
 
 void reanudar_planificacion() {
-    pausar_planificacion = false;
+    pausar_plani = false;
     log_info(logger_kernel, "Planificación reanudada");
 }
 

@@ -84,19 +84,21 @@ void procesar_conexion(void* void_args) {
         }
 
         switch (cop){
-        case CONTEXTO_EXEC:
+        case CONTEXTO_EXEC:{
             recibir_contexto_exec(pcb_en_ejecucion);
             break;
+        }
 
-        case ENTRADASALIDA:
+        case ENTRADASALIDA:{
             uint32_t size_buf = 0;
             recv(cliente_socket, &(size_buf), sizeof(uint32_t), MSG_WAITALL);
             t_buffer* buffer = buffer_create(size_buf);
             recv(cliente_socket, buffer->stream, buffer->size, MSG_WAITALL);
             recibir_info_io(cliente_socket,buffer);
             break;
+        }
 
-        case ENTRADASALIDA_LIBERADO:
+        case ENTRADASALIDA_LIBERADO:{
             uint32_t size_buf = 0;
             recv(cliente_socket, &(size_buf), sizeof(uint32_t), MSG_WAITALL);
             t_buffer* buffer = buffer_create(size_buf);
@@ -123,6 +125,7 @@ void procesar_conexion(void* void_args) {
             free(io);
 
             break;
+        }
 
         default:
             log_info(logger_conexiones,"no estas mandando nada");

@@ -46,7 +46,6 @@ typedef enum {
     OUT_OF_MEMORY,
     PETICION_RECURSO, //wait
     SIGNAL_RECURSO, //signal
-    PETICION_IO,
     FIN_QUANTUM,
     //
 }motivo_desalojo;
