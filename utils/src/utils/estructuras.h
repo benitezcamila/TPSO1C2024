@@ -52,7 +52,8 @@ typedef enum {
 
 
 typedef enum{
-    DESALOJO_QUANTUM
+    DESALOJO_QUANTUM,
+    DESALOJO_POR_USUARIO
 } tipo_de_interrupcion;
 
 
