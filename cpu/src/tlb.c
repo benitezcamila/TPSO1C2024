@@ -3,10 +3,13 @@
 
 t_TLB* tlb;
 
-//Función que inicializa la TLB. (IMPLEMENTAR)
-t_TLB* inicializar_tlb(){
-    //
-    return {};
+//Función que inicializa la TLB.
+void inicializar_tlb(t_TLB* tlb, uint32_t capacidad, const char* algoritmo){
+    tlb->entradas = malloc(sizeof(t_entrada_TLB) * capacidad);
+    tlb->capacidad = capacidad;
+    tlb->count = 0;
+    tlb->tiempoActual = 0;
+    tlb->algoritmo = string_duplicate(algoritmo);
 }
 
 //Función para buscar en la TLB.

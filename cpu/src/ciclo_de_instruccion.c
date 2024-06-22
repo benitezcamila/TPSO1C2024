@@ -21,6 +21,11 @@ void ciclo_de_instruccion(){
 }
 
 void fetch_instruction(){
+    if (contexto_registros == NULL) {
+        log_info(logger_errores_cpu, "El contexto de ejecución está vacío (NULL).");
+        return;
+    }
+
     log_info(logger_cpu, "PID: %d - FETCH - Program Counter: %d", PID, contexto_registros->PC);
     solicitar_instruccion_a_memoria();
     contexto_registros->PC += 1;
@@ -28,83 +33,73 @@ void fetch_instruction(){
 
 void decode(){
     recibir_instruccion_de_memoria(longitud_linea_instruccion);
-    linea_de_instruccion_tokenizada = string_n_split(linea_de_instruccion, *longitud_linea_instruccion, " ");
+
+    if (linea_de_instruccion != NULL) {
+        linea_de_instruccion_tokenizada = string_n_split(linea_de_instruccion, *longitud_linea_instruccion, " ");
+    } else {
+        log_info(logger_errores_cpu, "La línea de instrucción recibida está vacía (NULL).");
+    }
 }
 
 void execute(){
+    loggear_instruccion(*longitud_linea_instruccion);
+
     if(strcmp(linea_de_instruccion_tokenizada[0], "SET") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
         uint32_t valor = atoi(linea_de_instruccion_tokenizada[2]);
         set(linea_de_instruccion_tokenizada[1], valor);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "MOV_IN") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
 	    mov_in(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "MOV_OUT") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
 	    mov_out(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "SUM") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
         sum(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "SUB") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
         sub(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "JNZ") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
         uint32_t proxInstruccion = atoi(linea_de_instruccion_tokenizada[2]);
         jump_no_zero(linea_de_instruccion_tokenizada[1], proxInstruccion);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "RESIZE") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
 		uint tamanio = atoi(linea_de_instruccion_tokenizada[1]);
 		resize(tamanio);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "COPY_STRING") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
 		uint32_t tamanio = atoi(linea_de_instruccion_tokenizada[1]);
 		copy_string(tamanio);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_GEN_SLEEP") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
         uint32_t unidades_de_trabajo = atoi(linea_de_instruccion_tokenizada[2]);
         io_gen_sleep(linea_de_instruccion_tokenizada[1], unidades_de_trabajo);
     }
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_STDIN_READ") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
 		io_stdin_read(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_STDOUT_WRITE") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
 		io_stdout_write(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_CREATE") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
 		io_fs_create(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_DELETE") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
 		io_fs_delete(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_TRUNCATE") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
 		io_fs_truncate(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_WRITE") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
 		io_fs_write(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3],
                      linea_de_instruccion_tokenizada[4], linea_de_instruccion_tokenizada[5]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_FS_READ") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
 		io_fs_read(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3],
                      linea_de_instruccion_tokenizada[4], linea_de_instruccion_tokenizada[5]);
 	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "EXIT") == 0){
-        loggear_instruccion(*longitud_linea_instruccion);
 		exit_process();
 	}
 }
@@ -138,7 +133,7 @@ uint32_t mmu(t_TLB* tlb, uint32_t pid){
 
         if(marco == -1){
             log_info(logger_errores_cpu, "La memoria no envió el MARCO_BUSCADO.");
-            //DEBERÍA HACER UN RETURN, PERO RARO. REVISAR.ss
+            return -1; //Entiendo que este return es válido.
         }
     }
 
@@ -253,122 +248,85 @@ void mov_out(char* registro_direccion, char* registro_datos){
     free(contenido_auxiliar);
 }
 
-void sum(char* registro1, char* registro2){
-    if(strcmp(registro2, "AX") == 0){
-        sumar_contenido_registro(registro1, (int)contexto_registros->AX);
-    }
-    else if(strcmp(registro2, "BX") == 0){
-        sumar_contenido_registro(registro1, (int)contexto_registros->BX);
-    }
-    else if(strcmp(registro2, "CX") == 0){
-        sumar_contenido_registro(registro1, (int)contexto_registros->CX);
-    }
-    else if(strcmp(registro2, "DX") == 0){
-        sumar_contenido_registro(registro1, (int)contexto_registros->DX);
-    }
-    else if(strcmp(registro2, "EAX") == 0){
-        sumar_contenido_registro(registro1, (int)contexto_registros->EAX);
-    }
-    else if(strcmp(registro2, "EBX") == 0){
-        sumar_contenido_registro(registro1, (int)contexto_registros->EBX);
-    }
-    else if(strcmp(registro2, "ECX") == 0){
-        sumar_contenido_registro(registro1, (int)contexto_registros->ECX);
-    }
-    else if(strcmp(registro2, "EDX") == 0){
-        sumar_contenido_registro(registro1, (int)contexto_registros->EDX);
-    }
-    else if(strcmp(registro2, "SI") == 0){
-        sumar_contenido_registro(registro1, (int)contexto_registros->SI);
-    }
-    else if(strcmp(registro2, "DI") == 0){
-        sumar_contenido_registro(registro1, (int)contexto_registros->DI);
+void sum(char* reg_destino, char* reg_origen){
+    uint32_t valor_a_sumar = atoi(reg_origen);
+
+    if(strcmp(reg_destino, "AX") == 0){
+        contexto_registros->AX += valor_a_sumar;
+    } else if(strcmp(reg_destino, "BX") == 0){
+        contexto_registros->BX += valor_a_sumar;
+    } else if(strcmp(reg_destino, "CX") == 0){
+        contexto_registros->CX += valor_a_sumar;
+    } else if(strcmp(reg_destino, "DX") == 0){
+        contexto_registros->DX += valor_a_sumar;
+    } else if(strcmp(reg_destino, "EAX") == 0){
+        contexto_registros->EAX += valor_a_sumar;
+    } else if(strcmp(reg_destino, "EBX") == 0){
+        contexto_registros->EBX += valor_a_sumar;
+    } else if(strcmp(reg_destino, "ECX") == 0){
+        contexto_registros->ECX += valor_a_sumar;
+    } else if(strcmp(reg_destino, "EDX") == 0){
+        contexto_registros->EDX += valor_a_sumar;
+    } else if(strcmp(reg_destino, "SI") == 0){
+        contexto_registros->SI += valor_a_sumar;
+    } else if(strcmp(reg_destino, "DI") == 0){
+        contexto_registros->DI += valor_a_sumar;
     }
 }
 
-void sub(char* registro1, char* registro2){
-    if(strcmp(registro2, "AX") == 0){
-        restar_contenido_registro(registro1, (int)contexto_registros->AX);
-    }
-    else if(strcmp(registro2, "BX") == 0){
-        restar_contenido_registro(registro1, (int)contexto_registros->BX);
-    }
-    else if(strcmp(registro2, "CX") == 0){
-        restar_contenido_registro(registro1, (int)contexto_registros->CX);
-    }
-    else if(strcmp(registro2, "DX") == 0){
-        restar_contenido_registro(registro1, (int)contexto_registros->DX);
-    }
-    else if(strcmp(registro2, "EAX") == 0){
-        restar_contenido_registro(registro1, (int)contexto_registros->EAX);
-    }
-    else if(strcmp(registro2, "EBX") == 0){
-        restar_contenido_registro(registro1, (int)contexto_registros->EBX);
-    }
-    else if(strcmp(registro2, "ECX") == 0){
-        restar_contenido_registro(registro1, (int)contexto_registros->ECX);
-    }
-    else if(strcmp(registro2, "EDX") == 0){
-        restar_contenido_registro(registro1, (int)contexto_registros->EDX);
-    }
-    else if(strcmp(registro2, "SI") == 0){
-        restar_contenido_registro(registro1, (int)contexto_registros->SI);
-    }
-    else if(strcmp(registro2, "DI") == 0){
-        restar_contenido_registro(registro1, (int)contexto_registros->DI);
+void sub(char* reg_destino, char* reg_origen){
+    uint32_t valor_a_restar = atoi(reg_origen);
+
+    if(strcmp(reg_destino, "AX") == 0){
+        contexto_registros->AX -= valor_a_restar;
+    } else if(strcmp(reg_destino, "BX") == 0){
+        contexto_registros->BX -= valor_a_restar;
+    } else if(strcmp(reg_destino, "CX") == 0){
+        contexto_registros->CX -= valor_a_restar;
+    } else if(strcmp(reg_destino, "DX") == 0){
+        contexto_registros->DX -= valor_a_restar;
+    } else if(strcmp(reg_destino, "EAX") == 0){
+        contexto_registros->EAX -= valor_a_restar;
+    } else if(strcmp(reg_destino, "EBX") == 0){
+        contexto_registros->EBX -= valor_a_restar;
+    } else if(strcmp(reg_destino, "ECX") == 0){
+        contexto_registros->ECX -= valor_a_restar;
+    } else if(strcmp(reg_destino, "EDX") == 0){
+        contexto_registros->EDX -= valor_a_restar;
+    } else if(strcmp(reg_destino, "SI") == 0){
+        contexto_registros->SI -= valor_a_restar;
+    } else if(strcmp(reg_destino, "DI") == 0){
+        contexto_registros->DI -= valor_a_restar;
     }
 }
 
 void jump_no_zero(char* registro, uint32_t nro_instruccion){
+    uint32_t valor_actual;
+
     if(strcmp(registro, "AX") == 0){
-        if(contexto_registros->AX != 0){
-            contexto_registros->PC = nro_instruccion;
-        }
+        valor_actual = contexto_registros->AX;
+    } else if(strcmp(registro, "BX") == 0){
+        valor_actual = contexto_registros->BX;
+    } else if(strcmp(registro, "CX") == 0){
+        valor_actual = contexto_registros->CX;
+    } else if(strcmp(registro, "DX") == 0){
+        valor_actual = contexto_registros->DX;
+    } else if(strcmp(registro, "EAX") == 0){
+        valor_actual = contexto_registros->EAX;
+    } else if(strcmp(registro, "EBX") == 0){
+        valor_actual = contexto_registros->EBX;
+    } else if(strcmp(registro, "ECX") == 0){
+        valor_actual = contexto_registros->ECX;
+    } else if(strcmp(registro, "EDX") == 0){
+        valor_actual = contexto_registros->EDX;
+    } else if(strcmp(registro, "SI") == 0){
+        valor_actual = contexto_registros->SI;
+    } else if(strcmp(registro, "DI") == 0){
+        valor_actual = contexto_registros->DI;
     }
-    else if(strcmp(registro, "BX") == 0){
-        if(contexto_registros->BX != 0){
-            contexto_registros->PC = nro_instruccion;
-        }
-    }
-    else if(strcmp(registro, "CX") == 0){
-        if(contexto_registros->CX != 0){
-            contexto_registros->PC = nro_instruccion;
-        }
-    }
-    else if(strcmp(registro, "DX") == 0){
-        if(contexto_registros->DX != 0){
-            contexto_registros->PC = nro_instruccion;
-        }
-    }
-    else if(strcmp(registro, "EAX") == 0){
-        if(contexto_registros->EAX != 0){
-            contexto_registros->PC = nro_instruccion;
-        }
-    }
-    else if(strcmp(registro, "EBX") == 0){
-        if(contexto_registros->EBX != 0){
-            contexto_registros->PC = nro_instruccion;
-        }
-    }
-    else if(strcmp(registro, "ECX") == 0){
-        if(contexto_registros->ECX != 0){
-            contexto_registros->PC = nro_instruccion;
-        }
-    }
-    else if(strcmp(registro, "EDX") == 0){
-        if(contexto_registros->EDX != 0){
-            contexto_registros->PC = nro_instruccion;
-        }
-    }
-    else if(strcmp(registro, "SI") == 0){
-        if(contexto_registros->SI != 0){
-            contexto_registros->PC = nro_instruccion;
-        }
-    }
-    else if(strcmp(registro, "DI") == 0){
-        if(contexto_registros->DI != 0){
-            contexto_registros->PC = nro_instruccion;
-        }
+
+    if(valor_actual != 0){
+        contexto_registros->PC = nro_instruccion;
     }
 }
 
@@ -662,72 +620,6 @@ void exit_process(){
 }
 
 //FUNCIONES AUXILIARES.
-void sumar_contenido_registro(char* registro, uint32_t valor){
-    if(strcmp(registro, "AX") == 0){
-        contexto_registros->AX += valor;
-    }
-    else if(strcmp(registro, "BX") == 0){
-        contexto_registros->BX += valor;
-    }
-    else if(strcmp(registro, "CX") == 0){
-        contexto_registros->CX += valor;
-    }
-    else if(strcmp(registro, "DX") == 0){
-        contexto_registros->DX += valor;
-    }
-    else if(strcmp(registro, "EAX") == 0){
-        contexto_registros->EAX += valor;
-    }
-    else if(strcmp(registro, "EBX") == 0){
-        contexto_registros->EBX += valor;
-    }
-    else if(strcmp(registro, "ECX") == 0){
-        contexto_registros->ECX += valor;
-    }
-    else if(strcmp(registro, "EDX") == 0){
-        contexto_registros->EDX += valor;
-    }
-    else if(strcmp(registro, "SI") == 0){
-        contexto_registros->SI += valor;
-    }
-    else if(strcmp(registro, "DI") == 0){
-        contexto_registros->DI += valor;
-    }
-}
-
-void restar_contenido_registro(char* registro, uint32_t valor){
-    if(strcmp(registro, "AX") == 0){
-        contexto_registros->AX -= valor;
-    }
-    else if(strcmp(registro, "BX") == 0){
-        contexto_registros->BX -= valor;
-    }
-    else if(strcmp(registro, "CX") == 0){
-        contexto_registros->CX -= valor;
-    }
-    else if(strcmp(registro, "DX") == 0){
-        contexto_registros->DX -= valor;
-    }
-    else if(strcmp(registro, "EAX") == 0){
-        contexto_registros->EAX -= valor;
-    }
-    else if(strcmp(registro, "EBX") == 0){
-        contexto_registros->EBX -= valor;
-    }
-    else if(strcmp(registro, "ECX") == 0){
-        contexto_registros->ECX -= valor;
-    }
-    else if(strcmp(registro, "EDX") == 0){
-        contexto_registros->EDX -= valor;
-    }
-    else if(strcmp(registro, "SI") == 0){
-        contexto_registros->SI -= valor;
-    }
-    else if(strcmp(registro, "DI") == 0){
-        contexto_registros->DI -= valor;
-    }
-}
-
 void* obtener_contenido_registro(const char* registro) {
     if (strcmp(registro, "AX") == 0) {
         return &(contexto_registros->AX);
@@ -764,32 +656,19 @@ void* obtener_contenido_registro(const char* registro) {
     }
 }
 
-void loggear_instruccion(int cant_parametros){
-    switch(cant_parametros){
-        case 0:
-        log_info(logger_cpu, "PID: %d - Ejecutando: %s", PID, linea_de_instruccion_tokenizada[0]);
+void loggear_instruccion(uint32_t longitud_linea_instruccion){
+    char instruccion_completa[longitud_linea_instruccion + 1];
+    instruccion_completa = string_duplicate(linea_de_instruccion);
 
-        case 1:
-        log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", PID, linea_de_instruccion_tokenizada[0],
-                linea_de_instruccion_tokenizada[1]);
+    //Obtengo la instrucción.
+    char* instruccion = strtok(instruccion_completa, " ");
+    //Obtengo, del string que quedó, los parámetros.
+    char* parametros = strtok(NULL, "");
 
-        case 2:
-        log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s", PID, linea_de_instruccion_tokenizada[0],
-                linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2]);
-
-        case 3:
-        log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s %s", PID, linea_de_instruccion_tokenizada[0],
-                linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2],
-                linea_de_instruccion_tokenizada[3]);
-
-        case 5:
-        log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s %s %s %s %s", PID, linea_de_instruccion_tokenizada[0],
-                linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2],
-                linea_de_instruccion_tokenizada[3], linea_de_instruccion_tokenizada[4],
-                linea_de_instruccion_tokenizada[5]);
-
-        default:
-        log_info(logger_errores_cpu, "Hubo un problema obteniendo la instrucción. Cantidad
-                de parámetros obtenida: %d", cant_parametros);
+    // Si no hay parámetros, se pone el string en "".
+    if(parametros == NULL){
+        parametros = "";
     }
+
+    log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", PID, instruccion, parametros);
 }
