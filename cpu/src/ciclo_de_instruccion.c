@@ -152,7 +152,10 @@ uint32_t mmu(t_TLB* tlb, uint32_t pid){
 
 //Funciones de instrucciones.
 void set(char* registro, uint32_t valor){
-    if(strcmp(registro, "AX") == 0){
+    if(strcmp(registro, "PC") == 0){
+        contexto_registros->PC = valor;
+    }
+    else if(strcmp(registro, "AX") == 0){
         contexto_registros->AX = valor;
     }
     else if(strcmp(registro, "BX") == 0){
@@ -195,7 +198,7 @@ void mov_in(char* registro_datos, char* registro_direccion){
     dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
     
-    if(registro_datos[0] == 'E' || registro_datos[1] == 'I'){
+    if(!(registro_datos[1] == 'X')){
         solicitar_leer_en_memoria(dir_fisica, sizeof(uint32_t));
         
         void* datos_de_memoria = leer_de_memoria(sizeof(uint32_t));
@@ -232,7 +235,7 @@ void mov_out(char* registro_direccion, char* registro_datos){
     dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
     
-    if(registro_datos[0] == 'E' || registro_datos[1] == 'I'){
+    if(!(registro_datos[1] == 'X')){
         void* datos_de_registro = obtener_contenido_registro(registro_datos);
 
         solicitar_escribir_en_memoria(dir_fisica, datos_de_registro, sizeof(uint32_t));
@@ -257,7 +260,9 @@ void mov_out(char* registro_direccion, char* registro_datos){
 void sum(char* reg_destino, char* reg_origen){
     uint32_t valor_a_sumar = atoi(reg_origen);
 
-    if(strcmp(reg_destino, "AX") == 0){
+    if(strcmp(reg_destino, "PC") == 0){
+        contexto_registros->PC += valor_a_sumar;
+    } else if(strcmp(reg_destino, "AX") == 0){
         contexto_registros->AX += valor_a_sumar;
     } else if(strcmp(reg_destino, "BX") == 0){
         contexto_registros->BX += valor_a_sumar;
@@ -283,7 +288,9 @@ void sum(char* reg_destino, char* reg_origen){
 void sub(char* reg_destino, char* reg_origen){
     uint32_t valor_a_restar = atoi(reg_origen);
 
-    if(strcmp(reg_destino, "AX") == 0){
+    if(strcmp(reg_destino, "PC") == 0){
+        contexto_registros->PC -= valor_a_restar;
+    } else if(strcmp(reg_destino, "AX") == 0){
         contexto_registros->AX -= valor_a_restar;
     } else if(strcmp(reg_destino, "BX") == 0){
         contexto_registros->BX -= valor_a_restar;
@@ -309,6 +316,7 @@ void sub(char* reg_destino, char* reg_origen){
 void jump_no_zero(char* registro, uint32_t nro_instruccion){
     uint32_t valor_actual;
 
+    //No tendría sentido contemplar el caso de PC = 0...
     if(strcmp(registro, "AX") == 0){
         valor_actual = contexto_registros->AX;
     } else if(strcmp(registro, "BX") == 0){
@@ -418,7 +426,7 @@ void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* regist
     dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
 
-    if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
+    if(!(registro_tamanio[1] == 'X')){
         void* tamanio = obtener_contenido_registro(registro_tamanio);
 
         enviar_std_a_kernel(STDIN_READ, nombre_interfaz, tamanio, sizeof(uint32_t), dir_fisica);
@@ -448,7 +456,7 @@ void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* regi
     dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
 
-    if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
+    if(!(registro_tamanio[1] == 'X')){
         void* tamanio = obtener_contenido_registro(registro_tamanio);
 
         enviar_std_a_kernel(STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint32_t), dir_fisica);
@@ -481,7 +489,7 @@ void io_fs_delete(char* nombre_interfaz, char* nombre_archivo){
 void io_fs_truncate(char* nombre_interfaz, char* nombre_archivo, char* registro_tamanio){
     ind_contexto_kernel = 0;
 
-    if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
+    if(!(registro_tamanio[1] == 'X')){
         void* tamanio = obtener_contenido_registro(registro_tamanio);
 
         solicitar_truncate_fs_a_kernel(FS_TRUNCATE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t));
@@ -510,10 +518,10 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
     dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
 
-    if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
+    if(!(registro_tamanio[1] == 'X')){
         void* tamanio = obtener_contenido_registro(registro_tamanio);
 
-        if(registro_puntero_archivo[0] == 'E' || registro_puntero_archivo[1] == 'I'){
+        if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
             solicitar_write_read_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
@@ -535,7 +543,7 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
     else{
         void* tamanio = obtener_contenido_registro(registro_tamanio);
 
-        if(registro_puntero_archivo[0] == 'E' || registro_puntero_archivo[1] == 'I'){
+        if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
             solicitar_write_read_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
@@ -571,10 +579,10 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
     dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
 
-    if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
+    if(!(registro_tamanio[1] == 'X')){
         void* tamanio = obtener_contenido_registro(registro_tamanio);
 
-        if(registro_puntero_archivo[0] == 'E' || registro_puntero_archivo[1] == 'I'){
+        if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
             solicitar_write_read_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
@@ -596,7 +604,7 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
     else{
         void* tamanio = obtener_contenido_registro(registro_tamanio);
 
-        if(registro_puntero_archivo[0] == 'E' || registro_puntero_archivo[1] == 'I'){
+        if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
             solicitar_write_read_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
@@ -627,7 +635,10 @@ void exit_process(){
 
 //FUNCIONES AUXILIARES.
 void* obtener_contenido_registro(const char* registro) {
-    if (strcmp(registro, "AX") == 0) {
+    if (strcmp(registro, "PC") == 0) {
+        return &(contexto_registros->PC);
+    }
+    else if (strcmp(registro, "AX") == 0) {
         return &(contexto_registros->AX);
     }
     else if (strcmp(registro, "BX") == 0) {
