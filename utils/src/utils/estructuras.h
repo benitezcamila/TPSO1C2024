@@ -40,7 +40,7 @@ typedef enum {
 typedef enum {
     PROCESS_EXIT,
     PROCESS_ERROR,
-    INTERRUPCION,
+    INTERRUPCION_USUARIO,
     LLAMADO_KERNEL,
     PETICION_IO,
     OUT_OF_MEMORY,

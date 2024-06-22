@@ -168,7 +168,7 @@ void recibir_contexto_exec(t_pcb* pcb){
         free(motivo_error);
         break;
 
-    case INTERRUPCION:
+    case INTERRUPCION_USUARIO:
         log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pcb->pid);
         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INTERRUPTED_BY_USER",pcb->pid);
         liberar_proceso(pcb->pid);

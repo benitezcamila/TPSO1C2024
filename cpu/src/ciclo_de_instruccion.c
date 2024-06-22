@@ -111,14 +111,12 @@ void check_interrupt(){
 
         switch(motivo_interrupcion){
         case DESALOJO_QUANTUM:
-            enviar_contexto_a_kernel(DESALOJO_QUANTUM);
+            enviar_contexto_a_kernel(FIN_QUANTUM);
             break;
 
-        /*
-        case SOLICITUD_EXIT:
-            enviar_contexto_a_kernel(SOLICITUD_EXIT);
+        case DESALOJO_POR_USUARIO:
+            enviar_contexto_a_kernel(INTERRUPCION_USUARIO);
             break;
-        */
 
         default:
             log_info(logger_errores_cpu, "Ups! Pasó algo raro. El motivo de interrupción obtenido es: %d", motivo_interrupcion);
