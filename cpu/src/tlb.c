@@ -45,10 +45,11 @@ void actualizar_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina, uint32_t marco) {
 
 //Algoritmos de reemplazo.
 void reemplazo_FIFO(t_TLB* tlb, t_entrada_TLB nueva_entrada) {
-    int idx = 0;
-    int tiempo_min = 1; //REVISAR
+    uint32_t idx = 0;
+    uint32_t tiempo_min = UINT32_MAX;
 
-    for (int i = 0; i < tlb->count; ++i) {
+    //REVISAR EL ++i.
+    for (uint32_t i = 0; i < tlb->count; ++i) {
         if (tlb->entradas[i].tiempo < tiempo_min) {
             tiempo_min = tlb->entradas[i].tiempo;
             idx = i;
@@ -59,10 +60,11 @@ void reemplazo_FIFO(t_TLB* tlb, t_entrada_TLB nueva_entrada) {
 }
 
 void reemplazo_LRU(t_TLB* tlb, t_entrada_TLB nueva_entrada) {
-    int idx = 0;
-    int uso_min = 1; //REVISAR
+    uint32_t idx = 0;
+    uint32_t uso_min = UINT32_MAX;
 
-    for (int i = 0; i < tlb->count; ++i) {
+    //REVISAR EL ++i.
+    for (uint32_t i = 0; i < tlb->count; ++i) {
         if (tlb->entradas[i].uso < uso_min) {
             uso_min = tlb->entradas[i].uso;
             idx = i;
