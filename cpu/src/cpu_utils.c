@@ -87,8 +87,7 @@ void procesar_conexion(void* void_args) {
             break;
         
         default:
-            log_info(logger_errores_cpu, "Se recibió un código de operación incorrecto de parte del
-                    Kernel. El mismo fue: %d", codigo_op);
+            log_info(logger_errores_cpu, "Se recibió un código de operación incorrecto de parte del Kernel. El mismo fue: %d", codigo_op);
             break;
         }
         
@@ -112,8 +111,7 @@ void recibir_contexto_ejecucion(){
         buffer_read(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     }
     else{
-        log_info(logger_errores_cpu, "El contexto de ejecución no fue recibido correctamente. El
-                código de operación recibido fue: %d", paquete->codigo_operacion);
+        log_info(logger_errores_cpu, "El contexto de ejecución no fue recibido correctamente. El código de operación recibido fue: %d", paquete->codigo_operacion);
     }
 }
 
@@ -218,8 +216,7 @@ void recibir_instruccion_de_memoria(uint32_t* longitud_linea_instruccion){
         linea_de_instruccion = buffer_read_string(paquete->buffer, longitud_linea_instruccion);
     }
     else{
-        log_info(logger_errores_cpu, "El código de operación recibido de Memoria no fue una instrucción.
-                El código de operación recibido fue: %d", paquete->codigo_operacion);
+        log_info(logger_errores_cpu, "El código de operación recibido de Memoria no fue una instrucción. El código de operación recibido fue: %d", paquete->codigo_operacion);
     }
 
     free(paquete->buffer->stream);
@@ -240,8 +237,7 @@ void recibir_respuesta_resize_memoria(uint32_t PID){
         break;
 
     default:
-        log_info(logger_errores_cpu, "Ocurrió un error recibiendo la respuesta de Memoria tras Resize.
-                El código de operación recibido fue: %d", paquete->codigo_operacion);
+        log_info(logger_errores_cpu, "Ocurrió un error recibiendo la respuesta de Memoria tras Resize. El código de operación recibido fue: %d", op_code);
         break;
     }
 }
@@ -283,8 +279,7 @@ void* leer_de_memoria(uint32_t tamanio){
         return datos_de_memoria;
     }
     else{
-        log_info(logger_errores_cpu, "Ocurrió un error tras realizar una lectura de Memoria. 
-                    El código de operación recibido fue: %d", paquete->codigo_operacion);
+        log_info(logger_errores_cpu, "Ocurrió un error tras realizar una lectura de Memoria. El código de operación recibido fue: %d", paquete->codigo_operacion);
         free(paquete);
 
         return NULL;

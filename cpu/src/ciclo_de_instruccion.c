@@ -360,7 +360,7 @@ void copy_string(uint32_t tamanio){
     solicitar_leer_en_memoria(dir_fisica, tamanio);
     void* datos_de_memoria = leer_de_memoria(tamanio);
 
-    uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro("DI");
+    contenido_auxiliar = (uint32_t*)obtener_contenido_registro("DI");
     dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
 
@@ -672,7 +672,7 @@ void* obtener_contenido_registro(const char* registro) {
 }
 
 void loggear_instruccion(uint32_t longitud_linea_instruccion){
-    char instruccion_completa[longitud_linea_instruccion + 1];
+    char* instruccion_completa;
     instruccion_completa = string_duplicate(linea_de_instruccion);
 
     //Obtengo la instrucción.
@@ -686,4 +686,7 @@ void loggear_instruccion(uint32_t longitud_linea_instruccion){
     }
 
     log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", PID, instruccion, parametros);
+    free(instruccion_completa);
+    free(instruccion);
+    free(parametros);
 }

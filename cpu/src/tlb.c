@@ -4,11 +4,11 @@
 t_TLB* tlb;
 
 //Función que inicializa la TLB.
-void inicializar_tlb(t_TLB* tlb, uint32_t capacidad, const char* algoritmo){
+void inicializar_tlb(t_TLB* tlb, uint32_t capacidad, char* algoritmo){
     tlb->entradas = malloc(sizeof(t_entrada_TLB) * capacidad);
     tlb->capacidad = capacidad;
     tlb->count = 0;
-    tlb->tiempoActual = 0;
+    tlb->tiempo_actual = 0;
     tlb->algoritmo = string_duplicate(algoritmo);
 }
 
