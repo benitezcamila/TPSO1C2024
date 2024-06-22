@@ -46,7 +46,7 @@ void exit_process();
 //Funciones auxiliares.
 void sumar_contenido_registro(char*, uint32_t);
 void restar_contenido_registro(char*, uint32_t);
-void* obtener_contenido_registro(char*);
+void* obtener_contenido_registro(const char*);
 void loggear_instruccion(int);
 
 #endif

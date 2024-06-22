@@ -25,6 +25,7 @@ typedef struct {
 
 extern t_TLB* tlb;
 
+t_TLB* inicializar_tlb();
 int buscar_en_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina);
 void actualizar_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina, uint32_t marco);
 void reemplazo_FIFO(t_TLB* tlb, t_entrada_TLB nueva_entrada);

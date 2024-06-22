@@ -221,6 +221,10 @@ void recibir_instruccion_de_memoria(uint32_t* longitud_linea_instruccion){
         log_info(logger_errores_cpu, "El código de operación recibido de Memoria no fue una instrucción.
                 El código de operación recibido fue: %d", paquete->codigo_operacion);
     }
+
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
 }
 
 void recibir_respuesta_resize_memoria(uint32_t PID){
@@ -253,9 +257,7 @@ void solicitar_leer_en_memoria(uint32_t dir_fisica, uint32_t tamanio){
     enviar_paquete(paquete, sockets.socket_memoria);
 }
 
-//Si hay un error con la lectura de memoria, revisar acá.
 void* leer_de_memoria(uint32_t tamanio){
-    void* datos_de_memoria = malloc(tamanio);
     t_paquete* paquete = malloc(sizeof(t_paquete));
     recv(sockets.socket_memoria, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
 
@@ -263,26 +265,34 @@ void* leer_de_memoria(uint32_t tamanio){
         recv(sockets.socket_memoria, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
         paquete->buffer->stream = malloc(paquete->buffer->size);
 
+        void* datos_de_memoria = malloc(tamanio);
+        
         if(tamanio == sizeof(uint32_t)){
             recv(sockets.socket_memoria, paquete->buffer->stream, tamanio, MSG_WAITALL);
-            *datos_de_memoria = buffer_read_uint32(paquete->buffer);
+            *(uint32_t*)datos_de_memoria = buffer_read_uint32(paquete->buffer);
         }
         else if(tamanio == sizeof(uint8_t)){
             recv(sockets.socket_memoria, paquete->buffer->stream, tamanio, MSG_WAITALL);
-            *datos_de_memoria = buffer_read_uint8(paquete->buffer);
+            *(uint8_t*)datos_de_memoria = buffer_read_uint8(paquete->buffer);
         }
 
-        return (void*) datos_de_memoria;
+        free(paquete->buffer->stream);
+        free(paquete->buffer);
+        free(paquete);
+
+        return datos_de_memoria;
     }
     else{
-        log_info(logger_errores_cpu, "Ocurrió un error tras realizar una lectura de Memoria.
-                El código de operación recibido fue: %d", paquete->codigo_operacion);
+        log_info(logger_errores_cpu, "Ocurrió un error tras realizar una lectura de Memoria. 
+                    El código de operación recibido fue: %d", paquete->codigo_operacion);
+        free(paquete);
+
         return NULL;
     }
 }
 
 void solicitar_escribir_en_memoria(uint32_t dir_fisica, void* datos_de_registro, uint32_t tamanio){
-    t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_CPU, sizeof(uint32_t) * 4);
+    t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_CPU, sizeof(uint32_t) * 4 + tamanio);
 
     buffer_add_uint32(paquete->buffer, PID);
     buffer_add_uint32(paquete->buffer, (uint32_t) 1 ); // 1 escribir, 0 leer
@@ -307,6 +317,7 @@ int solicitar_marco_a_memoria(uint32_t numero_pagina){
 
         return buffer_read_uint32(buffer_memoria);
     }
+
     return -1;
 }
 

@@ -184,38 +184,55 @@ void set(char* registro, uint32_t valor){
 }
 
 void mov_in(char* registro_datos, char* registro_direccion){
-    dir_logica = (uint32_t) obtener_contenido_registro(registro_direccion);
+    uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
+
+    if(contenido_auxiliar == NULL){
+        log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
+        return;
+    }
+
+    dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
     
     if(registro_datos[0] == 'E' || registro_datos[1] == 'I'){
         solicitar_leer_en_memoria(dir_fisica, sizeof(uint32_t));
         
-        void* datos_de_memoria = malloc(sizeof(uint32_t));
-        datos_de_memoria = leer_de_memoria(sizeof(uint32_t));
+        void* datos_de_memoria = leer_de_memoria(sizeof(uint32_t));
+
+        uint32_t valor = *(uint32_t*)datos_de_memoria;
         
-        set(registro_datos, datos_de_memoria);
+        set(registro_datos, valor);
         log_info(logger_cpu, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, dir_fisica, (uint32_t)datos_de_memoria);
         free(datos_de_memoria);
     }
     else{
         solicitar_leer_en_memoria(dir_fisica, sizeof(uint8_t));
         
-        void* datos_de_memoria = malloc(sizeof(uint8_t));
-        datos_de_memoria = leer_de_memoria(sizeof(uint8_t));
+        void* datos_de_memoria = leer_de_memoria(sizeof(uint8_t));
+
+        uint8_t valor = *(uint8_t*)datos_de_memoria;
         
-        set(registro_datos, datos_de_memoria);
+        set(registro_datos, valor);
         log_info(logger_cpu, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, dir_fisica, (uint8_t)datos_de_memoria);
         free(datos_de_memoria);
     }
+
+    free(contenido_auxiliar);
 }
 
 void mov_out(char* registro_direccion, char* registro_datos){
-    dir_logica = (uint32_t) obtener_contenido_registro(registro_direccion);
+    uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
+
+    if(contenido_auxiliar == NULL){
+        log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
+        return;
+    }
+
+    dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
     
     if(registro_datos[0] == 'E' || registro_datos[1] == 'I'){
-        void* datos_de_registro = malloc(sizeof(uint32_t));
-        datos_de_registro = obtener_contenido_registro(registro_datos);
+        void* datos_de_registro = obtener_contenido_registro(registro_datos);
 
         solicitar_escribir_en_memoria(dir_fisica, datos_de_registro, sizeof(uint32_t));
 
@@ -224,8 +241,7 @@ void mov_out(char* registro_direccion, char* registro_datos){
         //y ahí mismo hago el loggeo de la escritura.
     }
     else{
-        void* datos_de_registro = malloc(sizeof(uint8_t));
-        datos_de_registro = obtener_contenido_registro(registro_datos);
+        void* datos_de_registro = obtener_contenido_registro(registro_datos);
 
         solicitar_escribir_en_memoria(dir_fisica, datos_de_registro, sizeof(uint8_t));
 
@@ -233,6 +249,8 @@ void mov_out(char* registro_direccion, char* registro_datos){
         //Seguro tenga que usar una función auxiliar para asegurarme que la escritura haya sido exitosa,
         //y ahí mismo hago el loggeo de la escritura.
     }
+
+    free(contenido_auxiliar);
 }
 
 void sum(char* registro1, char* registro2){
@@ -365,17 +383,21 @@ void resize(uint32_t tamanio){
 }
 
 void copy_string(uint32_t tamanio){
-    dir_logica = (uint32_t) obtener_contenido_registro("SI");
+    uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro("SI");
+    dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
-    void* datos_de_memoria = malloc(tamanio);
 
     solicitar_leer_en_memoria(dir_fisica, tamanio);
-    datos_de_memoria = leer_de_memoria(tamanio);
+    void* datos_de_memoria = leer_de_memoria(tamanio);
 
-    dir_logica = (uint32_t) obtener_contenido_registro("DI");
+    uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro("DI");
+    dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
 
     solicitar_escribir_en_memoria(dir_fisica, datos_de_memoria, tamanio);
+
+    free(contenido_auxiliar);
+    free(datos_de_memoria);
 }
 
 void wait(char* nombre_recurso){
@@ -422,48 +444,62 @@ void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
 
 void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* registro_tamanio){
     ind_contexto_kernel = 0;
-    dir_logica = (uint32_t) obtener_contenido_registro(registro_direccion);
+    uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
+
+    if(contenido_auxiliar == NULL){
+        log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
+        return;
+    }
+
+    dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
 
     if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
-        void* tamanio = malloc(sizeof(uint32_t));
-        tamanio = obtener_contenido_registro(registro_tamanio);
+        void* tamanio = obtener_contenido_registro(registro_tamanio);
 
         enviar_std_a_kernel(STDIN_READ, nombre_interfaz, tamanio, sizeof(uint32_t), dir_fisica);
 
         free(tamanio);
     }
     else{
-        void* tamanio = malloc(sizeof(uint8_t));
-        tamanio = obtener_contenido_registro(registro_tamanio);
+        void* tamanio = obtener_contenido_registro(registro_tamanio);
 
         enviar_std_a_kernel(STDIN_READ, nombre_interfaz, tamanio, sizeof(uint8_t), dir_fisica);
 
         free(tamanio);
     }
+
+    free(contenido_auxiliar);
 }
 
 void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* registro_tamanio){
     ind_contexto_kernel = 0;
-    dir_logica = (uint32_t) obtener_contenido_registro(registro_direccion);
+    uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
+
+    if(contenido_auxiliar == NULL){
+        log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
+        return;
+    }
+
+    dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
 
     if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
-        void* tamanio = malloc(sizeof(uint32_t));
-        tamanio = obtener_contenido_registro(registro_tamanio);
+        void* tamanio = obtener_contenido_registro(registro_tamanio);
 
         enviar_std_a_kernel(STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint32_t), dir_fisica);
 
         free(tamanio);
     }
     else{
-        void* tamanio = malloc(sizeof(uint8_t));
-        tamanio = obtener_contenido_registro(registro_tamanio);
+        void* tamanio = obtener_contenido_registro(registro_tamanio);
 
         enviar_std_a_kernel(STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint8_t), dir_fisica);
 
         free(tamanio);
     }
+
+    free(contenido_auxiliar);
 }
 
 void io_fs_create(char* nombre_interfaz, char* nombre_archivo){
@@ -482,16 +518,14 @@ void io_fs_truncate(char* nombre_interfaz, char* nombre_archivo, char* registro_
     ind_contexto_kernel = 0;
 
     if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
-        void* tamanio = malloc(sizeof(uint32_t));
-        tamanio = obtener_contenido_registro(registro_tamanio);
+        void* tamanio = obtener_contenido_registro(registro_tamanio);
 
         solicitar_truncate_fs_a_kernel(FS_TRUNCATE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t));
 
         free(tamanio);
     }
     else{
-        void* tamanio = malloc(sizeof(uint8_t));
-        tamanio = obtener_contenido_registro(registro_tamanio);
+        void* tamanio = obtener_contenido_registro(registro_tamanio);
 
         solicitar_truncate_fs_a_kernel(FS_TRUNCATE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t));
 
@@ -502,16 +536,21 @@ void io_fs_truncate(char* nombre_interfaz, char* nombre_archivo, char* registro_
 void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_direccion,
                 char* registro_tamanio, char* registro_puntero_archivo){
     ind_contexto_kernel = 0;
-    dir_logica = (uint32_t) obtener_contenido_registro(registro_direccion);
+    uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
+
+    if(contenido_auxiliar == NULL){
+        log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
+        return;
+    }
+
+    dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
 
     if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
-        void* tamanio = malloc(sizeof(uint32_t));
-        tamanio = obtener_contenido_registro(registro_tamanio);
+        void* tamanio = obtener_contenido_registro(registro_tamanio);
 
         if(registro_puntero_archivo[0] == 'E' || registro_puntero_archivo[1] == 'I'){
-            void* puntero_registro = malloc(sizeof(uint32_t));
-            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+            void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
             solicitar_write_read_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
                                             dir_fisica, puntero_registro, sizeof(uint32_t));
@@ -519,8 +558,7 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
             free(puntero_registro);
         }
         else{
-            void* puntero_registro = malloc(sizeof(uint8_t));
-            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+            void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
             solicitar_write_read_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
                                             dir_fisica, puntero_registro, sizeof(uint8_t));
@@ -531,12 +569,10 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
         free(tamanio);
     }
     else{
-        void* tamanio = malloc(sizeof(uint8_t));
-        tamanio = obtener_contenido_registro(registro_tamanio);
+        void* tamanio = obtener_contenido_registro(registro_tamanio);
 
         if(registro_puntero_archivo[0] == 'E' || registro_puntero_archivo[1] == 'I'){
-            void* puntero_registro = malloc(sizeof(uint32_t));
-            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+            void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
             solicitar_write_read_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
                                             dir_fisica, puntero_registro, sizeof(uint32_t));
@@ -544,8 +580,7 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
             free(puntero_registro);
         }
         else{
-            void* puntero_registro = malloc(sizeof(uint8_t));
-            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+            void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
             solicitar_write_read_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
                                             dir_fisica, puntero_registro, sizeof(uint8_t));
@@ -555,21 +590,28 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
 
         free(tamanio);
     }
+
+    free(contenido_auxiliar);
 }
 
 void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_direccion,
                 char* registro_tamanio, char* registro_puntero_archivo){
     ind_contexto_kernel = 0;
-    dir_logica = (uint32_t) obtener_contenido_registro(registro_direccion);
+    uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
+
+    if(contenido_auxiliar == NULL){
+        log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
+        return;
+    }
+
+    dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
 
     if(registro_tamanio[0] == 'E' || registro_tamanio[1] == 'I'){
-        void* tamanio = malloc(sizeof(uint32_t));
-        tamanio = obtener_contenido_registro(registro_tamanio);
+        void* tamanio = obtener_contenido_registro(registro_tamanio);
 
         if(registro_puntero_archivo[0] == 'E' || registro_puntero_archivo[1] == 'I'){
-            void* puntero_registro = malloc(sizeof(uint32_t));
-            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+            void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
             solicitar_write_read_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
                                             dir_fisica, puntero_registro, sizeof(uint32_t));
@@ -577,8 +619,7 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
             free(puntero_registro);
         }
         else{
-            void* puntero_registro = malloc(sizeof(uint8_t));
-            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+            void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
             solicitar_write_read_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
                                             dir_fisica, puntero_registro, sizeof(uint8_t));
@@ -589,12 +630,10 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
         free(tamanio);
     }
     else{
-        void* tamanio = malloc(sizeof(uint8_t));
-        tamanio = obtener_contenido_registro(registro_tamanio);
+        void* tamanio = obtener_contenido_registro(registro_tamanio);
 
         if(registro_puntero_archivo[0] == 'E' || registro_puntero_archivo[1] == 'I'){
-            void* puntero_registro = malloc(sizeof(uint32_t));
-            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+            void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
             solicitar_write_read_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
                                             dir_fisica, puntero_registro, sizeof(uint32_t));
@@ -602,8 +641,7 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
             free(puntero_registro);
         }
         else{
-            void* puntero_registro = malloc(sizeof(uint8_t));
-            puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+            void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
             solicitar_write_read_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
                                             dir_fisica, puntero_registro, sizeof(uint8_t));
@@ -613,6 +651,8 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
 
         free(tamanio);
     }
+
+    free(contenido_auxiliar);
 }
 
 void exit_process(){
@@ -688,37 +728,39 @@ void restar_contenido_registro(char* registro, uint32_t valor){
     }
 }
 
-//Esto puede explotar.
-void* obtener_contenido_registro(char* registro){
-    if(strcmp(registro, "AX") == 0){
-        return contexto_registros->AX;
+void* obtener_contenido_registro(const char* registro) {
+    if (strcmp(registro, "AX") == 0) {
+        return &(contexto_registros->AX);
     }
-    else if(strcmp(registro, "BX") == 0){
-        return contexto_registros->BX;
+    else if (strcmp(registro, "BX") == 0) {
+        return &(contexto_registros->BX);
     }
-    else if(strcmp(registro, "CX") == 0){
-        return contexto_registros->CX;
+    else if (strcmp(registro, "CX") == 0) {
+        return &(contexto_registros->CX);
     }
-    else if(strcmp(registro, "DX") == 0){
-        return contexto_registros->DX;
+    else if (strcmp(registro, "DX") == 0) {
+        return &(contexto_registros->DX);
     }
-    else if(strcmp(registro, "EAX") == 0){
-        return contexto_registros->EAX;
+    else if (strcmp(registro, "EAX") == 0) {
+        return &(contexto_registros->EAX);
     }
-    else if(strcmp(registro, "EBX") == 0){
-        return contexto_registros->EBX;
+    else if (strcmp(registro, "EBX") == 0) {
+        return &(contexto_registros->EBX);
     }
-    else if(strcmp(registro, "ECX") == 0){
-        return contexto_registros->ECX;
+    else if (strcmp(registro, "ECX") == 0) {
+        return &(contexto_registros->ECX);
     }
-    else if(strcmp(registro, "EDX") == 0){
-        return contexto_registros->EDX;
+    else if (strcmp(registro, "EDX") == 0) {
+        return &(contexto_registros->EDX);
     }
-    else if(strcmp(registro, "SI") == 0){
-        return contexto_registros->SI;
+    else if (strcmp(registro, "SI") == 0) {
+        return &(contexto_registros->SI);
     }
-    else if(strcmp(registro, "DI") == 0){
-        return contexto_registros->DI;
+    else if (strcmp(registro, "DI") == 0) {
+        return &(contexto_registros->DI);
+    }
+    else {
+        return NULL; // Retornar NULL si el registro no es encontrado
     }
 }
 

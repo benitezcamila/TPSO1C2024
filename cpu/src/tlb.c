@@ -3,6 +3,12 @@
 
 t_TLB* tlb;
 
+//Función que inicializa la TLB. (IMPLEMENTAR)
+t_TLB* inicializar_tlb(){
+    //
+    return {};
+}
+
 //Función para buscar en la TLB.
 int buscar_en_TLB(t_TLB* tlb, uint32_t pid, uint32_t pagina){
     for (int i = 0; i < tlb->count; ++i) {
