@@ -204,7 +204,7 @@ void mov_in(char* registro_datos, char* registro_direccion){
         uint32_t valor = *(uint32_t*)datos_de_memoria;
         
         set(registro_datos, valor);
-        log_info(logger_cpu, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, dir_fisica, (uint32_t)datos_de_memoria);
+        log_info(logger_cpu, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, dir_fisica, *(uint32_t*)datos_de_memoria);
         free(datos_de_memoria);
     }
     else{
@@ -215,7 +215,7 @@ void mov_in(char* registro_datos, char* registro_direccion){
         uint8_t valor = *(uint8_t*)datos_de_memoria;
         
         set(registro_datos, valor);
-        log_info(logger_cpu, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, dir_fisica, (uint8_t)datos_de_memoria);
+        log_info(logger_cpu, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, dir_fisica, *(uint8_t*)datos_de_memoria);
         free(datos_de_memoria);
     }
 
