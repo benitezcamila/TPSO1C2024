@@ -28,11 +28,12 @@ void procesar_io_gen_sleep (t_buffer* buffer_kernel) {
 	temporal_stop(temporal);
     log_info(logger_entrada_salida, "Tiempo esperado: %u". temporal_gettime(temporal));
     temporal_destroy(temporal);
+    enviar_fin_de_instruccion ();
 }
 
 
 void enviar_info_io_a_kernel(){
-    t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_interfaz) + string_length(nombre_interfaz)+1+sizeof(uint32_t));
+    t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_interfaz) + string_length(nombre_interfaz)+1);
     buffer_add(paquete->buffer, &configuracion.TIPO_INTERFAZ, sizeof(t_interfaz));
     
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
@@ -45,10 +46,8 @@ void procesar_io_stdin_read(t_buffer* buffer_kernel, uint32_t pid ) {
     uint32_t direccion_fisica_memoria_read;
     buffer_read(buffer_kernel,&direccion_fisica_memoria_read, sizeof(uint32_t));
     char* input_consola = leer_consola();
-
     escribir_en_memoria(input_consola, direccion_fisica_memoria_read, pid);
-
-
+    enviar_fin_de_instruccion ();
 }
 
 char* leer_consola(){
@@ -109,7 +108,7 @@ void procesar_io_stdout_write(t_buffer* buffer_kernel, uint32_t pid) {
     
     printf(mostrar_de_memoria);
     free(length);
-     
+    enviar_fin_de_instruccion();
 }
 
 
@@ -203,12 +202,8 @@ char* string_de_instruccion (t_instruccion instruccion_a_procesar){
 }
 
 
-/*void proceso_E_S(){
-    pthread_t hilo_kernel, hilo_memoria;
-    pthread_create(&hilo_memoria, NULL,(void *) establecer_conexion_memoria, NULL);
-    pthread_create(&hilo_kernel, NULL,(void*) establecer_conexion_kernel, NULL); 
-    
-    pthread_join(hilo_memoria);
-    pthread_join(hilo_kernel);
-}
-*/
+void enviar_fin_de_instruccion () {
+    t_paquete* paquete = crear_paquete(ENTRADASALIDA_LIBERADO, sizeof(t_interfaz) + string_length(nombre_interfaz)+1);
+    buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
+    enviar_paquete(paquete, sockets.socket_kernel);
+ }
