@@ -116,6 +116,15 @@ void procesar_io_stdout_write(t_buffer* buffer_kernel, uint32_t pid) {
 void recibir_instrucciones (){
     t_instruccion instruccion_a_procesar;
     uint32_t pid ;
+    op_code cop;
+    if (recv(sockets.socket_kernel, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
+            log_info(logger_conexiones, "Error en el OpCode!");
+            return;
+        }
+    if (cop != ENTRADASALIDA) {
+        log_info(logger_conexiones, "OpCode recibido no corresponde con ENTRADASALIDA");
+        return;
+    }
     if (recv(sockets.socket_kernel, &instruccion_a_procesar, sizeof(t_instruccion), 0) != sizeof(t_instruccion)) {
             log_info(logger_entrada_salida, "Instruccion invalida");
             return;
