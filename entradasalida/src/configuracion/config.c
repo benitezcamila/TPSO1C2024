@@ -93,7 +93,6 @@ void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint32_t cantidad_bloqu
 void inicializar_fs(char * path_bloques, char* path_bitmap, uint8_t tamanio_bloques, uint32_t cantidad_bloques ){
     crear_bloques(path_bloques,tamanio_bloques,cantidad_bloques);
     bitmap = crear_bitmap(path_bitmap,tamanio_bloques,cantidad_bloques);
-    //algo_aca=mmap(NULL,tamanio_memoria_bloques,PROT_WRITE,MAP_SHARED,aca va el fd del archivo de bloques,0)
 }
 
 void crear_bloques(char* path_bloques, uint8_t tamanio_bloques, uint32_t cantidad_bloques ){
@@ -120,16 +119,13 @@ t_bitarray* crear_bitmap(char* path_bitmap, uint8_t tamanio_bloques, uint32_t ca
         exit(EXIT_FAILURE);
     }
     // Mapear el archivo en memoria
-    //primero genero el bitarray despues lo mapeo?
     bitmap_memoria = mmap(NULL, tamanio_bitmap_bytes,PROT_WRITE, MAP_SHARED, fd_bitmap, 0);
     if (bitmap_memoria == MAP_FAILED) {
         log_info(logger_entrada_salida, "Fallo el mmap");
         close(fd_bitmap);
         return NULL;
     }
-    //prueba cantidad de bloques = 1024
-    //prueba tamaño de bloques = 64
-    //el tamaño del bitmap deberia ser de 1024 bits o 128 bytes
+    //creo el bitarray con puntero a el espacio de memoria mapeado
     bitmap = bitarray_create_with_mode(bitmap_memoria,tamanio_bitmap_bytes,LSB_FIRST);
     if (close(fd_bitmap) == -1) {
         log_info(logger_entrada_salida, "Error al cerrar el archivo bitmap.dat");
