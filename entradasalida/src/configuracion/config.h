@@ -3,11 +3,15 @@
 
 #include <commons/config.h>
 #include <commons/collections/list.h>
+#include <commons/bitarray.h>
 #include <commons/log.h>
 #include <stdint.h>
 #include <string.h>
 #include "utils/conexion.h"
 #include "utils/serializacion.h"
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 
 typedef struct {
@@ -23,16 +27,14 @@ typedef struct {
 }t_cfg;
 
 extern t_cfg configuracion;
-
 extern t_config* config;
-
-
 extern t_log* logger_entrada_salida;
 extern t_log* logger_conexiones;
+extern t_bitarray* bitmap;
 
 void iniciar_logger();
 void obtener_config(char* path_config);
-
+t_bitarray* crear_bitmap(char* path_bitmap, uint8_t tamanio_bloques, uint32_t cantidad_bloques );
 
 
 #endif

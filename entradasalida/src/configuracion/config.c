@@ -5,6 +5,7 @@ t_config* config;
 t_log* logger_entrada_salida;
 t_log* logger_conexiones;
 char * tipo_interfaz_string;
+t_bitarray* bitmap = NULL;
 
 t_interfaz config_string_a_enum(char* str){
     if (strcmp(str,"GENERICA")== 0 ){
@@ -64,7 +65,7 @@ void iniciar_logger(){
     logger_conexiones = log_create("/home/utnso/tp-2024-1c-Chiripiorca/entradasalida/logs/conexiones.log","Conexion",1,LOG_LEVEL_INFO);
 }
 
-void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint8_t cantidad_bloques) {
+void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint32_t cantidad_bloques) {
     //leer archivos de bloques y bitmap, si no existen, crearlos
     //agregar /bloques.dat y /bitmap.dat al path a la hora de hacer el fopen
     //lock para que mas de 1 interfaz no utilice mismos archivos en simultaneo
@@ -74,11 +75,11 @@ void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint8_t cantidad_bloque
     char* path_bitmap = string_new();
     string_append(&path_bitmap,path_fs);
     string_append(&path_bitmap,"/bitmap.dat");
-    FILE* archivo_bloques = fopen(path_bloques,r+);
-    FILE* archivo_bitmap = fopen(path_bitmap,r+);
+    FILE* archivo_bloques = fopen(path_bloques,"r+");
+    FILE* archivo_bitmap = fopen(path_bitmap,"r+");
     
     if(!archivo_bloques) { //si no existe el archivo aun, lo creo y corro ftruncate para inicializar bloques
-        inicializar_fs();
+        inicializar_fs(path_bloques, path_bitmap,  tamanio_bloques,  cantidad_bloques);
     } else { 
         // si los archivos existen, leo
     }
@@ -86,7 +87,47 @@ void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint8_t cantidad_bloque
 
 }
 
-void inicializar_fs(){
-    //tener en cuenta tamaño bitmap, si cantidad de bloques/8 no da redondo, redondear para arriba
-    return;
+void inicializar_fs(char * path_bloques, char* path_bitmap, uint8_t tamanio_bloques, uint32_t cantidad_bloques ){
+    crear_bloques(path_bloques,tamanio_bloques,cantidad_bloques);
+    bitmap = crear_bitmap(path_bitmap,tamanio_bloques,cantidad_bloques);
+    //algo_aca=mmap(NULL,tamanio_memoria_bloques,PROT_WRITE,MAP_SHARED,aca va el fd del archivo de bloques,0)
+}
+
+void crear_bloques(char* path_bloques, uint8_t tamanio_bloques, uint32_t cantidad_bloques ){
+     int tamanio_memoria_bloques = tamanio_bloques * cantidad_bloques;
+}
+
+t_bitarray* crear_bitmap(char* path_bitmap, uint8_t tamanio_bloques, uint32_t cantidad_bloques ){
+    int tamanio_bitmap_bytes;
+    //tengo en cuenta tamaño bitmap, si cantidad de bloques/8 no da redondo, redondear para arriba
+    if(cantidad_bloques%8 !=0) {
+        tamanio_bitmap_bytes = (cantidad_bloques/8 )+1;
+    } else {
+        tamanio_bitmap_bytes = cantidad_bloques/8;
+    }
+    int fd_bitmap = open(path_bitmap, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    if (fd_bitmap == -1) {
+        log_info(logger_entrada_salida, "Fallo la creacion del archivo bitmap");
+        exit(EXIT_FAILURE);
+    }
+    //defino tamaño con ftruncate
+    if (ftruncate(fd_bitmap, tamanio_bitmap_bytes) == -1) {
+        log_info(logger_entrada_salida, "Error al truncar el archivo de bitmap");
+        close(fd_bitmap);
+        exit(EXIT_FAILURE);
+    }
+    // Mapear el archivo en memoria
+    //primero genero el bitarray despues lo mapeo?
+    void* bitmap_memoria = mmap(NULL, tamanio_bitmap_bytes,PROT_WRITE, MAP_SHARED, fd_bitmap, 0);
+    if (bitmap_memoria == MAP_FAILED) {
+        log_info(logger_entrada_salida, "Fallo el mmap");
+        close(fd_bitmap);
+        return NULL;
+    }
+    //prueba cantidad de bloques = 1024
+    //prueba tamaño de bloques = 64
+    //el tamaño del bitmap deberia ser de 1024 bits o 128 bytes
+    bitmap = bitarray_create_with_mode(bitmap_memoria,tamanio_bitmap_bytes,LSB_FIRST);
+    close(fd_bitmap);
+    return bitmap;
 }
