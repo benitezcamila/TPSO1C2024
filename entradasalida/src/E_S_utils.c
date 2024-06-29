@@ -124,12 +124,9 @@ void recibir_instrucciones (){
         log_info(logger_conexiones, "OpCode recibido no corresponde con ENTRADASALIDA");
         return;
     }
-    if (recv(sockets.socket_kernel, &instruccion_a_procesar, sizeof(t_instruccion), 0) != sizeof(t_instruccion)) {
-            log_info(logger_entrada_salida, "Instruccion invalida");
-            return;
-        }
-    char* instruccion_string = string_de_instruccion(instruccion_a_procesar);
     t_buffer* buffer_kernel = recibir_todo_elbuffer(sockets.socket_kernel);
+    buffer_read(buffer_kernel,&instruccion_a_procesar,sizeof(t_instruccion));
+    char* instruccion_string = string_de_instruccion(instruccion_a_procesar);
     pid = buffer_read_uint32(buffer_kernel);
     char* informar_pid = string_from_format("PID: %s - Operacion: %s",string_itoa(pid),instruccion_string); 
     log_info(logger_entrada_salida, informar_pid);
@@ -145,7 +142,7 @@ void recibir_instrucciones (){
         procesar_io_stdout_write(buffer_kernel,pid);
         break;
         case FS_CREATE:
-        //procesar_io_fs_create();
+        procesar_io_fs_create(buffer_kernel,pid);
         break;
         case FS_DELETE:
         //procesar_io_fs_delete();
@@ -206,4 +203,12 @@ void enviar_fin_de_instruccion () {
     t_paquete* paquete = crear_paquete(ENTRADASALIDA_LIBERADO, sizeof(t_interfaz) + string_length(nombre_interfaz)+1);
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     enviar_paquete(paquete, sockets.socket_kernel);
+ }
+
+ void procesar_io_fs_create(t_buffer* buffer_kernel, uint32_t pid ){
+    uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
+    char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
+    //LOGS DialFS - Crear Archivo: “PID: <PID> - Crear Archivo: <NOMBRE_ARCHIVO>” 
+
+
  }

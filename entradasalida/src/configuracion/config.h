@@ -34,4 +34,5 @@ void iniciar_logger();
 void obtener_config(char* path_config);
 
 
+
 #endif

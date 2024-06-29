@@ -53,7 +53,8 @@ void obtener_config(char* path_config){
             configuracion.TIEMPO_UNIDAD_TRABAJO = config_get_int_value(config,"TIEMPO_UNIDAD_TRABAJO");
             configuracion.PATH_BASE_DIALFS = config_get_string_value(config,"PATH_BASE_DIALFS");
             configuracion.BLOCK_SIZE = config_get_int_value(config,"BLOCK_SIZE");
-            configuracion.BLOCK_COUNT = config_get_int_value(config,"BLOCK_COUNT");            
+            configuracion.BLOCK_COUNT = config_get_int_value(config,"BLOCK_COUNT"); 
+            levantar_fs(configuracion.PATH_BASE_DIALFS,configuracion.BLOCK_SIZE,configuracion.BLOCK_COUNT);           
             break;
     }
 }
@@ -61,4 +62,31 @@ void obtener_config(char* path_config){
 void iniciar_logger(){
     logger_entrada_salida = log_create("/home/utnso/tp-2024-1c-Chiripiorca/entradasalida/logs/entrada salida.log","Entrada Salida",1,LOG_LEVEL_INFO);
     logger_conexiones = log_create("/home/utnso/tp-2024-1c-Chiripiorca/entradasalida/logs/conexiones.log","Conexion",1,LOG_LEVEL_INFO);
+}
+
+void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint8_t cantidad_bloques) {
+    //leer archivos de bloques y bitmap, si no existen, crearlos
+    //agregar /bloques.dat y /bitmap.dat al path a la hora de hacer el fopen
+    //lock para que mas de 1 interfaz no utilice mismos archivos en simultaneo
+    char* path_bloques = string_new();
+    string_append(&path_bloques,path_fs);
+    string_append(&path_bloques,"/bloques.dat");
+    char* path_bitmap = string_new();
+    string_append(&path_bitmap,path_fs);
+    string_append(&path_bitmap,"/bitmap.dat");
+    FILE* archivo_bloques = fopen(path_bloques,r+);
+    FILE* archivo_bitmap = fopen(path_bitmap,r+);
+    
+    if(!archivo_bloques) { //si no existe el archivo aun, lo creo y corro ftruncate para inicializar bloques
+        inicializar_fs();
+    } else { 
+        // si los archivos existen, leo
+    }
+
+
+}
+
+void inicializar_fs(){
+    //tener en cuenta tamaño bitmap, si cantidad de bloques/8 no da redondo, redondear para arriba
+    return;
 }
