@@ -6,6 +6,9 @@ t_log* logger_entrada_salida;
 t_log* logger_conexiones;
 char * tipo_interfaz_string;
 t_bitarray* bitmap = NULL;
+int tamanio_bitmap_bytes = 0;
+int fd_bitmap;
+void* bitmap_memoria = NULL;
 
 t_interfaz config_string_a_enum(char* str){
     if (strcmp(str,"GENERICA")== 0 ){
@@ -98,14 +101,14 @@ void crear_bloques(char* path_bloques, uint8_t tamanio_bloques, uint32_t cantida
 }
 
 t_bitarray* crear_bitmap(char* path_bitmap, uint8_t tamanio_bloques, uint32_t cantidad_bloques ){
-    int tamanio_bitmap_bytes;
     //tengo en cuenta tamaño bitmap, si cantidad de bloques/8 no da redondo, redondear para arriba
     if(cantidad_bloques%8 !=0) {
         tamanio_bitmap_bytes = (cantidad_bloques/8 )+1;
     } else {
         tamanio_bitmap_bytes = cantidad_bloques/8;
     }
-    int fd_bitmap = open(path_bitmap, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    //crea file descriptor a archivo generado bitmap.dat
+    fd_bitmap = open(path_bitmap, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd_bitmap == -1) {
         log_info(logger_entrada_salida, "Fallo la creacion del archivo bitmap");
         exit(EXIT_FAILURE);
@@ -118,7 +121,7 @@ t_bitarray* crear_bitmap(char* path_bitmap, uint8_t tamanio_bloques, uint32_t ca
     }
     // Mapear el archivo en memoria
     //primero genero el bitarray despues lo mapeo?
-    void* bitmap_memoria = mmap(NULL, tamanio_bitmap_bytes,PROT_WRITE, MAP_SHARED, fd_bitmap, 0);
+    bitmap_memoria = mmap(NULL, tamanio_bitmap_bytes,PROT_WRITE, MAP_SHARED, fd_bitmap, 0);
     if (bitmap_memoria == MAP_FAILED) {
         log_info(logger_entrada_salida, "Fallo el mmap");
         close(fd_bitmap);
@@ -128,6 +131,9 @@ t_bitarray* crear_bitmap(char* path_bitmap, uint8_t tamanio_bloques, uint32_t ca
     //prueba tamaño de bloques = 64
     //el tamaño del bitmap deberia ser de 1024 bits o 128 bytes
     bitmap = bitarray_create_with_mode(bitmap_memoria,tamanio_bitmap_bytes,LSB_FIRST);
-    close(fd_bitmap);
+    if (close(fd_bitmap) == -1) {
+        log_info(logger_entrada_salida, "Error al cerrar el archivo bitmap.dat");
+        exit(EXIT_FAILURE);
+    }
     return bitmap;
 }

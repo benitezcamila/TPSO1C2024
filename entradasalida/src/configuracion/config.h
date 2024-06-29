@@ -12,6 +12,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 
 
 typedef struct {
@@ -31,6 +32,9 @@ extern t_config* config;
 extern t_log* logger_entrada_salida;
 extern t_log* logger_conexiones;
 extern t_bitarray* bitmap;
+extern int tamanio_bitmap_bytes;
+extern int fd_bitmap;
+extern void* bitmap_memoria;
 
 void iniciar_logger();
 void obtener_config(char* path_config);
