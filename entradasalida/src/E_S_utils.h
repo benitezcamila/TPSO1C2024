@@ -34,4 +34,5 @@ void escribir_en_memoria(char* ,uint32_t ,uint32_t ) ;
 void procesar_io_stdout_write(t_buffer* , uint32_t );
 void recibir_instrucciones ();
 char* string_de_instruccion (t_instruccion);
+int contar_bloques_libres(t_bitarray*);
 #endif

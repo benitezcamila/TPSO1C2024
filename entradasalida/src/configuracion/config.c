@@ -176,5 +176,7 @@ t_bitarray* mapear_archivo_bitmap (int fd_bitmap, int tamanio_bitmap_bytes) {
         log_info(logger_entrada_salida, "Error al cerrar el archivo bitmap.dat");
         exit(EXIT_FAILURE);
     }
+    log_info(logger_entrada_salida, "Bitmap de %i bits", bitarray_get_max_bit(bitmap));
+    log_info(logger_entrada_salida, "Bits libres: %i", contar_bloques_libres(bitmap));
     return bitmap;
 }
