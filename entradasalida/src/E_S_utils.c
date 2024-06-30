@@ -242,19 +242,76 @@ void procesar_io_fs_create(t_buffer* buffer_kernel, uint32_t pid ){
             return;
         }
         fclose(file);
-        return;
         } else {
             perror("Error al abrir el archivo");
             return;
         }
+        int bloque_asignado = primer_bloque_libre(bitmap);
         t_config* config_archivo = config_create(path_archivo);
-        config_set_value(config_archivo,"BLOQUE_INICIAL",string_itoa(primer_bloque_libre()));
+        config_set_value(config_archivo,"BLOQUE_INICIAL",string_itoa(bloque_asignado));
         config_set_value(config_archivo,"TAMANIO_ARCHIVO","0");
         config_save(config_archivo);
+        bitarray_set_bit(bitmap,bloque_asignado);
 }
 
-int primer_bloque_libre() {
-    return 0;
+void io_fs_create_prueba (char* nombre_archivo){
+    char* path_archivo = string_new();
+    string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
+    string_append(&path_archivo,"/");
+    string_append(&path_archivo,nombre_archivo);
+    char* informar_crear_archivo = string_from_format("PID: %s - Crear Archivo: %s","prueba",nombre_archivo); 
+    log_info(logger_entrada_salida, informar_crear_archivo);
+    /*
+    IO_FS_CREATE (Interfaz, Nombre Archivo): Esta instrucción solicita al 
+    Kernel que mediante la interfaz seleccionada, se cree un archivo en el FS montado en dicha interfaz.
+    */
+    FILE *file = fopen(path_archivo, "r+");
+    if (file != NULL) {
+        log_info(logger_entrada_salida, "El archivo ya existe");
+        fclose(file);
+        return;
+    }
+    if(contar_bloques_libres(bitmap) == 0){
+        log_info(logger_entrada_salida, "No hay mas bloques disponibles");
+        fclose(file);
+        return;
+    }
+    if (errno == ENOENT) {
+        file = fopen(path_archivo, "w+");
+        if (file == NULL) {
+            log_info(logger_entrada_salida, "Error al crear el archivo");
+            return;
+        }
+        int fd = fileno(file);
+        if (ftruncate(fd, 0) != 0) {
+            log_info(logger_entrada_salida, "Error al truncar el archivo");
+            fclose(file);
+            return;
+        }
+        fclose(file);
+        } else {
+            perror("Error al abrir el archivo");
+            return;
+        }
+        int bloque_asignado = primer_bloque_libre(bitmap);
+        t_config* config_archivo = config_create(path_archivo);
+        config_set_value(config_archivo,"BLOQUE_INICIAL",string_itoa(bloque_asignado));
+        config_set_value(config_archivo,"TAMANIO_ARCHIVO","0");
+        config_save(config_archivo);
+        bitarray_set_bit(bitmap,bloque_asignado);
+}
+
+
+
+int primer_bloque_libre(t_bitarray* bitmap) {
+    int primer_bit_libre;
+    for (int i=0;i<bitarray_get_max_bit(bitmap);i++){
+        if(!bitarray_test_bit(bitmap,i)){
+            primer_bit_libre=i;
+            return primer_bit_libre;
+        }
+    }
+    return -1;
 }
 
 int contar_bloques_libres(t_bitarray* bitmap) {

@@ -41,6 +41,7 @@ int main(int argc, char* argv[]) {
 
     //fin de pruebas
     */
+    io_fs_create_prueba("pruebilla3");
     pthread_create(&memoria,NULL,(void*)establecer_conexion_memoria,NULL);
     pthread_create(&kernel,NULL,(void*)establecer_conexion_kernel,NULL);
     
