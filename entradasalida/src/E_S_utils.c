@@ -130,7 +130,7 @@ void recibir_instrucciones (){
     pid = buffer_read_uint32(buffer_kernel);
     char* informar_pid = string_from_format("PID: %s - Operacion: %s",string_itoa(pid),instruccion_string); 
     log_info(logger_entrada_salida, informar_pid);
-    
+    //falta agregar el tiempo de FS a cada instruccion (un usleep)
     switch (instruccion_a_procesar) {
         case GEN_SLEEP:
         procesar_io_gen_sleep(buffer_kernel);
