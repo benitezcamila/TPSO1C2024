@@ -41,7 +41,18 @@ int main(int argc, char* argv[]) {
 
     //fin de pruebas
     */
-    io_fs_create_prueba("pruebilla3");
+    /*
+    PRUEBAS FUNCIONES ARCHIVOS
+    log_info(logger_entrada_salida, "Bloque inicial archivo 1: %i",obtener_primer_bloque_de_archivo("pruebilla2"));
+    log_info(logger_entrada_salida, "Tamanio archivo 1: %i",obtener_tamanio_de_archivo("pruebilla2"));
+    log_info(logger_entrada_salida, "Bloque final archivo 1: %i",obtener_ultimo_bloque_de_archivo("pruebilla2"));
+    log_info(logger_entrada_salida, "Bloque inicial archivo 2: %i",obtener_primer_bloque_de_archivo("pruebilla3"));
+    log_info(logger_entrada_salida, "Tamanio archivo 2: %i",obtener_tamanio_de_archivo("pruebilla3"));
+    log_info(logger_entrada_salida, "Bloque final archivo 2: %i",obtener_ultimo_bloque_de_archivo("pruebilla3"));
+    */
+    log_info(logger_entrada_salida, "Bits libres: %i",contar_bloques_libres(bitmap));
+    procesar_io_fs_delete_prueba( "pruebilla3");
+    log_info(logger_entrada_salida, "Bits libres: %i",contar_bloques_libres(bitmap));
     pthread_create(&memoria,NULL,(void*)establecer_conexion_memoria,NULL);
     pthread_create(&kernel,NULL,(void*)establecer_conexion_kernel,NULL);
     

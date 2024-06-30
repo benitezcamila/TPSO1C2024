@@ -36,4 +36,6 @@ void recibir_instrucciones ();
 char* string_de_instruccion (t_instruccion);
 int contar_bloques_libres(t_bitarray*);
 int primer_bloque_libre(t_bitarray*);
+void procesar_io_fs_create(t_buffer*, uint32_t);
+void limpiar_bits(t_bitarray* , off_t , off_t);
 #endif

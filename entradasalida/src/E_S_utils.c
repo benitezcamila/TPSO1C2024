@@ -145,10 +145,10 @@ void recibir_instrucciones (){
         procesar_io_fs_create(buffer_kernel,pid);
         break;
         case FS_DELETE:
-        //procesar_io_fs_delete();
+        procesar_io_fs_delete(buffer_kernel,pid);
         break;
         case FS_TRUNCATE:
-        //procesar_io_fs_truncate();
+        procesar_io_fs_truncate(buffer_kernel,pid);
         break;
         case FS_WRITE:
         //procesar_io_fs_write();
@@ -206,6 +206,7 @@ void enviar_fin_de_instruccion () {
  }
 
 void procesar_io_fs_create(t_buffer* buffer_kernel, uint32_t pid ){
+    usleep(configuracion.TIEMPO_UNIDAD_TRABAJO*1000);
     uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
     char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
     char* path_archivo = string_new();
@@ -252,55 +253,9 @@ void procesar_io_fs_create(t_buffer* buffer_kernel, uint32_t pid ){
         config_set_value(config_archivo,"TAMANIO_ARCHIVO","0");
         config_save(config_archivo);
         bitarray_set_bit(bitmap,bloque_asignado);
+        msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
+        enviar_fin_de_instruccion();
 }
-
-void io_fs_create_prueba (char* nombre_archivo){
-    char* path_archivo = string_new();
-    string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
-    string_append(&path_archivo,"/");
-    string_append(&path_archivo,nombre_archivo);
-    char* informar_crear_archivo = string_from_format("PID: %s - Crear Archivo: %s","prueba",nombre_archivo); 
-    log_info(logger_entrada_salida, informar_crear_archivo);
-    /*
-    IO_FS_CREATE (Interfaz, Nombre Archivo): Esta instrucción solicita al 
-    Kernel que mediante la interfaz seleccionada, se cree un archivo en el FS montado en dicha interfaz.
-    */
-    FILE *file = fopen(path_archivo, "r+");
-    if (file != NULL) {
-        log_info(logger_entrada_salida, "El archivo ya existe");
-        fclose(file);
-        return;
-    }
-    if(contar_bloques_libres(bitmap) == 0){
-        log_info(logger_entrada_salida, "No hay mas bloques disponibles");
-        fclose(file);
-        return;
-    }
-    if (errno == ENOENT) {
-        file = fopen(path_archivo, "w+");
-        if (file == NULL) {
-            log_info(logger_entrada_salida, "Error al crear el archivo");
-            return;
-        }
-        int fd = fileno(file);
-        if (ftruncate(fd, 0) != 0) {
-            log_info(logger_entrada_salida, "Error al truncar el archivo");
-            fclose(file);
-            return;
-        }
-        fclose(file);
-        } else {
-            perror("Error al abrir el archivo");
-            return;
-        }
-        int bloque_asignado = primer_bloque_libre(bitmap);
-        t_config* config_archivo = config_create(path_archivo);
-        config_set_value(config_archivo,"BLOQUE_INICIAL",string_itoa(bloque_asignado));
-        config_set_value(config_archivo,"TAMANIO_ARCHIVO","0");
-        config_save(config_archivo);
-        bitarray_set_bit(bitmap,bloque_asignado);
-}
-
 
 
 int primer_bloque_libre(t_bitarray* bitmap) {
@@ -322,4 +277,110 @@ int contar_bloques_libres(t_bitarray* bitmap) {
         }
     }
     return bits_libres;
+}
+
+int obtener_primer_bloque_de_archivo (char * nombre_archivo){
+    char* path_archivo = string_new();
+    string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
+    string_append(&path_archivo,"/");
+    string_append(&path_archivo,nombre_archivo);
+    t_config* config_achivo = config_create(path_archivo);
+    int bloque_inicial = config_get_int_value(config_achivo,"BLOQUE_INICIAL");
+    return bloque_inicial;
+}
+
+int obtener_tamanio_de_archivo (char * nombre_archivo){
+    char* path_archivo = string_new();
+    string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
+    string_append(&path_archivo,"/");
+    string_append(&path_archivo,nombre_archivo);
+    t_config* config_achivo = config_create(path_archivo);
+    int tamanio_archivo = config_get_int_value(config_achivo,"TAMANIO_ARCHIVO");
+    return tamanio_archivo;
+}
+
+int obtener_ultimo_bloque_de_archivo (char * nombre_archivo){
+    char* path_archivo = string_new();
+    string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
+    string_append(&path_archivo,"/");
+    string_append(&path_archivo,nombre_archivo);
+    t_config* config_achivo = config_create(path_archivo);
+    int bloque_inicial = config_get_int_value(config_achivo,"BLOQUE_INICIAL");
+    int tamanio_archivo = config_get_int_value(config_achivo,"TAMANIO_ARCHIVO");
+    int bloque_final = tamanio_archivo / configuracion.BLOCK_SIZE;
+    if (tamanio_archivo%configuracion.BLOCK_SIZE!=0) {
+        bloque_final+=1;
+    }
+    bloque_final+=bloque_inicial;
+    return bloque_final;
+}
+
+void procesar_io_fs_delete(t_buffer* buffer_kernel, uint32_t pid){
+    /*
+    IO_FS_DELETE (Interfaz, Nombre Archivo): Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, 
+    se elimine un archivo en el FS montado en dicha interfaz
+    */
+    usleep(configuracion.TIEMPO_UNIDAD_TRABAJO*1000);
+    uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
+    char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
+    char* path_archivo = string_new();
+    string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
+    string_append(&path_archivo,"/");
+    string_append(&path_archivo,nombre_archivo);
+    char* informar_eliminar_archivo = string_from_format("PID: %s - Eliminar Archivo: %s",string_itoa(pid),nombre_archivo); 
+    log_info(logger_entrada_salida, informar_eliminar_archivo);
+    int primer_bit_archivo = obtener_primer_bloque_de_archivo(nombre_archivo);
+    int ultimo_bit_archivo = obtener_ultimo_bloque_de_archivo(nombre_archivo);
+    if (remove(path_archivo) == 0) {
+        log_info(logger_entrada_salida, "Archivo eliminado");
+        limpiar_bits(bitmap,primer_bit_archivo,ultimo_bit_archivo);
+        msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
+    } else {
+        log_info(logger_entrada_salida, "Error al eliminar el archivo");
+    }
+    enviar_fin_de_instruccion();
+}
+
+void limpiar_bits(t_bitarray* bitmap, off_t bit_inicial, off_t bit_final) {
+    for (off_t i=bit_inicial;i<bit_final;i++){
+        bitarray_clean_bit(bitmap,i);
+        log_info(logger_entrada_salida, "Bit %i eliminado",i);
+    }
+}
+
+void procesar_io_fs_delete_prueba(char* nombre_archivo){
+    char* path_archivo = string_new();
+    string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
+    string_append(&path_archivo,"/");
+    string_append(&path_archivo,nombre_archivo);
+    char* informar_eliminar_archivo = string_from_format("PID: %s - Eliminar Archivo: %s","prueba",nombre_archivo); 
+    log_info(logger_entrada_salida, informar_eliminar_archivo);
+    int primer_bit_archivo = obtener_primer_bloque_de_archivo(nombre_archivo);
+    int ultimo_bit_archivo = obtener_ultimo_bloque_de_archivo(nombre_archivo);
+    if (remove(path_archivo) == 0) {
+        log_info(logger_entrada_salida, "Archivo eliminado");
+        limpiar_bits(bitmap,primer_bit_archivo,ultimo_bit_archivo);
+        msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
+    } else {
+        log_info(logger_entrada_salida, "Error al eliminar el archivo");
+    }
+}
+
+void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid ){
+    /*
+    IO_FS_TRUNCATE (Interfaz, Nombre Archivo, Registro Tamaño): Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, 
+    se modifique el tamaño del archivo en el FS montado en dicha interfaz, actualizando al valor que se encuentra en el registro indicado 
+    por Registro Tamaño.
+    */
+    usleep(configuracion.TIEMPO_UNIDAD_TRABAJO*1000);
+    uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
+    char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
+    char* path_archivo = string_new();
+    string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
+    string_append(&path_archivo,"/");
+    string_append(&path_archivo,nombre_archivo);
+    int tamanio_nuevo;
+    char* informar_eliminar_archivo = string_from_format("PID: %s - Truncar Archivo: %s - Tamaño %i",string_itoa(pid),nombre_archivo,tamanio_nuevo); 
+    //PID: <PID> - Truncar Archivo: <NOMBRE_ARCHIVO> - Tamaño: <TAMAÑO>
+    log_info(logger_entrada_salida, informar_eliminar_archivo);
 }
