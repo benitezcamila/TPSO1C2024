@@ -111,8 +111,8 @@ void inicializar_fs(char * path_bloques, char* path_bitmap, uint32_t tamanio_blo
 }
 
 void* crear_bloques(char* path_bloques, uint32_t tamanio_bloques, uint32_t cantidad_bloques ){
-     fd_bloques = open(path_bloques, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-     if (fd_bloques == -1) {
+    fd_bloques = open(path_bloques, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    if (fd_bloques == -1) {
         log_info(logger_entrada_salida, "Fallo la creacion del archivo de bloques");
         exit(EXIT_FAILURE);
     }

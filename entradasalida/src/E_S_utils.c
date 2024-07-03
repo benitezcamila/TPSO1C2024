@@ -152,6 +152,9 @@ void recibir_instrucciones (){
         break;
         case FS_WRITE:
         //procesar_io_fs_write();
+        //Ejemplo de instruccion 
+        //IO_FS_WRITE Interfaz: DISCO Archivo: prueba.txt Dirección: 0 (No tenemos nada más en memoria) Tamaño: 8 (
+        //queremos cargar los 8 caracteres) Puntero Archivo: 19 (se lee desde el 1 en adelante)
         break;
         case FS_READ:
         //procesar_io_fs_read();
@@ -296,7 +299,23 @@ int obtener_tamanio_de_archivo (char * nombre_archivo){
     string_append(&path_archivo,nombre_archivo);
     t_config* config_achivo = config_create(path_archivo);
     int tamanio_archivo = config_get_int_value(config_achivo,"TAMANIO_ARCHIVO");
+    config_destroy(path_archivo);
     return tamanio_archivo;
+}
+
+int obtener_nuevo_bloque_final (char * nombre_archivo, uint32_t tamanio_nuevo){
+    int bloque_inicial = obtener_primer_bloque_de_archivo(nombre_archivo);
+    int bloque_final = obtener_ultimo_bloque_de_archivo(nombre_archivo);
+    int nuevo_bloque_final = tamanio_nuevo / configuracion.BLOCK_SIZE;
+    if (tamanio_nuevo%configuracion.BLOCK_SIZE!=0) {
+        nuevo_bloque_final+=1;
+    }
+    nuevo_bloque_final+=bloque_inicial;
+    if(nuevo_bloque_final>configuracion.BLOCK_COUNT){
+        log_info(logger_entrada_salida, "Error: el bloque final supera el limite del FS");
+        return -1;
+    }
+    return nuevo_bloque_final;
 }
 
 int obtener_ultimo_bloque_de_archivo (char * nombre_archivo){
@@ -312,6 +331,7 @@ int obtener_ultimo_bloque_de_archivo (char * nombre_archivo){
         bloque_final+=1;
     }
     bloque_final+=bloque_inicial;
+    config_destroy(config_achivo);
     return bloque_final;
 }
 
@@ -321,6 +341,7 @@ void procesar_io_fs_delete(t_buffer* buffer_kernel, uint32_t pid){
     se elimine un archivo en el FS montado en dicha interfaz
     */
     usleep(configuracion.TIEMPO_UNIDAD_TRABAJO*1000);
+    //REVISAR BUFFER, VEO QUE LLEGA ALGO ADICIONAL AL TAMAÑO DEL ARCHIVO
     uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
     char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
     char* path_archivo = string_new();
@@ -334,7 +355,6 @@ void procesar_io_fs_delete(t_buffer* buffer_kernel, uint32_t pid){
     if (remove(path_archivo) == 0) {
         log_info(logger_entrada_salida, "Archivo eliminado");
         limpiar_bits(bitmap,primer_bit_archivo,ultimo_bit_archivo);
-        msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
     } else {
         log_info(logger_entrada_salida, "Error al eliminar el archivo");
     }
@@ -346,6 +366,15 @@ void limpiar_bits(t_bitarray* bitmap, off_t bit_inicial, off_t bit_final) {
         bitarray_clean_bit(bitmap,i);
         log_info(logger_entrada_salida, "Bit %i eliminado",i);
     }
+    msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
+}
+
+void setear_bits(t_bitarray* bitmap, off_t bit_inicial, off_t bit_final) {
+    for (off_t i=bit_inicial;i<bit_final;i++){
+        bitarray_set_bit(bitmap,i);
+        log_info(logger_entrada_salida, "Bit %i seteado",i);
+    }
+    msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
 }
 
 void procesar_io_fs_delete_prueba(char* nombre_archivo){
@@ -360,7 +389,6 @@ void procesar_io_fs_delete_prueba(char* nombre_archivo){
     if (remove(path_archivo) == 0) {
         log_info(logger_entrada_salida, "Archivo eliminado");
         limpiar_bits(bitmap,primer_bit_archivo,ultimo_bit_archivo);
-        msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
     } else {
         log_info(logger_entrada_salida, "Error al eliminar el archivo");
     }
@@ -379,8 +407,37 @@ void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid ){
     string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
     string_append(&path_archivo,"/");
     string_append(&path_archivo,nombre_archivo);
-    int tamanio_nuevo;
-    char* informar_eliminar_archivo = string_from_format("PID: %s - Truncar Archivo: %s - Tamaño %i",string_itoa(pid),nombre_archivo,tamanio_nuevo); 
-    //PID: <PID> - Truncar Archivo: <NOMBRE_ARCHIVO> - Tamaño: <TAMAÑO>
-    log_info(logger_entrada_salida, informar_eliminar_archivo);
+    uint32_t tamanio_nuevo = buffer_read_uint32(buffer_kernel);
+    char* informar_truncar_archivo = string_from_format("PID: %s - Truncar Archivo: %s - Tamaño %i",string_itoa(pid),nombre_archivo,tamanio_nuevo); 
+    log_info(logger_entrada_salida, informar_truncar_archivo);
+    //verifico si el archivo es actualmente mas grande (no necesito compactar ni validar si existe espacio)
+    int bloque_inicial_archivo = obtener_primer_bloque_de_archivo(nombre_archivo);
+    int pre_bloque_final_archivo = obtener_ultimo_bloque_de_archivo(nombre_archivo);
+    int post_bloque_final_archivo = obtener_nuevo_bloque_final (nombre_archivo,tamanio_nuevo); 
+    if((post_bloque_final_archivo > pre_bloque_final_archivo) ||  post_bloque_final_archivo = -1) { //-1 representa que se excede de bloque maximo
+        if(post_bloque_final_archivo!=-1 && !hay_bits_ocupados(bitmap, bloque_inicial_archivo,post_bloque_final_archivo)){ 
+            //si hay espacio para extender, ocupo bits
+            setear_bits(bitmap,bloque_inicial_archivo,post_bloque_final_archivo);
+        } else{
+            //si tenemos bloques suficientes, compactar, sino devolver error
+        }
+    }
+    if (post_bloque_final_archivo < pre_bloque_final_archivo) {
+        //https://github.com/sisoputnfrba/foro/issues/3993 no es necesario limpiar, puede quedar basura en el archivo
+        limpiar_bits(bitmap,post_bloque_inicial_archivo+1,post_bloque_final_archivo);
+    } 
+    t_config* config_archivo = config_create(path_archivo);
+    config_set_value(config_archivo,"BLOQUE_INICIAL",string_itoa(post_bloque_inicial_archivo));
+    config_set_value(config_archivo,"TAMANIO_ARCHIVO",string_itoa(tamanio_nuevo));
+    config_save(config_archivo);
+    config_destroy(config_archivo);
+}
+
+bool hay_bits_ocupados(t_bitarray* bitmap, int inicio, int fin){
+    for (int i=inicio; i<fin;i++) {
+        if(bitarray_test_bit(bitmap,i)){
+            return true;
+        }
+    }
+    return false;
 }
