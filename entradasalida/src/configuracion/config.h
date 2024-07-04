@@ -46,7 +46,7 @@ void obtener_config(char* path_config);
 t_bitarray* crear_bitmap(char* path_bitmap, uint32_t cantidad_bloques );
 void* crear_bloques(char* path_bloques, uint32_t tamanio_bloques, uint32_t cantidad_bloques );
 t_bitarray* mapear_archivo_bitmap (int fd_bitmap, int tamanio_bitmap_bytes);
-void* mapear_archivo_bloques(int fd_bloques, int tamanio_memoria_bloques);
+void* mapear_archivo_bloques(int fd_bloques, uint32_t tamanio_bloques, uint32_t cantidad_bloques);
 
 
 #endif

@@ -38,4 +38,5 @@ int contar_bloques_libres(t_bitarray*);
 int primer_bloque_libre(t_bitarray*);
 void procesar_io_fs_create(t_buffer*, uint32_t);
 void limpiar_bits(t_bitarray* , off_t , off_t);
+bool hay_bits_ocupados(t_bitarray* , int , int );
 #endif

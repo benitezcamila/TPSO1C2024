@@ -361,6 +361,15 @@ void procesar_io_fs_delete(t_buffer* buffer_kernel, uint32_t pid){
     enviar_fin_de_instruccion();
 }
 
+int calcular_cantidad_de_bloques (int tamanio){
+    int bloques_totales = tamanio / configuracion.BLOCK_SIZE;
+    if(tamanio%configuracion.BLOCK_SIZE!=0){
+        bloques_totales+=1;
+    }
+    return bloques_totales;
+}
+
+
 void limpiar_bits(t_bitarray* bitmap, off_t bit_inicial, off_t bit_final) {
     for (off_t i=bit_inicial;i<bit_final;i++){
         bitarray_clean_bit(bitmap,i);
@@ -403,31 +412,41 @@ void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid ){
     usleep(configuracion.TIEMPO_UNIDAD_TRABAJO*1000);
     uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
     char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
+
     char* path_archivo = string_new();
     string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
     string_append(&path_archivo,"/");
     string_append(&path_archivo,nombre_archivo);
+
     uint32_t tamanio_nuevo = buffer_read_uint32(buffer_kernel);
     char* informar_truncar_archivo = string_from_format("PID: %s - Truncar Archivo: %s - Tamaño %i",string_itoa(pid),nombre_archivo,tamanio_nuevo); 
     log_info(logger_entrada_salida, informar_truncar_archivo);
-    //verifico si el archivo es actualmente mas grande (no necesito compactar ni validar si existe espacio)
+
     int bloque_inicial_archivo = obtener_primer_bloque_de_archivo(nombre_archivo);
     int pre_bloque_final_archivo = obtener_ultimo_bloque_de_archivo(nombre_archivo);
     int post_bloque_final_archivo = obtener_nuevo_bloque_final (nombre_archivo,tamanio_nuevo); 
-    if((post_bloque_final_archivo > pre_bloque_final_archivo) ||  post_bloque_final_archivo = -1) { //-1 representa que se excede de bloque maximo
+
+    if((post_bloque_final_archivo > pre_bloque_final_archivo) ||  post_bloque_final_archivo == -1) { //-1 representa que se excede de bloque maximo
         if(post_bloque_final_archivo!=-1 && !hay_bits_ocupados(bitmap, bloque_inicial_archivo,post_bloque_final_archivo)){ 
             //si hay espacio para extender, ocupo bits
             setear_bits(bitmap,bloque_inicial_archivo,post_bloque_final_archivo);
         } else{
             //si tenemos bloques suficientes, compactar, sino devolver error
+            if(contar_bloques_libres(bitmap)>calcular_cantidad_de_bloques(tamanio_nuevo)) { 
+                compactar(bloques,bitmap);
+                //actualizar_valores
+            } else {
+                log_info(logger_entrada_salida, "Error al truncar: no hay suficiente espacio libre en FS");
+                return;
+            }
         }
     }
     if (post_bloque_final_archivo < pre_bloque_final_archivo) {
         //https://github.com/sisoputnfrba/foro/issues/3993 no es necesario limpiar, puede quedar basura en el archivo
-        limpiar_bits(bitmap,post_bloque_inicial_archivo+1,post_bloque_final_archivo);
+        limpiar_bits(bitmap,bloque_inicial_archivo+1,post_bloque_final_archivo);
     } 
     t_config* config_archivo = config_create(path_archivo);
-    config_set_value(config_archivo,"BLOQUE_INICIAL",string_itoa(post_bloque_inicial_archivo));
+    config_set_value(config_archivo,"BLOQUE_INICIAL",string_itoa(bloque_inicial_archivo));
     config_set_value(config_archivo,"TAMANIO_ARCHIVO",string_itoa(tamanio_nuevo));
     config_save(config_archivo);
     config_destroy(config_archivo);
@@ -441,3 +460,7 @@ bool hay_bits_ocupados(t_bitarray* bitmap, int inicio, int fin){
     }
     return false;
 }
+void compactar(void** bloques,t_bitarray* bitmap) {
+
+}
+ 

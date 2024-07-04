@@ -96,7 +96,7 @@ void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint32_t cantidad_bloqu
         // si los archivos existen, los mapeo a las variables 
         int fd_bloques = fileno(archivo_bloques);
         int fd_bitmap = fileno(archivo_bitmap);
-        bloques = mapear_archivo_bloques(fd_bloques,tamanio_memoria_bloques);
+        bloques = mapear_archivo_bloques(fd_bloques,tamanio_bloques,cantidad_bloques);
         log_info(logger_entrada_salida, "Archivo bloques.dat mapeado");
         bitmap = mapear_archivo_bitmap(fd_bitmap,tamanio_bitmap_bytes);
         log_info(logger_entrada_salida, "Archivo bitmap.dat mapeado");
@@ -121,15 +121,14 @@ void* crear_bloques(char* path_bloques, uint32_t tamanio_bloques, uint32_t canti
         close(fd_bloques);
         exit(EXIT_FAILURE);
     }
-    bloques = mapear_archivo_bloques(fd_bloques,tamanio_memoria_bloques);
+    bloques = mapear_archivo_bloques(fd_bloques, tamanio_bloques,  cantidad_bloques);
     log_info(logger_entrada_salida, "Archivo bloques.dat creado");
     return bloques;
 }
 
-void* mapear_archivo_bloques(int fd_bloques, int tamanio_memoria_bloques){
-    bloques = malloc(tamanio_memoria_bloques);
-    bloques = mmap(NULL, tamanio_memoria_bloques,PROT_WRITE, MAP_SHARED, fd_bloques, 0);
-    if (bloques == MAP_FAILED) {
+void* mapear_archivo_bloques(int fd_bloques, uint32_t tamanio_bloques, uint32_t cantidad_bloques){
+    bloques_memoria = mmap(NULL, tamanio_memoria_bloques,PROT_WRITE, MAP_SHARED, fd_bloques, 0);
+    if (bloques_memoria == MAP_FAILED) {
         log_info(logger_entrada_salida, "Fallo el mmap de bloques");
         close(fd_bloques);
         return NULL;
@@ -137,6 +136,10 @@ void* mapear_archivo_bloques(int fd_bloques, int tamanio_memoria_bloques){
     if (close(fd_bloques) == -1) {
         log_info(logger_entrada_salida, "Error al cerrar el archivo bloques.dat");
         exit(EXIT_FAILURE);
+    }
+    void **bloques = malloc(cantidad_bloques * sizeof(void *));
+    for (int i = 0; i < cantidad_bloques; ++i) {
+        bloques[i] = (char *)bloques_memoria + i * tamanio_bloques;
     }
     return bloques;
 }
