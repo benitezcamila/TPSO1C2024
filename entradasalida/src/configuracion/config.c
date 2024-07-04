@@ -13,6 +13,7 @@ int fd_bloques;
 void* bitmap_memoria = NULL;
 void* bloques_memoria = NULL;
 void ** bloques;
+char** indice;
 
 t_interfaz config_string_a_enum(char* str){
     if (strcmp(str,"GENERICA")== 0 ){
@@ -82,6 +83,9 @@ void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint32_t cantidad_bloqu
     char* path_bitmap = string_new();
     string_append(&path_bitmap,path_fs);
     string_append(&path_bitmap,"/bitmap.dat");
+    char* path_indice = string_new();
+    string_append(&path_indice,path_fs);
+    string_append(&path_indice,"/indice.txt");
     if(cantidad_bloques%8 !=0) {
         tamanio_bitmap_bytes = (cantidad_bloques/8 )+1;
     } else {
@@ -90,8 +94,9 @@ void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint32_t cantidad_bloqu
     tamanio_memoria_bloques = tamanio_bloques * cantidad_bloques;
     FILE* archivo_bloques = fopen(path_bloques,"r+");
     FILE* archivo_bitmap = fopen(path_bitmap,"r+");
+    FILE* archivo_indice = fopen(path_indice,"r+");
     if(!archivo_bloques) { //si no existe el archivo aun, lo creo y corro ftruncate para inicializar bloques
-        inicializar_fs(path_bloques, path_bitmap,  tamanio_bloques,  cantidad_bloques);
+        inicializar_fs(path_bloques, path_bitmap, path_indice, tamanio_bloques,  cantidad_bloques);
     } else { 
         // si los archivos existen, los mapeo a las variables 
         int fd_bloques = fileno(archivo_bloques);
@@ -105,9 +110,10 @@ void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint32_t cantidad_bloqu
 
 }
 
-void inicializar_fs(char * path_bloques, char* path_bitmap, uint32_t tamanio_bloques, uint32_t cantidad_bloques ){
+void inicializar_fs(char * path_bloques, char* path_bitmap, char* path_indice, uint32_t tamanio_bloques, uint32_t cantidad_bloques ){
     bloques = crear_bloques(path_bloques,tamanio_bloques,cantidad_bloques);
     bitmap = crear_bitmap(path_bitmap,cantidad_bloques);
+    indice = crear_indice(path_indice,cantidad_bloques);
 }
 
 void* crear_bloques(char* path_bloques, uint32_t tamanio_bloques, uint32_t cantidad_bloques ){
@@ -182,4 +188,10 @@ t_bitarray* mapear_archivo_bitmap (int fd_bitmap, int tamanio_bitmap_bytes) {
     log_info(logger_entrada_salida, "Bitmap de %i bits", bitarray_get_max_bit(bitmap));
     log_info(logger_entrada_salida, "Bits libres: %i", contar_bloques_libres(bitmap));
     return bitmap;
+}
+
+char** crear_indice(char* path_indice, uint32_t cantidad_bloques) {
+    char **indice_archivos = malloc(cantidad_bloques * sizeof(char *));
+    memset(indice_archivos, 0, cantidad_bloques * sizeof(char *));
+    return indice_archivos;
 }

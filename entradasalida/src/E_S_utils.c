@@ -433,7 +433,7 @@ void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid ){
         } else{
             //si tenemos bloques suficientes, compactar, sino devolver error
             if(contar_bloques_libres(bitmap)>calcular_cantidad_de_bloques(tamanio_nuevo)) { 
-                compactar(bloques,bitmap);
+                compactar_y_acomodar_al_final(bloques,bitmap,bloque_inicial_archivo,pre_bloque_final_archivo);
                 //actualizar_valores
             } else {
                 log_info(logger_entrada_salida, "Error al truncar: no hay suficiente espacio libre en FS");
@@ -460,7 +460,53 @@ bool hay_bits_ocupados(t_bitarray* bitmap, int inicio, int fin){
     }
     return false;
 }
-void compactar(void** bloques,t_bitarray* bitmap) {
+void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque_inicial, int bloque_final) {
+    int indice_auxiliar = 0;
+    int cantidad_a_mover = bloque_final - bloque_inicial +1;
+    void **bloques_auxiliares = malloc(cantidad_a_mover * sizeof(void *));
+    
+    //Guardo temporalmente los bloques que quiero dejar al final y marco como libre el bitmap en esas posiciones
+    for (int j = 0; j < cantidad_a_mover; ++j) {
+        int i = bloque_inicial+j;
+        bloques_auxiliares[j] = malloc(configuracion.BLOCK_SIZE);
+        memcpy(bloques_auxiliares[j], bloques[i], configuracion.BLOCK_SIZE);
+        bitarray_clean_bit(bitmap,i); 
 
+    }
+    msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
+
+    // Muevo todos los bloques ocupados a las primeras posiciones libres
+    for (int i = 0; i < configuracion.BLOCK_COUNT; ++i) {
+        if (bitarray_test_bit(bitmap, i)) {
+            if (i != indice_auxiliar) { //si el bit no se encuentra en la primer posicion libre
+                //AGREGAR MODIFICACION DE CONFIG DE ARCHIVO USANDO ARCHIVO DE INDICE
+                void *bloque_desplazado = bloques[i];
+                void *posicion_libre = bloques[indice_auxiliar];
+                memcpy(posicion_libre, bloque_desplazado, configuracion.BLOCK_SIZE);
+                bitarray_set_bit(bitmap, indice_auxiliar);
+                bitarray_clean_bit(bitmap, i);
+            }
+            indice_auxiliar++;
+        }
+    }
+
+    // Muevo los bloques almacenados temporalmente a las últimas posiciones libres
+    for (size_t j = 0; j < cantidad_a_mover; ++j) {
+        //AGREGAR MODIFICACION DE ARCHIVO DE METADATA CON USO DE ARCHIVO DE INDICE
+        if (indice_auxiliar < configuracion.BLOCK_COUNT) {
+            void *posicion_libre = bloques[indice_auxiliar];
+            memcpy(posicion_libre, bloques_auxiliares[j], configuracion.BLOCK_SIZE);
+            bitarray_set_bit(bitmap, indice_auxiliar);
+            indice_auxiliar++;
+        }
+        free(bloques_auxiliares[j]); 
+    }
+    free(bloques_auxiliares);
+
+    // Limpio los bloques que quedan al final de la compactacion (si hubiere)
+    for (size_t i = indice_auxiliar; i < configuracion.BLOCK_COUNT; ++i) {
+        bitarray_clean_bit(bitmap, i);
+    }
 }
+
  
