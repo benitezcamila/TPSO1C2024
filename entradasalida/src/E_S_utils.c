@@ -444,8 +444,11 @@ void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid ){
         } else{
             //si tenemos bloques suficientes, compactar, sino devolver error
             if(contar_bloques_libres(bitmap)>calcular_cantidad_de_bloques(tamanio_nuevo)) { 
-                compactar_y_acomodar_al_final(bloques,bitmap,bloque_inicial_archivo,pre_bloque_final_archivo,pid);
+                int nuevo_bloque_inicial = compactar_y_acomodar_al_final(bloques,bitmap,bloque_inicial_archivo,pre_bloque_final_archivo,pid);
                 //actualizar_valores
+                bloque_inicial_archivo = nuevo_bloque_inicial;
+                post_bloque_final_archivo = obtener_nuevo_bloque_final (nombre_archivo,tamanio_nuevo);
+                setear_bits(bitmap,bloque_inicial_archivo,post_bloque_final_archivo);
             } else {
                 log_info(logger_entrada_salida, "Error al truncar: no hay suficiente espacio libre en FS");
                 return;
