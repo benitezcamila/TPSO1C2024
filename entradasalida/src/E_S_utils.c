@@ -130,7 +130,6 @@ void recibir_instrucciones (){
     pid = buffer_read_uint32(buffer_kernel);
     char* informar_pid = string_from_format("PID: %s - Operacion: %s",string_itoa(pid),instruccion_string); 
     log_info(logger_entrada_salida, informar_pid);
-    //falta agregar el tiempo de FS a cada instruccion (un usleep)
     switch (instruccion_a_procesar) {
         case GEN_SLEEP:
         procesar_io_gen_sleep(buffer_kernel);
@@ -152,9 +151,6 @@ void recibir_instrucciones (){
         break;
         case FS_WRITE:
         procesar_io_fs_write(buffer_kernel,pid);
-        //Ejemplo de instruccion 
-        //IO_FS_WRITE Interfaz: DISCO Archivo: prueba.txt Dirección: 0 (No tenemos nada más en memoria) Tamaño: 8 (
-        //queremos cargar los 8 caracteres) Puntero Archivo: 19 (se lee desde el 1 en adelante)
         break;
         case FS_READ:
         procesar_io_fs_read(buffer_kernel,pid);
@@ -346,7 +342,6 @@ void procesar_io_fs_delete(t_buffer* buffer_kernel, uint32_t pid){
     se elimine un archivo en el FS montado en dicha interfaz
     */
     usleep(configuracion.TIEMPO_UNIDAD_TRABAJO*1000);
-    //REVISAR BUFFER, VEO QUE LLEGA ALGO ADICIONAL AL TAMAÑO DEL ARCHIVO
     uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
     char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
     char* path_archivo = string_new();
@@ -642,6 +637,8 @@ void procesar_io_fs_write(buffer_kernel,pid){
 
     uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
     char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
+    
+
     uint32_t tamanio_bytes_escritura = buffer_read_uint32(buffer_kernel);
     uint32_t bytes_a_escribir;
     buffer_read(buffer_kernel,&bytes_a_escribir, tamanio_bytes_escritura);
