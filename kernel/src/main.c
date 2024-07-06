@@ -19,14 +19,15 @@ int main(int argc, char* argv[]) {
     pthread_create(&planificador_corto_plazo,NULL,(void*)planificar_a_corto_plazo_segun_algoritmo,NULL);
     pthread_create(&planificador_largo_plazo,NULL,(void*)planificar_a_largo_plazo,NULL);
     pthread_create(&consola,NULL,(void*)ejecutar_consola_kernel,NULL);
-    pthread_create(&gestion_interfaces,NULL,(void*)gestionar_interfaces,NULL);
-    pthread_create(&gestion_recursos,NULL,(void*)gestionar_recurso,NULL);
+    //pthread_create(&gestion_interfaces,NULL,(void*)gestionar_interfaces,NULL);
+    //pthread_create(&gestion_recursos,NULL,(void*)gestionar_recurso,NULL);
 
     pthread_join(levantar_kernel,NULL);
     pthread_join(establecer_conexion,NULL);
     pthread_join(escuchar_conexiones,NULL);
     pthread_join(planificador_corto_plazo,NULL);
     pthread_join(planificador_largo_plazo,NULL);
+    pthread_join(consola,NULL);
 
     
 

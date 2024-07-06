@@ -26,7 +26,7 @@ void obtener_config(){
     configuracion.INSTANCIAS_RECURSOS = list_create();
     char** aux_instancias =config_get_array_value(config,"INSTANCIAS_RECURSOS");
     for(int i = 0; aux_instancias[i] != NULL; i++){
-        list_add(configuracion.RECURSOS, aux_instancias[i]);
+        list_add(configuracion.INSTANCIAS_RECURSOS, aux_instancias[i]);
     }
     configuracion.GRADO_MULTIPROGRAMACION = config_get_int_value(config,"GRADO_MULTIPROGRAMACION");
 

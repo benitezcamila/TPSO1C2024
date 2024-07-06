@@ -8,6 +8,7 @@ int main(int argc, char* argv[]) {
     pthread_t levantar_server, conexion, escuchar_conexiones;
     iniciar_logger();
     obtener_config();
+    tlb = malloc(sizeof(t_TLB));
     inicializar_tlb(tlb, configuracion.CANTIDAD_ENTRADAS_TLB, configuracion.ALGORITMO_TLB);
 
     pthread_create(&levantar_server,NULL,(void*)iniciar_server_kernel,NULL);

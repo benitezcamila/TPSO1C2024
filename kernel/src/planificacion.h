@@ -16,6 +16,7 @@ extern sem_t proceso_ejecutando;
 extern sem_t hay_procesos_nuevos;
 extern sem_t sem_pausa_planificacion_largo_plazo;
 extern sem_t sem_pausa_planificacion_corto_plazo;
+extern sem_t sem_proceso_en_ready;
 extern bool pausar_plani;
 extern char* mensaje_ingreso_ready;
 extern t_queue *cola_new;

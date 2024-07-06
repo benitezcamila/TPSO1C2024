@@ -13,6 +13,7 @@
 #include "recursos.h"
 #include "consola.h"
 #include "manejoES.h"
+#include "planificacion.h"
 
 extern pthread_t levantar_kernel, escuchar_conexiones, 
                  establecer_conexion, planificador_corto_plazo, 

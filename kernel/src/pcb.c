@@ -79,6 +79,9 @@ void liberar_recursos(t_pcb* pcb){
 
 void eliminar_pcb(char* pid){
     t_pcb* pcb = dictionary_remove(dicc_pcb,pid);
+    if(pcb->estado=READY){
+        sem_wait(&sem_proceso_en_ready);
+    }
     pcb->estado = EXIT;
     liberar_recursos(pcb);
     free(pcb->registros);
@@ -215,6 +218,8 @@ void recibir_contexto_exec(t_pcb* pcb){
         log_info(logger_kernel, "PID: %u - Desalojado por fin de Quantum", pcb->pid);
         log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: READY", pcb->pid);
         queue_push(cola_ready,pcb);
+        pcb->estado = READY;
+        sem_post(&sem_proceso_en_ready);
         mensaje_ingreso_ready = string_new();
         list_iterate(cola_ready->elements,agregar_PID_ready);
         log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Cola Ready: %s",pcb->pid, mensaje_ingreso_ready);

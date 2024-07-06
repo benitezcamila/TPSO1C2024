@@ -5,6 +5,7 @@ sem_t proceso_ejecutando;
 sem_t hay_procesos_nuevos;
 sem_t sem_pausa_planificacion_largo_plazo;
 sem_t sem_pausa_planificacion_corto_plazo;
+sem_t sem_proceso_en_ready;
 pthread_t temporizador_quantum;
 bool pausar_plani;
 char* mensaje_ingreso_ready;
@@ -29,6 +30,7 @@ void iniciar_semaforos_planificacion(){
     sem_init(&proceso_ejecutando, 0, 1);
     sem_init(&sem_pausa_planificacion_corto_plazo,0,0);
     sem_init(&sem_pausa_planificacion_largo_plazo,0,0);
+    sem_init(&sem_proceso_en_ready,0,0);
 }
 
 void iniciar_colas(){
@@ -77,7 +79,9 @@ void planificar_a_largo_plazo(){
             reanudar_planificacion();
         }
         t_pcb* proceso_para_ready = queue_pop(cola_new);
+        proceso_para_ready->estado = READY;
         queue_push(cola_ready, proceso_para_ready);
+        sem_post(&sem_proceso_en_ready);
         mensaje_ingreso_ready = string_new();
         list_iterate(cola_ready->elements,agregar_PID_ready);
         log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Cola Ready: %s",proceso_para_ready->pid, mensaje_ingreso_ready);
@@ -88,6 +92,7 @@ void planificar_a_largo_plazo(){
 
 void planificar_a_corto_plazo_segun_algoritmo(){
     char *algoritmo_planificador = configuracion.ALGORITMO_PLANIFICACION;
+    sem_wait(&sem_proceso_en_ready);
     while(1){
     if(pausar_plani){
             sem_wait(&sem_pausa_planificacion_corto_plazo);
@@ -148,7 +153,6 @@ void ejecutar_RR(t_pcb *a_ejecutar){
     
 
 }
-
 
 void ejecutar_VRR(t_pcb *a_ejecutar){
 
