@@ -257,6 +257,7 @@ void procesar_io_fs_create(t_buffer* buffer_kernel, uint32_t pid ){
         config_save(config_archivo);
         bitarray_set_bit(bitmap,bloque_asignado);
         msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
+        agregar_archivo_a_indice(fd_indice, nombre_archivo ,bloque_asignado);
         enviar_fin_de_instruccion();
 }
 
@@ -460,6 +461,11 @@ bool hay_bits_ocupados(t_bitarray* bitmap, int inicio, int fin){
     }
     return false;
 }
+
+
+
+
+
 void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque_inicial, int bloque_final) {
     int indice_auxiliar = 0;
     int cantidad_a_mover = bloque_final - bloque_inicial +1;
@@ -478,13 +484,15 @@ void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloqu
     // Muevo todos los bloques ocupados a las primeras posiciones libres
     for (int i = 0; i < configuracion.BLOCK_COUNT; ++i) {
         if (bitarray_test_bit(bitmap, i)) {
-            if (i != indice_auxiliar) { //si el bit no se encuentra en la primer posicion libre
-                //AGREGAR MODIFICACION DE CONFIG DE ARCHIVO USANDO ARCHIVO DE INDICE
+            if (i != indice_auxiliar) { //si el bit no se encuentra en la primer posicion libre (indice auxiliar comienza en 0)
+                
                 void *bloque_desplazado = bloques[i];
                 void *posicion_libre = bloques[indice_auxiliar];
                 memcpy(posicion_libre, bloque_desplazado, configuracion.BLOCK_SIZE);
                 bitarray_set_bit(bitmap, indice_auxiliar);
                 bitarray_clean_bit(bitmap, i);
+                //MODIFICO CONFIG DE ARCHIVO USANDO ARCHIVO DE INDICE
+                //modificar_bloque_inicial(bloque_desplazado,indice_auxiliar)
             }
             indice_auxiliar++;
         }
@@ -509,4 +517,67 @@ void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloqu
     }
 }
 
- 
+ void agregar_archivo_a_indice(int fd_indice, char* nombre_archivo, int bloque) {
+    FILE* archivo_indice = fdopen(fd_indice, "a");
+    if(archivo_indice == NULL) {
+        log_info(logger_entrada_salida,"Error al abrir archivo de indices");
+        return;
+    }
+    t_indice indice_del_archivo;
+    indice_del_archivo.indice_de_bloques = bloque;
+    strncpy(indice_del_archivo.nombre_archivo,nombre_archivo,PATH_MAX);
+    fwrite(&indice_del_archivo,sizeof(t_indice),1,archivo_indice);
+    fclose(archivo_indice);
+ }
+
+ void sacar_archivo_de_indice(int fd_indice, char* nombre_archivo) {
+    FILE* archivo_indice = fdopen(fd_indice, "rb");
+    if(archivo_indice==NULL) {
+        log_info(logger_entrada_salida,"Error al abrir archivo de indices");
+        return;
+    }
+    int fd_archivo_temporal = open("indice_temporal.dat", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    if (fd_archivo_temporal == -1) {
+        log_info(logger_entrada_salida,"Error al crear archivo de indices auxiliar");
+        close(fd_indice);
+        return;
+    }
+    FILE* archivo_temporal = fdopen(fd_archivo_temporal,"wb");
+    if(archivo_temporal==NULL){
+        log_info(logger_entrada_salida,"Error al abrir archivo de indices auxiliar");
+        fclose(archivo_indice);
+        close(fd_archivo_temporal);
+        return;
+    }
+    t_indice indice_auxiliar;
+    while(fread(&indice_auxiliar,sizeof(t_indice)),1,archivo_indice) { //recorro archivo de indices
+        if(strcmp(indice_auxiliar.nombre_archivo,nombre_archivo)!=0) { //si el indice no coincide, lo grabo en el archivo temporal
+            fwrite(&indice_auxiliar,sizeof(indice_auxiliar),1,archivo_temporal);
+        }
+    }
+    fclose(archivo_indice);
+    fclose(archivo_temporal);
+    if(remove("indice.dat") == 0) {
+        log_info(logger_entrada_salida,"Archivo de indices original borrado")
+    }
+    rename("indice_temporal.dat","indice.dat"); //quizas podria usar cosntances para evitar problemas debuggeando
+    return;
+ }
+
+ int buscar_archivo_en_indice(int fd_indice, int bloque_inicial, char* nombre_archivo) { //devuelve -1 si hay error y -2 si no encuentra el archivo
+    FILE* archivo_indices = fdopen(fd_indice, "rb");
+    if(archivo_indices == NULL){
+        log_info(logger_entrada_salida,"Error al abrir archivo de indices");
+        return -1;
+    }
+    t_indice indice_del_archivo;
+    while (fread(&indice_del_archivo,sizeof(t_indice),1,archivo_indices)==1){
+        if(indice_del_archivo.indice_de_bloques == bloque_inicial) {
+            strcpy(nombre_archivo,indice_del_archivo.nombre_archivo);
+            fclose(archivo_indices);
+            return 0;
+        }
+    }
+    fclose(archivo_indices);
+    return -2;
+ }

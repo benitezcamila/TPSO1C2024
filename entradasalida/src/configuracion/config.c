@@ -1,5 +1,8 @@
 #include "config.h"
 
+
+
+
 t_cfg configuracion;
 t_config* config;
 t_log* logger_entrada_salida;
@@ -10,10 +13,13 @@ int tamanio_bitmap_bytes = 0;
 int tamanio_memoria_bloques = 0;
 int fd_bitmap;
 int fd_bloques;
+int fd_indice;
 void* bitmap_memoria = NULL;
 void* bloques_memoria = NULL;
 void ** bloques;
 char** indice;
+
+
 
 t_interfaz config_string_a_enum(char* str){
     if (strcmp(str,"GENERICA")== 0 ){
@@ -85,13 +91,14 @@ void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint32_t cantidad_bloqu
     string_append(&path_bitmap,"/bitmap.dat");
     char* path_indice = string_new();
     string_append(&path_indice,path_fs);
-    string_append(&path_indice,"/indice.txt");
+    string_append(&path_indice,"/indice.dat");
     if(cantidad_bloques%8 !=0) {
         tamanio_bitmap_bytes = (cantidad_bloques/8 )+1;
     } else {
         tamanio_bitmap_bytes = cantidad_bloques/8;
     }
     tamanio_memoria_bloques = tamanio_bloques * cantidad_bloques;
+    //generar tamanio indice
     FILE* archivo_bloques = fopen(path_bloques,"r+");
     FILE* archivo_bitmap = fopen(path_bitmap,"r+");
     FILE* archivo_indice = fopen(path_indice,"r+");
@@ -101,6 +108,7 @@ void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint32_t cantidad_bloqu
         // si los archivos existen, los mapeo a las variables 
         int fd_bloques = fileno(archivo_bloques);
         int fd_bitmap = fileno(archivo_bitmap);
+        fd_indice = fileno(archivo_indice);
         bloques = mapear_archivo_bloques(fd_bloques,tamanio_bloques,cantidad_bloques);
         log_info(logger_entrada_salida, "Archivo bloques.dat mapeado");
         bitmap = mapear_archivo_bitmap(fd_bitmap,tamanio_bitmap_bytes);
@@ -113,23 +121,23 @@ void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint32_t cantidad_bloqu
 void inicializar_fs(char * path_bloques, char* path_bitmap, char* path_indice, uint32_t tamanio_bloques, uint32_t cantidad_bloques ){
     bloques = crear_bloques(path_bloques,tamanio_bloques,cantidad_bloques);
     bitmap = crear_bitmap(path_bitmap,cantidad_bloques);
-    indice = crear_indice(path_indice,cantidad_bloques);
+    fd_indice = crear_indice(path_indice,cantidad_bloques);
 }
 
 void* crear_bloques(char* path_bloques, uint32_t tamanio_bloques, uint32_t cantidad_bloques ){
     fd_bloques = open(path_bloques, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd_bloques == -1) {
         log_info(logger_entrada_salida, "Fallo la creacion del archivo de bloques");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     if (ftruncate(fd_bloques, tamanio_memoria_bloques) == -1) {
         log_info(logger_entrada_salida, "Error al truncar el archivo de bloques");
         close(fd_bloques);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
-    bloques = mapear_archivo_bloques(fd_bloques, tamanio_bloques,  cantidad_bloques);
+    bloques_memoria = mapear_archivo_bloques(fd_bloques, tamanio_bloques,  cantidad_bloques);
     log_info(logger_entrada_salida, "Archivo bloques.dat creado");
-    return bloques;
+    return bloques_memoria;
 }
 
 void* mapear_archivo_bloques(int fd_bloques, uint32_t tamanio_bloques, uint32_t cantidad_bloques){
@@ -158,16 +166,16 @@ t_bitarray* crear_bitmap(char* path_bitmap, uint32_t cantidad_bloques ){
     fd_bitmap = open(path_bitmap, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd_bitmap == -1) {
         log_info(logger_entrada_salida, "Fallo la creacion del archivo bitmap");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     //defino tamaño con ftruncate
     if (ftruncate(fd_bitmap, tamanio_bitmap_bytes) == -1) {
         log_info(logger_entrada_salida, "Error al truncar el archivo de bitmap");
         close(fd_bitmap);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     // Mapear el archivo en memoria
-    bitmap_memoria = mapear_archivo_bitmap(fd_bitmap,tamanio_bitmap_bytes);
+    bitmap = mapear_archivo_bitmap(fd_bitmap,tamanio_bitmap_bytes);
     log_info(logger_entrada_salida, "Archivo bitmap.dat creado");
     return bitmap;
 }
@@ -183,15 +191,20 @@ t_bitarray* mapear_archivo_bitmap (int fd_bitmap, int tamanio_bitmap_bytes) {
     bitmap = bitarray_create_with_mode(bitmap_memoria,tamanio_bitmap_bytes,LSB_FIRST);
     if (close(fd_bitmap) == -1) {
         log_info(logger_entrada_salida, "Error al cerrar el archivo bitmap.dat");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     log_info(logger_entrada_salida, "Bitmap de %i bits", bitarray_get_max_bit(bitmap));
     log_info(logger_entrada_salida, "Bits libres: %i", contar_bloques_libres(bitmap));
     return bitmap;
 }
 
-char** crear_indice(char* path_indice, uint32_t cantidad_bloques) {
-    char **indice_archivos = malloc(cantidad_bloques * sizeof(char *));
-    memset(indice_archivos, 0, cantidad_bloques * sizeof(char *));
-    return indice_archivos;
+int crear_indice(char* path_indice, uint32_t cantidad_bloques) {
+    int fd_indice = open(path_indice, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    if (fd_indice == -1) {
+        log_info(logger_entrada_salida, "Fallo la creacion del archivo indice");
+        return;
+    }
+    //no mapeo el archivo a memoria ya que tendria que reservar un filepath por bloque o tener que remapear a memoria cada vez que se amplia el tamaño
+    log_info(logger_entrada_salida, "Archivo indice.dat creado");
+    return fd_indice;
 }

@@ -27,6 +27,11 @@ typedef struct {
     uint16_t BLOCK_COUNT;
 }t_cfg;
 
+typedef struct {
+    uint32_t indice_de_bloques;
+    char nombre_archivo[PATH_MAX];
+} t_indice;
+
 extern t_cfg configuracion;
 extern t_config* config;
 extern t_log* logger_entrada_salida;
@@ -37,6 +42,7 @@ extern int tamanio_memoria_bloques;
 extern int fd_bitmap;
 extern void* bitmap_memoria;
 extern int fd_bloques;
+extern int fd_indice;
 extern void ** bloques;
 extern char** indice;
 
@@ -48,7 +54,7 @@ t_bitarray* crear_bitmap(char* path_bitmap, uint32_t cantidad_bloques );
 void* crear_bloques(char* path_bloques, uint32_t tamanio_bloques, uint32_t cantidad_bloques );
 t_bitarray* mapear_archivo_bitmap (int fd_bitmap, int tamanio_bitmap_bytes);
 void* mapear_archivo_bloques(int fd_bloques, uint32_t tamanio_bloques, uint32_t cantidad_bloques);
-char** crear_indice(char* path_indice, uint32_t cantidad_bloques);
+int crear_indice(char* path_indice, uint32_t cantidad_bloques);
 
 
 #endif
