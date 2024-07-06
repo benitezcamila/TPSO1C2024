@@ -645,9 +645,9 @@ void procesar_io_fs_write(buffer_kernel,pid){
     uint32_t tamanio_puntero_archivo = buffer_read_uint32(buffer_kernel);
     uint32_t offset_archivo;
     buffer_read(buffer_kernel,&offset_archivo, tamanio_puntero_archivo);
-    char* informar_leer_archivo = string_from_format("PID: %s - Escribir Archivo: %s - Tamaño a Escribir: %i - Puntero Archivo: %i",string_itoa(pid),nombre_archivo,bytes_a_leer,offset_archivo); 
-    log_info(logger_entrada_salida, informar_leer_archivo);
-    free(informar_leer_archivo);
+    char* informar_escribir_archivo = string_from_format("PID: %s - Escribir Archivo: %s - Tamaño a Escribir: %i - Puntero Archivo: %i",string_itoa(pid),nombre_archivo,bytes_a_escribir,offset_archivo); 
+    log_info(logger_entrada_salida, informar_escribir_archivo);
+    free(informar_escribir_archivo);
 
     char* path_archivo = string_new();
     string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
@@ -682,7 +682,7 @@ void procesar_io_fs_write(buffer_kernel,pid){
 
 void escribir_en_fs (int indice_bloques, uint32_t offset, uint32_t tamanio, void* data) {
     uint32_t bytes_escritos = 0;
-    uint32_t bytes_a_escribir = tamanio;
+    uint32_t bytes_pendientes_escritura = tamanio;
     uint32_t offset_de_bloques = offset/configuracion.BLOCK_SIZE;
     uint32_t offset_dentro_de_bloque = offset % configuracion.BLOCK_SIZE;
     uint32_t nuevo_indice = indice_bloques + offset_de_bloques;
@@ -690,11 +690,11 @@ void escribir_en_fs (int indice_bloques, uint32_t offset, uint32_t tamanio, void
 
     while(bytes_escritos<tamanio){
         //si lo que tengo que escribir supera lo que tengo remanente en el bloque
-        if(bytes_a_escribir > configuracion.BLOCK_SIZE - offset_dentro_de_bloque) {
-            bytes_a_escribir = configuracion.BLOCK_SIZE - offset_de_bloques;
+        if(bytes_pendientes_escritura > configuracion.BLOCK_SIZE - offset_dentro_de_bloque) {
+            bytes_pendientes_escritura = configuracion.BLOCK_SIZE - offset_de_bloques;
         }
-        memcpy(bloques[nuevo_indice] + offset_dentro_de_bloque, data + bytes_escritos, bytes_a_escribir);
-        bytes_escritos +=bytes_a_escribir;
+        memcpy(bloques[nuevo_indice] + offset_dentro_de_bloque, data + bytes_escritos, bytes_pendientes_escritura);
+        bytes_escritos +=bytes_pendientes_escritura;
         nuevo_indice ++;
         offset_dentro_de_bloque = 0;
     }
@@ -705,15 +705,28 @@ void procesar_io_fs_read(buffer_kernel,pid){
     usleep(configuracion.TIEMPO_UNIDAD_TRABAJO*1000);
     uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
     char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
-    uint32_t tamanio_bytes_escritura = buffer_read_uint32(buffer_kernel);
-    uint32_t bytes_a_escribir;
-    buffer_read(buffer_kernel,&bytes_a_escribir, tamanio_bytes_escritura);
+    uint32_t tamanio_bytes_lectura = buffer_read_uint32(buffer_kernel);
+    uint32_t dir_fisica = buffer_read_uint32(buffer_kernel);
+    uint32_t bytes_a_leer;
+    buffer_read(buffer_kernel,&bytes_a_leer, tamanio_bytes_lectura);
     uint32_t tamanio_puntero_archivo = buffer_read_uint32(buffer_kernel);
     uint32_t offset_archivo;
     buffer_read(buffer_kernel,&offset_archivo, tamanio_puntero_archivo);
-    char* informar_leer_archivo = string_from_format("PID: %s - Leer Archivo: %s - Tamaño a Leer: %i - Puntero Archivo: %i",string_itoa(pid),nombre_archivo,bytes_a_leer,offset_archivo); 
+    
+    char* informar_leer_archivo = string_from_format("PID: %s - Leer Archivo: %s - Tamaño a Leer: %i - Puntero Archivo: %i",string_itoa(pid),nombre_archivo,tamanio_bytes_lectura,offset_archivo); 
     log_info(logger_entrada_salida, informar_leer_archivo);
     free(informar_leer_archivo);
-    //no veo registro de memoria donde escribir
+
+    void* data_a_escribir = malloc(tamanio_bytes_lectura);
+    char* path_archivo = string_new();
+    string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
+    string_append(&path_archivo,"/");
+    string_append(&path_archivo,nombre_archivo);
+    t_config* config_archivo = config_create(path_archivo);
+    int bloque_inicial_archivo = config_get_int_value(path_archivo,"BLOQUE_INICIAL");
+    config_destroy(config_archivo);
+    memcpy(data_a_escribir,bloques+(bloque_inicial_archivo*configuracion.BLOCK_SIZE)+offset_archivo,bytes_a_leer);
+    escribir_en_memoria(data_a_escribir,pid,dir_fisica);
+    free(data_a_escribir);
     enviar_fin_de_instruccion();
 }
