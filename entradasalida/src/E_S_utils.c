@@ -674,8 +674,6 @@ void procesar_io_fs_write(buffer_kernel,pid){
     uint32_t* length = malloc(sizeof(uint32_t));
     char* info_de_memoria = buffer_read_string(memoria, length); 
     escribir_en_fs(bloque_inicial_archivo,offset_archivo,tamanio_bytes_escritura,&info_de_memoria);
-    
-    
     free(length);
     free(path_archivo);
     enviar_fin_de_instruccion();
@@ -683,8 +681,25 @@ void procesar_io_fs_write(buffer_kernel,pid){
 
 
 void escribir_en_fs (int indice_bloques, uint32_t offset, uint32_t tamanio, void* data) {
-    memcpy(bloques[indice_bloques]+offset,&data,tamanio);
+    uint32_t bytes_escritos = 0;
+    uint32_t bytes_a_escribir = tamanio;
+    uint32_t offset_de_bloques = offset/configuracion.BLOCK_SIZE;
+    uint32_t offset_dentro_de_bloque = offset % configuracion.BLOCK_SIZE;
+    uint32_t nuevo_indice = indice_bloques + offset_de_bloques;
+
+
+    while(bytes_escritos<tamanio){
+        //si lo que tengo que escribir supera lo que tengo remanente en el bloque
+        if(bytes_a_escribir > configuracion.BLOCK_SIZE - offset_dentro_de_bloque) {
+            bytes_a_escribir = configuracion.BLOCK_SIZE - offset_de_bloques;
+        }
+        memcpy(bloques[nuevo_indice] + offset_dentro_de_bloque, data + bytes_escritos, bytes_a_escribir);
+        bytes_escritos +=bytes_a_escribir;
+        nuevo_indice ++;
+        offset_dentro_de_bloque = 0;
+    }
 }
+
 
 void procesar_io_fs_read(buffer_kernel,pid){
     usleep(configuracion.TIEMPO_UNIDAD_TRABAJO*1000);
