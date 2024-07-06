@@ -55,4 +55,5 @@ void enviar_instruccion(char*);
 void ajustar_tam_proceso( t_buffer*);
 void agregarProcesoALaCola(procesoListaInst*);
 procesoListaInst* buscar_procesoPorId(int);
+
 #endif

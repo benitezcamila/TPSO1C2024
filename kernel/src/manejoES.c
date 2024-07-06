@@ -3,7 +3,7 @@
 t_dictionary* dicc_IO;
 
 void recibir_info_io(int cliente_socket, t_buffer* buffer){
-    log_info(logger_conexiones,"me mandaste la info de entradasalida");
+    //log_info(logger_conexiones,"me mandaste la info de entradasalida");
     /*serializo*/
     t_interfaz tipo_interfaz;
     buffer_read(buffer,&tipo_interfaz,sizeof(t_interfaz));
@@ -32,6 +32,7 @@ dispositivo_IO* crear_dispositivo_IO(int cliente_socket, t_interfaz tipo_interfa
     interfaz->socket = cliente_socket;
     interfaz->tipo_interfaz = tipo_interfaz;
     sem_init(&interfaz->esta_libre,0,1);
+    sem_init(&interfaz->pidieron_interfaz,0,0);
     interfaz->proceso_okupa = NULL;
     interfaz->cola = queue_create();
     struct pollfd fds[1];
@@ -73,6 +74,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
     }
+    sem_post(&interfaz->pidieron_interfaz);
     switch (*tipo_instruccion)
     {
     case GEN_SLEEP:{
@@ -342,6 +344,7 @@ void gestionar_interfaces(dispositivo_IO* interfaz){
     }
     pthread_detach(hilo);
     while(1){
+        sem_wait(&interfaz->pidieron_interfaz);
         sem_wait(&interfaz->esta_libre);
         if(interfaz->socket == -1){
             destruir_dispositivo_IO(interfaz->nombre);

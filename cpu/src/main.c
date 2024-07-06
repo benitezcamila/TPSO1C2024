@@ -19,6 +19,10 @@ int main(int argc, char* argv[]) {
     pthread_join(conexion,NULL);
     pthread_join(escuchar_conexiones,NULL);
 
+    sem_t semaforo;
+    sem_init(&semaforo,0,0);
+    sem_wait(&semaforo);
+
     return 0;
 }
 

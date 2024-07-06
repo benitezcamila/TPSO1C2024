@@ -6,5 +6,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <E_S_utils.h>
+#include <semaphore.h>
+
 
 #endif

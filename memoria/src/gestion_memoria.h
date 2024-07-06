@@ -49,7 +49,7 @@ void* escribir_espacio_usuario(uint32_t ,uint32_t,uint32_t,t_buffer*);
 bool hay_espacio(uint32_t , uint32_t );
 int cantFramesDisponibles();
 bool hay_lugar_contiguo();
-void escribir_memoria(t_list*, t_pagina*,uint32_t,uint32_t, void*);
+void escribir_memoria(uint32_t , uint32_t , void* );
 t_paquete* buscar_marco_pagina (t_buffer*);
-
+t_paquete* enviar_tam_memoria(void);
 #endif

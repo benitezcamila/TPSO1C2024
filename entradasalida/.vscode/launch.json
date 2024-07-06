@@ -8,7 +8,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
-      "args": ["cfg/entradasalidaprueba.config","interfaz1"],
+      "args": ["cfg/SPL1.config","SPL1","cfg/MONITOR.config","MONITOR","cfg/TECLADO.config","TECLADO","cfg/IO_GEN_SLEEP.config","IO_GEN_SLEEP","cfg/GENERICA.config","GENERICA","cfg/ESPERA.config","ESPERA","cfg/FS.config","FS"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

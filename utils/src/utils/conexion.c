@@ -168,7 +168,7 @@ t_buffer* recibir_todo_elbuffer(int socket_conexion){
 			return buffer;
 		}
 	}else{
-		printf("Pifiaste negro");
+		printf("Pifiaste");
 		exit(EXIT_FAILURE);
 	}
 	

@@ -2,7 +2,7 @@
 
 str_sockets sockets;
 char* nombre_interfaz;
-
+sem_t mutex_conexion;
 
 void establecer_conexion_kernel(){
     motivo_desalojo instruccion_a_procesar;
@@ -10,11 +10,12 @@ void establecer_conexion_kernel(){
     sockets.socket_kernel = fd_kernel;
     log_info(logger_entrada_salida, "Conectado Entrada/Salida-Kernel");
     enviar_info_io_a_kernel();
+    sem_post(&mutex_conexion);
     log_info(logger_entrada_salida, "Info enviada");
     recibir_instrucciones();
 }
 void establecer_conexion_memoria(){
-    int fd_memoria = crear_conexion(configuracion.IP_MEMORIA ,string_itoa(configuracion.PUERTO_MEMORIA),logger_entrada_salida,"Entrada Salida");
+    int fd_memoria = crear_conexion(configuracion.IP_MEMORIA ,string_itoa(configuracion.PUERTO_MEMORIA),logger_entrada_salida,nombre_interfaz);
     sockets.socket_memoria = fd_memoria;
     log_info(logger_entrada_salida, "Conectado Entrada/Salida-Memoria");
 }
@@ -33,7 +34,7 @@ void procesar_io_gen_sleep (t_buffer* buffer_kernel) {
 
 
 void enviar_info_io_a_kernel(){
-    t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_interfaz) + string_length(nombre_interfaz)+1);
+    t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_interfaz)+ sizeof(uint32_t) + string_length(nombre_interfaz)+1);
     buffer_add(paquete->buffer, &configuracion.TIPO_INTERFAZ, sizeof(t_interfaz));
     
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);

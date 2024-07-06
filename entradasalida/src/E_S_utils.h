@@ -11,13 +11,14 @@
 #include <pthread.h>
 #include "utils/conexion.h"
 #include "utils/serializacion.h"
-
+#include <semaphore.h>
 typedef struct {
     int socket_memoria;
     int socket_kernel;
 }str_sockets;
 
 extern str_sockets sockets;
+extern sem_t mutex_conexion;
 
 //void proceso_E_S();
 void establecer_conexion_memoria();

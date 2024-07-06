@@ -114,11 +114,12 @@ void procesar_conexion(void* void_args) {
             enviar_paquete((t_paquete*)a_enviar, sockets.socket_cliente_CPU);//lectura
         break;
 
-        case ACCESO_TABLA_PAGINAS:
+        case ACCESO_TABLA_PAGINAS://cpu
             buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
             a_enviar = buscar_marco_pagina (buffer_de_cpu);
             enviar_paquete((t_paquete*) a_enviar, sockets.socket_cliente_CPU);
-
+        case SOLICITUD_TAMANO_PAGINA: //a cpu
+            enviar_paquete(enviar_tam_memoria(), sockets.socket_cliente_CPU);
         default:
             break;
         }
@@ -126,6 +127,8 @@ void procesar_conexion(void* void_args) {
     usleep(configuracion.RETARDO_RESPUESTA *1000);
     free(nombre_cliente);
 }
+
+
 
 
 

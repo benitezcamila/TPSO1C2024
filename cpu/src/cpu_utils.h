@@ -20,6 +20,7 @@ typedef struct{
 
 extern int ind_contexto_kernel;
 extern int llego_interrupcion;
+extern uint32_t tamano_pagina;
 extern str_sockets sockets;
 
 void iniciar_server_kernel();
@@ -36,8 +37,9 @@ void enviar_std_a_kernel(t_instruccion, char*, void*, uint32_t, uint32_t);
 void solicitar_create_delete_fs_a_kernel(t_instruccion, char*, char*);
 void solicitar_truncate_fs_a_kernel(t_instruccion, char*, char*, void*, uint32_t);
 void solicitar_write_read_fs_a_kernel(t_instruccion, char*, char*, void*, uint32_t, uint32_t, void*, uint32_t);
+uint32_t recibir_tamano_pagina();
 void solicitar_instruccion_a_memoria();
-int solicitar_marco_a_memoria(uint32_t );
+int solicitar_marco_a_memoria(uint32_t);
 void recibir_instruccion_de_memoria();
 void recibir_respuesta_resize_memoria(uint32_t);
 void solicitar_leer_en_memoria(uint32_t, uint32_t);

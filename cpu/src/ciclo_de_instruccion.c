@@ -11,7 +11,6 @@ uint32_t* longitud_linea_instruccion;
 tipo_de_interrupcion motivo_interrupcion;
 uint32_t dir_logica = 0;
 uint32_t dir_fisica = 0;
-uint32_t tamano_pagina; //REVISAR.
 
 void ciclo_de_instruccion(){
     fetch_instruction();
@@ -141,12 +140,19 @@ uint32_t mmu(t_TLB* tlb, uint32_t pid){
         }
     }
 
+
+    
+
+
     //No sé si este log está bien puesto acá
     log_info(logger_cpu, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d", PID, numero_pagina, marco);
     actualizar_TLB(tlb, pid, numero_pagina, marco);
 
     return (marco * tamano_pagina) + desplazamiento;
 }
+
+
+
 
 //Funciones de instrucciones.
 void set(char* registro, uint32_t valor){
@@ -195,8 +201,11 @@ void mov_in(char* registro_datos, char* registro_direccion){
 
     dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
-    
+    uint32_t offset = dir_fisica % tamano_pagina;
+
     if(!(registro_datos[1] == 'X')){
+    
+    
         solicitar_leer_en_memoria(dir_fisica, sizeof(uint32_t));
         
         void* datos_de_memoria = leer_de_memoria(sizeof(uint32_t));

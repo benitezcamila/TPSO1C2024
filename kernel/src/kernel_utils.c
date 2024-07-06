@@ -50,7 +50,7 @@ int server_escuchar() {
 
     int cliente_socket = esperar_cliente(sockets.socket_server,logger_conexiones,nom_cliente); //conecta, valida con handshake y devuelve socket
     //log_info(logger_conexiones, "Conectado 1");
-    //sem_wait(&sem_escuchar); //semaforo escuchar, repetido?
+    sem_post(&sem_escuchar);
     //log_info(logger_conexiones, "No bloqueado");
     if (cliente_socket != -1) {
         pthread_t hilo;
@@ -140,9 +140,13 @@ void procesar_conexion(void* void_args) {
 }
 
 void establecer_conexiones(){
-    establecer_conexion_cpu_D();
-    establecer_conexion_cpu_I();
-    establecer_conexion_memoria();
+    pthread_t cpu_D, cpu_I, memoria;
+    pthread_create(&cpu_D,NULL, (void*) establecer_conexion_cpu_D, NULL);
+    pthread_create(&cpu_I,NULL, (void*) establecer_conexion_cpu_I, NULL);
+    pthread_create(&memoria,NULL, (void*) establecer_conexion_memoria, NULL);
+    pthread_detach(cpu_D);
+    pthread_detach(cpu_I);
+    pthread_detach(memoria);
 }
 
 

@@ -4,6 +4,7 @@ int ind_contexto_kernel = 0;
 sem_t sem_contexto_kernel;
 str_sockets sockets;
 int llego_interrupcion = 0;
+uint32_t tamano_pagina;
 
 void iniciar_server_kernel(){
     pthread_t dispatch, interrupt;
@@ -28,6 +29,7 @@ void establecer_conexion_memoria(){
     int fd_memoria = crear_conexion(configuracion.IP_MEMORIA,string_itoa(configuracion.PUERTO_MEMORIA),logger_conexiones,"CPU");
     log_info(logger_conexiones, "Conectado-CPU-memoria");
     sockets.socket_memoria = fd_memoria;
+    solicitar_tamano_pagina();
 }
 
 void atender_conexiones(){
@@ -197,6 +199,26 @@ void solicitar_write_read_fs_a_kernel(t_instruccion motivo_io, char* nombre_inte
     enviar_paquete(paquete, sockets.socket_server_D);
 }
 
+void solicitar_tamano_pagina(){
+    op_code* codigo_operacion;
+    *codigo_operacion = SOLICITUD_TAMANO_PAGINA;
+
+    send(sockets.socket_memoria, codigo_operacion, sizeof(op_code),0);
+
+    free(codigo_operacion);
+    
+    int cod_op = recibir_operacion(sockets.socket_memoria);
+    
+    if(cod_op == TAMANO_PAGINA){
+        t_buffer* buffer_memoria = recibir_todo_elbuffer(sockets.socket_memoria);
+
+        tamanio_pagina =  buffer_read_uint32(buffer_memoria);
+    }
+    else{
+        log_info(logger_errores_cpu, "El código de operación recibido no fue el esperado de memoria. El mismo fue: %d", cod_op);
+    }
+}
+
 void solicitar_instruccion_a_memoria(){
     t_paquete* paquete = crear_paquete(SOLICITUD_INSTRUCCION, sizeof(uint32_t));
     buffer_add_uint32(paquete->buffer, contexto_registros->PC);
@@ -242,9 +264,13 @@ void recibir_respuesta_resize_memoria(uint32_t PID){
     }
 }
 
+uint32_t cantidad_paginas_que_ocupa( uint32_t tamanio, uint32_t offset){
+    return ((tamanio-tamanio_pagina+offset) / tamanio_pagina) + 1 ;
+}
+
 void solicitar_leer_en_memoria(uint32_t dir_fisica, uint32_t tamanio){
     t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_CPU, sizeof(uint32_t) * 4);
-
+    while()
     buffer_add_uint32(paquete->buffer, PID);
     buffer_add_uint32(paquete->buffer, (uint32_t) 0 ); // 1 escribir, 0 leer
     buffer_add_uint32(paquete->buffer, dir_fisica);
@@ -288,10 +314,11 @@ void* leer_de_memoria(uint32_t tamanio){
 
 void solicitar_escribir_en_memoria(uint32_t dir_fisica, void* datos_de_registro, uint32_t tamanio){
     t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_CPU, sizeof(uint32_t) * 4 + tamanio);
-
+    
     buffer_add_uint32(paquete->buffer, PID);
     buffer_add_uint32(paquete->buffer, (uint32_t) 1 ); // 1 escribir, 0 leer
     buffer_add_uint32(paquete->buffer, dir_fisica);
+    
     buffer_add_uint32(paquete->buffer, tamanio);
     buffer_add(paquete->buffer, datos_de_registro, tamanio);
 

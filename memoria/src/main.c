@@ -9,13 +9,12 @@ int main(int argc, char* argv[]) {
     obtener_config();
     inicializar_memoria();
 
-    
     t_list* listaDeProcesos = list_create();
 
-    pthread_create(&levantar_server,NULL,(void*)inicializar_memoria,NULL);
+    //pthread_create(&levantar_server,NULL,(void*)inicializar_memoria,NULL);
     pthread_create(&escuchar,NULL,(void*)atender_escuchas,NULL);
     
-    pthread_join(levantar_server,NULL);
+    //pthread_join(levantar_server,NULL);
     pthread_join(escuchar,NULL);
     sem_destroy(&sem_escuchar);
     list_destroy(listaDeProcesos);

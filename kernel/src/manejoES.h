@@ -9,6 +9,7 @@ typedef struct{
     char* nombre;
     t_interfaz tipo_interfaz;
     sem_t esta_libre;
+    sem_t pidieron_interfaz;
     int socket;
     t_pcb* proceso_okupa;
     t_queue* cola;
