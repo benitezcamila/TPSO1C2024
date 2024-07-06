@@ -638,6 +638,8 @@ void procesar_io_fs_write(buffer_kernel,pid){
 
     uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
     char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
+    
+
     uint32_t tamanio_bytes_escritura = buffer_read_uint32(buffer_kernel);
     uint32_t bytes_a_escribir;
     uint32_t dir_fisica = buffer_read_uint32(buffer_kernel);
