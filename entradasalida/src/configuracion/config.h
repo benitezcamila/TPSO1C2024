@@ -25,6 +25,7 @@ typedef struct {
     char* PATH_BASE_DIALFS;
     uint8_t BLOCK_SIZE;
     uint16_t BLOCK_COUNT;
+    uint32_t RETRASO_COMPACTACION;
 }t_cfg;
 
 typedef struct {

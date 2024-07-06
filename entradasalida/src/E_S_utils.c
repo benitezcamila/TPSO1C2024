@@ -218,6 +218,7 @@ void procesar_io_fs_create(t_buffer* buffer_kernel, uint32_t pid ){
     string_append(&path_archivo,nombre_archivo);
     char* informar_crear_archivo = string_from_format("PID: %s - Crear Archivo: %s",string_itoa(pid),nombre_archivo); 
     log_info(logger_entrada_salida, informar_crear_archivo);
+    free(informar_crear_archivo);
     /*
     IO_FS_CREATE (Interfaz, Nombre Archivo): Esta instrucción solicita al 
     Kernel que mediante la interfaz seleccionada, se cree un archivo en el FS montado en dicha interfaz.
@@ -290,6 +291,7 @@ int obtener_primer_bloque_de_archivo (char * nombre_archivo){
     string_append(&path_archivo,nombre_archivo);
     t_config* config_achivo = config_create(path_archivo);
     int bloque_inicial = config_get_int_value(config_achivo,"BLOQUE_INICIAL");
+    free(path_archivo);
     return bloque_inicial;
 }
 
@@ -301,6 +303,7 @@ int obtener_tamanio_de_archivo (char * nombre_archivo){
     t_config* config_achivo = config_create(path_archivo);
     int tamanio_archivo = config_get_int_value(config_achivo,"TAMANIO_ARCHIVO");
     config_destroy(path_archivo);
+    free(path_archivo);
     return tamanio_archivo;
 }
 
@@ -333,6 +336,7 @@ int obtener_ultimo_bloque_de_archivo (char * nombre_archivo){
     }
     bloque_final+=bloque_inicial;
     config_destroy(config_achivo);
+    free(path_archivo);
     return bloque_final;
 }
 
@@ -351,6 +355,7 @@ void procesar_io_fs_delete(t_buffer* buffer_kernel, uint32_t pid){
     string_append(&path_archivo,nombre_archivo);
     char* informar_eliminar_archivo = string_from_format("PID: %s - Eliminar Archivo: %s",string_itoa(pid),nombre_archivo); 
     log_info(logger_entrada_salida, informar_eliminar_archivo);
+    free(informar_eliminar_archivo);
     int primer_bit_archivo = obtener_primer_bloque_de_archivo(nombre_archivo);
     int ultimo_bit_archivo = obtener_ultimo_bloque_de_archivo(nombre_archivo);
     if (remove(path_archivo) == 0) {
@@ -359,6 +364,9 @@ void procesar_io_fs_delete(t_buffer* buffer_kernel, uint32_t pid){
     } else {
         log_info(logger_entrada_salida, "Error al eliminar el archivo");
     }
+    eliminar_archivo_de_indice(fd_indice,nombre_archivo);
+    free(nombre_archivo);
+    free(path_archivo);
     enviar_fin_de_instruccion();
 }
 
@@ -394,6 +402,7 @@ void procesar_io_fs_delete_prueba(char* nombre_archivo){
     string_append(&path_archivo,nombre_archivo);
     char* informar_eliminar_archivo = string_from_format("PID: %s - Eliminar Archivo: %s","prueba",nombre_archivo); 
     log_info(logger_entrada_salida, informar_eliminar_archivo);
+    free(informar_eliminar_archivo);
     int primer_bit_archivo = obtener_primer_bloque_de_archivo(nombre_archivo);
     int ultimo_bit_archivo = obtener_ultimo_bloque_de_archivo(nombre_archivo);
     if (remove(path_archivo) == 0) {
@@ -402,6 +411,7 @@ void procesar_io_fs_delete_prueba(char* nombre_archivo){
     } else {
         log_info(logger_entrada_salida, "Error al eliminar el archivo");
     }
+    free(path_archivo);
 }
 
 void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid ){
@@ -422,7 +432,7 @@ void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid ){
     uint32_t tamanio_nuevo = buffer_read_uint32(buffer_kernel);
     char* informar_truncar_archivo = string_from_format("PID: %s - Truncar Archivo: %s - Tamaño %i",string_itoa(pid),nombre_archivo,tamanio_nuevo); 
     log_info(logger_entrada_salida, informar_truncar_archivo);
-
+    free(informar_truncar_archivo);
     int bloque_inicial_archivo = obtener_primer_bloque_de_archivo(nombre_archivo);
     int pre_bloque_final_archivo = obtener_ultimo_bloque_de_archivo(nombre_archivo);
     int post_bloque_final_archivo = obtener_nuevo_bloque_final (nombre_archivo,tamanio_nuevo); 
@@ -434,7 +444,7 @@ void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid ){
         } else{
             //si tenemos bloques suficientes, compactar, sino devolver error
             if(contar_bloques_libres(bitmap)>calcular_cantidad_de_bloques(tamanio_nuevo)) { 
-                compactar_y_acomodar_al_final(bloques,bitmap,bloque_inicial_archivo,pre_bloque_final_archivo);
+                compactar_y_acomodar_al_final(bloques,bitmap,bloque_inicial_archivo,pre_bloque_final_archivo,pid);
                 //actualizar_valores
             } else {
                 log_info(logger_entrada_salida, "Error al truncar: no hay suficiente espacio libre en FS");
@@ -451,6 +461,8 @@ void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid ){
     config_set_value(config_archivo,"TAMANIO_ARCHIVO",string_itoa(tamanio_nuevo));
     config_save(config_archivo);
     config_destroy(config_archivo);
+    free(nombre_archivo);
+    free(path_archivo);
 }
 
 bool hay_bits_ocupados(t_bitarray* bitmap, int inicio, int fin){
@@ -466,7 +478,14 @@ bool hay_bits_ocupados(t_bitarray* bitmap, int inicio, int fin){
 
 
 
-void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque_inicial, int bloque_final) {
+void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque_inicial, int bloque_final, uint32_t pid) {
+    /*
+    DialFS - Inicio Compactación: “PID: <PID> - Inicio Compactación.” 
+    DialFS - Fin Compactación: “PID: <PID> - Fin Compactación.”
+    */
+    char* informar_inicio_compactacion = string_from_format("PID: %s - Inicio Compactación",string_itoa(pid)); 
+    log_info(logger_entrada_salida, informar_inicio_compactacion);
+    free(informar_inicio_compactacion);
     int indice_auxiliar = 0;
     int cantidad_a_mover = bloque_final - bloque_inicial +1;
     void **bloques_auxiliares = malloc(cantidad_a_mover * sizeof(void *));
@@ -492,11 +511,13 @@ void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloqu
                 bitarray_set_bit(bitmap, indice_auxiliar);
                 bitarray_clean_bit(bitmap, i);
                 //MODIFICO CONFIG DE ARCHIVO USANDO ARCHIVO DE INDICE
-                //modificar_bloque_inicial(bloque_desplazado,indice_auxiliar)
+                modificar_bloque_inicial_indice(bloque_desplazado,indice_auxiliar);
             }
             indice_auxiliar++;
         }
     }
+    msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
+    msync(bloques,tamanio_memoria_bloques,MS_SYNC);
 
     // Muevo los bloques almacenados temporalmente a las últimas posiciones libres
     for (size_t j = 0; j < cantidad_a_mover; ++j) {
@@ -505,16 +526,23 @@ void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloqu
             void *posicion_libre = bloques[indice_auxiliar];
             memcpy(posicion_libre, bloques_auxiliares[j], configuracion.BLOCK_SIZE);
             bitarray_set_bit(bitmap, indice_auxiliar);
+            modificar_bloque_inicial_indice(bloque_inicial,indice_auxiliar);
             indice_auxiliar++;
         }
         free(bloques_auxiliares[j]); 
     }
     free(bloques_auxiliares);
-
+    msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
+    msync(bloques,tamanio_memoria_bloques,MS_SYNC);
     // Limpio los bloques que quedan al final de la compactacion (si hubiere)
     for (size_t i = indice_auxiliar; i < configuracion.BLOCK_COUNT; ++i) {
         bitarray_clean_bit(bitmap, i);
     }
+    msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
+    usleep(configuracion.RETRASO_COMPACTACION);
+    char* informar_fin_compactacion = string_from_format("PID: %s - Fin Compactación",string_itoa(pid)); 
+    log_info(logger_entrada_salida, informar_fin_compactacion);
+    free(informar_fin_compactacion);
 }
 
  void agregar_archivo_a_indice(int fd_indice, char* nombre_archivo, int bloque) {
@@ -530,7 +558,7 @@ void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloqu
     fclose(archivo_indice);
  }
 
- void sacar_archivo_de_indice(int fd_indice, char* nombre_archivo) {
+ void eliminar_archivo_de_indice(int fd_indice, char* nombre_archivo) {
     FILE* archivo_indice = fdopen(fd_indice, "rb");
     if(archivo_indice==NULL) {
         log_info(logger_entrada_salida,"Error al abrir archivo de indices");
@@ -550,7 +578,7 @@ void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloqu
         return;
     }
     t_indice indice_auxiliar;
-    while(fread(&indice_auxiliar,sizeof(t_indice)),1,archivo_indice) { //recorro archivo de indices
+    while(fread(&indice_auxiliar,sizeof(t_indice),1,archivo_indice)) { //recorro archivo de indices
         if(strcmp(indice_auxiliar.nombre_archivo,nombre_archivo)!=0) { //si el indice no coincide, lo grabo en el archivo temporal
             fwrite(&indice_auxiliar,sizeof(indice_auxiliar),1,archivo_temporal);
         }
@@ -558,7 +586,7 @@ void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloqu
     fclose(archivo_indice);
     fclose(archivo_temporal);
     if(remove("indice.dat") == 0) {
-        log_info(logger_entrada_salida,"Archivo de indices original borrado")
+        log_info(logger_entrada_salida,"Archivo de indices original borrado");
     }
     rename("indice_temporal.dat","indice.dat"); //quizas podria usar cosntances para evitar problemas debuggeando
     return;
@@ -580,4 +608,20 @@ void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloqu
     }
     fclose(archivo_indices);
     return -2;
+ }
+
+ void modificar_bloque_inicial_indice (int bloque_inicial, int bloque_modificado) {
+    char* nombre_del_archivo = string_new();
+    if(buscar_archivo_en_indice(fd_indice,bloque_inicial,&nombre_del_archivo)==-2) { //si el bit no corresponde a un bloque inicial de archivo, no hago nada
+        return;
+    }
+    char* path_archivo = string_new();
+    string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
+    string_append(&path_archivo,"/");
+    string_append(&path_archivo,nombre_del_archivo);    
+    t_config* config_archivo = config_create(path_archivo);
+    config_set_value(config_archivo,"BLOQUE_INICIAL",string_itoa(bloque_modificado));
+    config_save(config_archivo);
+    free(nombre_del_archivo);
+    free(path_archivo);
  }

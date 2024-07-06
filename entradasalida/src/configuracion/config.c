@@ -69,6 +69,7 @@ void obtener_config(char* path_config){
             configuracion.PATH_BASE_DIALFS = config_get_string_value(config,"PATH_BASE_DIALFS");
             configuracion.BLOCK_SIZE = config_get_int_value(config,"BLOCK_SIZE");
             configuracion.BLOCK_COUNT = config_get_int_value(config,"BLOCK_COUNT"); 
+            configuracion.RETRASO_COMPACTACION = config_get_int_value(config,"RETRASO_COMPACTACION"); 
             levantar_fs(configuracion.PATH_BASE_DIALFS,configuracion.BLOCK_SIZE,configuracion.BLOCK_COUNT);           
             break;
     }
