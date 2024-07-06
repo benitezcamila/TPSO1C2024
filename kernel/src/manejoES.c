@@ -258,16 +258,18 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         uint32_t tamanio_data = buffer_read_uint32(buffer);
         void* tamanio_fs = malloc(tamanio_data);
         buffer_read(buffer,tamanio_fs, tamanio_data);
+        uint32_t dir_fisica = buffer_read_uint32(buffer);
         uint32_t tamanio_data2 = buffer_read_uint32(buffer);
         void* puntero_archivo = malloc(tamanio_data2);
         buffer_read(buffer,tamanio_fs, tamanio_data);
 
-        t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_instruccion) + sizeof(uint32_t)*4 + len + tamanio_data + tamanio_data2);
+        t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_instruccion) + sizeof(uint32_t)*5 + len + tamanio_data + tamanio_data2);
         buffer_add(paquete->buffer,tipo_instruccion,sizeof(t_instruccion));
         buffer_add_uint32(paquete->buffer,pid);
         buffer_add_string(paquete->buffer, len, nombre_archivo);
         buffer_add_uint32(paquete->buffer, tamanio_data);
         buffer_add(paquete->buffer,tamanio_fs, tamanio_data);
+        buffer_add_uint32(paquete->buffer, dir_fisica);
         buffer_add_uint32(paquete->buffer, tamanio_data2);
         buffer_add(paquete->buffer, puntero_archivo, tamanio_data2);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
@@ -297,16 +299,18 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         uint32_t tamanio_data = buffer_read_uint32(buffer);
         void* tamanio_fs = malloc(tamanio_data);
         buffer_read(buffer,tamanio_fs, tamanio_data);
+        uint32_t dir_fisica = buffer_read_uint32(buffer);
         uint32_t tamanio_data2 = buffer_read_uint32(buffer);
         void* puntero_archivo = malloc(tamanio_data2);
         buffer_read(buffer,tamanio_fs, tamanio_data);
 
-        t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_instruccion) + sizeof(uint32_t)*4 + len + tamanio_data + tamanio_data2);
+        t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_instruccion) + sizeof(uint32_t)*5 + len + tamanio_data + tamanio_data2);
         buffer_add(paquete->buffer,tipo_instruccion,sizeof(t_instruccion));
         buffer_add_uint32(paquete->buffer,pid);
         buffer_add_string(paquete->buffer, len, nombre_archivo);
         buffer_add_uint32(paquete->buffer, tamanio_data);
         buffer_add(paquete->buffer,tamanio_fs, tamanio_data);
+        buffer_add_uint32(paquete->buffer, dir_fisica);
         buffer_add_uint32(paquete->buffer, tamanio_data2);
         buffer_add(paquete->buffer, puntero_archivo, tamanio_data2);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
