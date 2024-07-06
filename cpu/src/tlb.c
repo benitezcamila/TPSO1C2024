@@ -1,8 +1,6 @@
 #include <tlb.h>
 #include <cpu_utils.h>
 
-t_TLB* tlb;
-
 //Función que inicializa la TLB.
 void inicializar_tlb(t_TLB* tlb, uint32_t capacidad, char* algoritmo){
     tlb->entradas = malloc(sizeof(t_entrada_TLB) * capacidad);

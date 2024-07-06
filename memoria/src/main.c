@@ -19,5 +19,6 @@ int main(int argc, char* argv[]) {
     pthread_join(escuchar,NULL);
     sem_destroy(&sem_escuchar);
     list_destroy(listaDeProcesos);
+    
     return 0;
 }
