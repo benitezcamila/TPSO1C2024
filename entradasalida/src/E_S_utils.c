@@ -151,13 +151,13 @@ void recibir_instrucciones (){
         procesar_io_fs_truncate(buffer_kernel,pid);
         break;
         case FS_WRITE:
-        //procesar_io_fs_write();
+        procesar_io_fs_write(buffer_kernel,pid);
         //Ejemplo de instruccion 
         //IO_FS_WRITE Interfaz: DISCO Archivo: prueba.txt Dirección: 0 (No tenemos nada más en memoria) Tamaño: 8 (
         //queremos cargar los 8 caracteres) Puntero Archivo: 19 (se lee desde el 1 en adelante)
         break;
         case FS_READ:
-        //procesar_io_fs_read();
+        procesar_io_fs_read(buffer_kernel,pid);
         break;
         default:
         log_info(logger_entrada_salida, "Instruccion invalida");
@@ -394,7 +394,7 @@ void setear_bits(t_bitarray* bitmap, off_t bit_inicial, off_t bit_final) {
     }
     msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
 }
-
+/*
 void procesar_io_fs_delete_prueba(char* nombre_archivo){
     char* path_archivo = string_new();
     string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
@@ -413,6 +413,7 @@ void procesar_io_fs_delete_prueba(char* nombre_archivo){
     }
     free(path_archivo);
 }
+*/
 
 void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid ){
     /*
@@ -625,6 +626,66 @@ void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloqu
     t_config* config_archivo = config_create(path_archivo);
     config_set_value(config_archivo,"BLOQUE_INICIAL",string_itoa(bloque_modificado));
     config_save(config_archivo);
+    config_destroy(config_archivo);
     free(nombre_del_archivo);
     free(path_archivo);
  }
+
+void procesar_io_fs_write(buffer_kernel,pid){
+    /*
+        IO_FS_WRITE (Interfaz, Nombre Archivo, Registro Dirección, Registro Tamaño, Registro Puntero Archivo): 
+        Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, se lea desde Memoria la cantidad de bytes indicadas por el 
+        Registro Tamaño a partir de la dirección lógica que se encuentra en el Registro Dirección y se escriban en el archivo a partir del valor 
+        del Registro Puntero Archivo.
+    */
+    usleep(configuracion.TIEMPO_UNIDAD_TRABAJO*1000);
+
+    uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
+    char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
+    uint32_t tamanio_bytes_escritura = buffer_read_uint32(buffer_kernel);
+    uint32_t bytes_a_escribir;
+    buffer_read(buffer_kernel,&bytes_a_escribir, tamanio_bytes_escritura);
+    uint32_t tamanio_puntero_archivo = buffer_read_uint32(buffer_kernel);
+    uint32_t offset_archivo;
+    buffer_read(buffer_kernel,&offset_archivo, tamanio_puntero_archivo);
+    char* informar_leer_archivo = string_from_format("PID: %s - Escribir Archivo: %s - Tamaño a Escribir: %i - Puntero Archivo: %i",string_itoa(pid),nombre_archivo,bytes_a_leer,offset_archivo); 
+    log_info(logger_entrada_salida, informar_leer_archivo);
+    free(informar_leer_archivo);
+
+    char* path_archivo = string_new();
+    string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
+    string_append(&path_archivo,"/");
+    string_append(&path_archivo,nombre_archivo);
+    t_config* config_archivo = config_create(path_archivo);
+    int bloque_inicial_archivo = config_get_int_value(path_archivo,"BLOQUE_INICIAL");
+    config_destroy(config_archivo);
+    /*
+    https://github.com/sisoputnfrba/foro/issues/4038 lo indica al reves
+    */
+    escribir_en_fs(bloque_inicial_archivo,offset_archivo,tamanio_bytes_escritura,&bytes_a_escribir);
+
+    free(path_archivo);
+    enviar_fin_de_instruccion();
+}
+
+
+void escribir_en_fs (int indice_bloques, uint32_t offset, uint32_t tamanio, uint32_t data) {
+    memcpy(bloques[indice_bloques]+offset,&data,tamanio);
+}
+
+void procesar_io_fs_read(buffer_kernel,pid){
+    usleep(configuracion.TIEMPO_UNIDAD_TRABAJO*1000);
+    uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
+    char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
+    uint32_t tamanio_bytes_escritura = buffer_read_uint32(buffer_kernel);
+    uint32_t bytes_a_escribir;
+    buffer_read(buffer_kernel,&bytes_a_escribir, tamanio_bytes_escritura);
+    uint32_t tamanio_puntero_archivo = buffer_read_uint32(buffer_kernel);
+    uint32_t offset_archivo;
+    buffer_read(buffer_kernel,&offset_archivo, tamanio_puntero_archivo);
+    char* informar_leer_archivo = string_from_format("PID: %s - Leer Archivo: %s - Tamaño a Leer: %i - Puntero Archivo: %i",string_itoa(pid),nombre_archivo,bytes_a_leer,offset_archivo); 
+    log_info(logger_entrada_salida, informar_leer_archivo);
+    free(informar_leer_archivo);
+    //no veo registro de memoria donde escribir
+    enviar_fin_de_instruccion();
+}
