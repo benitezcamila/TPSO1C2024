@@ -262,7 +262,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         uint32_t tamanio_data2 = buffer_read_uint32(buffer);
         void* puntero_archivo = malloc(tamanio_data2);
         buffer_read(buffer,tamanio_fs, tamanio_data);
-
+        
         t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_instruccion) + sizeof(uint32_t)*5 + len + tamanio_data + tamanio_data2);
         buffer_add(paquete->buffer,tipo_instruccion,sizeof(t_instruccion));
         buffer_add_uint32(paquete->buffer,pid);
