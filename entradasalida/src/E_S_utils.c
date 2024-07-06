@@ -116,52 +116,54 @@ void recibir_instrucciones (){
     t_instruccion instruccion_a_procesar;
     uint32_t pid ;
     op_code cop;
-    if (recv(sockets.socket_kernel, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
-            log_info(logger_conexiones, "Error en el OpCode!");
+    while(sockets.socket_kernel!=-1) {
+        if (recv(sockets.socket_kernel, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
+                log_info(logger_conexiones, "Error en el OpCode!");
+                return;
+            }
+        if (cop != ENTRADASALIDA) {
+            log_info(logger_conexiones, "OpCode recibido no corresponde con ENTRADASALIDA");
             return;
         }
-    if (cop != ENTRADASALIDA) {
-        log_info(logger_conexiones, "OpCode recibido no corresponde con ENTRADASALIDA");
-        return;
+        t_buffer* buffer_kernel = recibir_todo_elbuffer(sockets.socket_kernel);
+        buffer_read(buffer_kernel,&instruccion_a_procesar,sizeof(t_instruccion));
+        char* instruccion_string = string_de_instruccion(instruccion_a_procesar);
+        pid = buffer_read_uint32(buffer_kernel);
+        char* informar_pid = string_from_format("PID: %s - Operacion: %s",string_itoa(pid),instruccion_string); 
+        log_info(logger_entrada_salida, informar_pid);
+        switch (instruccion_a_procesar) {
+            case GEN_SLEEP:
+            procesar_io_gen_sleep(buffer_kernel);
+            break;
+            case STDIN_READ:
+            procesar_io_stdin_read(buffer_kernel,pid);
+            break;
+            case STDOUT_WRITE:
+            procesar_io_stdout_write(buffer_kernel,pid);
+            break;
+            case FS_CREATE:
+            procesar_io_fs_create(buffer_kernel,pid);
+            break;
+            case FS_DELETE:
+            procesar_io_fs_delete(buffer_kernel,pid);
+            break;
+            case FS_TRUNCATE:
+            procesar_io_fs_truncate(buffer_kernel,pid);
+            break;
+            case FS_WRITE:
+            procesar_io_fs_write(buffer_kernel,pid);
+            break;
+            case FS_READ:
+            procesar_io_fs_read(buffer_kernel,pid);
+            break;
+            default:
+            log_info(logger_entrada_salida, "Instruccion invalida");
+            break;
+        }
+        free(informar_pid);
+        free(instruccion_string);
+        buffer_destroy(buffer_kernel);
     }
-    t_buffer* buffer_kernel = recibir_todo_elbuffer(sockets.socket_kernel);
-    buffer_read(buffer_kernel,&instruccion_a_procesar,sizeof(t_instruccion));
-    char* instruccion_string = string_de_instruccion(instruccion_a_procesar);
-    pid = buffer_read_uint32(buffer_kernel);
-    char* informar_pid = string_from_format("PID: %s - Operacion: %s",string_itoa(pid),instruccion_string); 
-    log_info(logger_entrada_salida, informar_pid);
-    switch (instruccion_a_procesar) {
-        case GEN_SLEEP:
-        procesar_io_gen_sleep(buffer_kernel);
-        break;
-        case STDIN_READ:
-        procesar_io_stdin_read(buffer_kernel,pid);
-        break;
-        case STDOUT_WRITE:
-        procesar_io_stdout_write(buffer_kernel,pid);
-        break;
-        case FS_CREATE:
-        procesar_io_fs_create(buffer_kernel,pid);
-        break;
-        case FS_DELETE:
-        procesar_io_fs_delete(buffer_kernel,pid);
-        break;
-        case FS_TRUNCATE:
-        procesar_io_fs_truncate(buffer_kernel,pid);
-        break;
-        case FS_WRITE:
-        procesar_io_fs_write(buffer_kernel,pid);
-        break;
-        case FS_READ:
-        procesar_io_fs_read(buffer_kernel,pid);
-        break;
-        default:
-        log_info(logger_entrada_salida, "Instruccion invalida");
-        break;
-    }
-    free(informar_pid);
-    free(instruccion_string);
-    buffer_destroy(buffer_kernel);
     return;
 }
 
@@ -520,7 +522,6 @@ void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloqu
 
     // Muevo los bloques almacenados temporalmente a las últimas posiciones libres
     for (size_t j = 0; j < cantidad_a_mover; ++j) {
-        //AGREGAR MODIFICACION DE ARCHIVO DE METADATA CON USO DE ARCHIVO DE INDICE
         if (indice_auxiliar < configuracion.BLOCK_COUNT) {
             void *posicion_libre = bloques[indice_auxiliar];
             memcpy(posicion_libre, bloques_auxiliares[j], configuracion.BLOCK_SIZE);
@@ -637,10 +638,9 @@ void procesar_io_fs_write(buffer_kernel,pid){
 
     uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
     char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
-    
-
     uint32_t tamanio_bytes_escritura = buffer_read_uint32(buffer_kernel);
     uint32_t bytes_a_escribir;
+    uint32_t dir_fisica = buffer_read_uint32(buffer_kernel);
     buffer_read(buffer_kernel,&bytes_a_escribir, tamanio_bytes_escritura);
     uint32_t tamanio_puntero_archivo = buffer_read_uint32(buffer_kernel);
     uint32_t offset_archivo;
@@ -659,14 +659,30 @@ void procesar_io_fs_write(buffer_kernel,pid){
     /*
     https://github.com/sisoputnfrba/foro/issues/4038 lo indica al reves
     */
-    escribir_en_fs(bloque_inicial_archivo,offset_archivo,tamanio_bytes_escritura,&bytes_a_escribir);
-
+    
+    uint32_t accion =0;    
+    t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_ES, sizeof(uint32_t) * 4);
+    buffer_add_uint32(paquete->buffer, pid);
+    buffer_add_uint32(paquete->buffer, accion);
+    buffer_add_uint32(paquete->buffer, dir_fisica);
+    buffer_add_uint32(paquete->buffer, bytes_a_escribir);
+    enviar_paquete(paquete, sockets.socket_memoria);
+    eliminar_paquete(paquete);
+    op_code codigo_leido;
+    recv(sockets.socket_memoria,&codigo_leido , sizeof(op_code), 0);
+    t_buffer* memoria = recibir_todo_elbuffer (sockets.socket_memoria);
+    uint32_t* length = malloc(sizeof(uint32_t));
+    char* info_de_memoria = buffer_read_string(memoria, length); 
+    escribir_en_fs(bloque_inicial_archivo,offset_archivo,tamanio_bytes_escritura,&info_de_memoria);
+    
+    
+    free(length);
     free(path_archivo);
     enviar_fin_de_instruccion();
 }
 
 
-void escribir_en_fs (int indice_bloques, uint32_t offset, uint32_t tamanio, uint32_t data) {
+void escribir_en_fs (int indice_bloques, uint32_t offset, uint32_t tamanio, void* data) {
     memcpy(bloques[indice_bloques]+offset,&data,tamanio);
 }
 
