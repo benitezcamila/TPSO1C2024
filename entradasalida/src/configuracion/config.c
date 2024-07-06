@@ -159,8 +159,6 @@ void* mapear_archivo_bloques(int fd_bloques, uint32_t tamanio_bloques, uint32_t 
     return bloques;
 }
 
-
-
 t_bitarray* crear_bitmap(char* path_bitmap, uint32_t cantidad_bloques ){
     //tengo en cuenta tamaño bitmap, si cantidad de bloques/8 no da redondo, redondear para arriba
     //crea file descriptor a archivo generado bitmap.dat

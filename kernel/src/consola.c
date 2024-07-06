@@ -68,7 +68,7 @@ void iniciar_proceso(const char *path) {
 
 void finalizar_proceso(char* pid) {
     unsigned long int aux = strtoul(pid, NULL, 10);
-    if(pcb_en_ejecucion->pid = (uint32_t) aux){
+    if(pcb_en_ejecucion->pid == (uint32_t) aux){
         void* a_enviar = malloc(sizeof(tipo_de_interrupcion));
         tipo_de_interrupcion inter = DESALOJO_POR_USUARIO;
         memcpy(a_enviar,&(inter),sizeof(tipo_de_interrupcion));
