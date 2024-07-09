@@ -324,6 +324,9 @@ void* leer_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t tama
     buffer_add(buffer_auxiliar, solicitar_leer_en_memoria(direccion_fisica, tamanio_a_leer), tamanio_a_leer);
     tamanio_auxiliar =- tamanio_a_leer;
     
+    //TODO agregar el VALOR que se lee del buffer.
+    log_info(logger_cpu, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, direccion_fisica, 0);
+    
     if(tamanio_auxiliar >= 0){
         dir_logica = floor(dir_logica)+ 1;    
      
@@ -348,6 +351,9 @@ void escribir_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t t
     tamanio_total -= tamanio_a_escribir;
     solicitar_escribir_en_memoria(direccion_fisica, data_a_escribir, tamanio_a_escribir);
     
+    //TODO agregar el VALOR que se escribe del buffer.
+    log_info(logger_cpu, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d", PID, direccion_fisica, 0);
+
     if(tamanio_total > 0){
         dir_logica = floor(dir_logica) + 1;
         escribir_en_memoria_mas_de_una_pagina(buffer_auxiliar, tamanio_total);
