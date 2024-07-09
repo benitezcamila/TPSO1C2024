@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
         pthread_create(&kernel,NULL,(void*)establecer_conexion_kernel,NULL);
         pthread_detach(memoria);
         pthread_detach(kernel);
-        free(path_config);
+        
     }
     sem_t semaforo;
     sem_init(&semaforo,0,0);

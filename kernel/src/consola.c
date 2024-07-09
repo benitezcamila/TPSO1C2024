@@ -19,10 +19,10 @@ void ejecutar_consola_kernel() {
             case EJECUTAR_SCRIPT:
                 ejecutar_script(input + 16);
                 break;
-            case INICIAR_PROCESO:
+            case INICIAR_PROCESO_CONSOLA:
                 iniciar_proceso(input + 16);
                 break;
-            case FINALIZAR_PROCESO:
+            case FINALIZAR_PROCESO_CONSOLA:
                 finalizar_proceso(input + 18);
                 break;
             case DETENER_PLANIFICACION:

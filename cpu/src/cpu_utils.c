@@ -6,7 +6,7 @@ int ind_contexto_kernel = 0;
 sem_t sem_contexto_kernel;
 str_sockets sockets;
 int llego_interrupcion = 0;
-uint32_t tamano_pagina;
+uint32_t tamanio_pagina;
 
 void iniciar_server_kernel(){
     pthread_t dispatch, interrupt;
@@ -31,7 +31,7 @@ void establecer_conexion_memoria(){
     int fd_memoria = crear_conexion(configuracion.IP_MEMORIA,string_itoa(configuracion.PUERTO_MEMORIA),logger_conexiones,"CPU");
     log_info(logger_conexiones, "Conectado-CPU-memoria");
     sockets.socket_memoria = fd_memoria;
-    solicitar_tamano_pagina();
+    solicitar_tamanio_pagina();
 }
 
 void atender_conexiones(){
@@ -135,14 +135,14 @@ void enviar_contexto_a_kernel(motivo_desalojo motivo){
 }
 
 void envios_de_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
-                           uint32_t tamanio_data, t_buffer buffer){ // tamanio std
+                           uint32_t tamanio_data, t_buffer* buffer){ // tamanio std
     uint32_t direc_fisica = mmu(tlb, dir_logica);                        
-    uint32_t offset = direc_fisica % tamano_pagina;
-    uint32_t tamanio_disponible = min(tamano_pagina - offset, tamanio_data);
+    uint32_t offset = direc_fisica % tamanio_pagina;
+    uint32_t tamanio_disponible = min(tamanio_pagina - offset, tamanio_data);
     void* tamanio_std = malloc(tamanio_disponible);
     
     buffer_read(buffer, tamanio_std, tamanio_data);
-    enviar_std_a_kernel(motivo_io, nombre_interfaz, tamanio_disponible, tamanio_std, direc_fisica);
+    enviar_std_a_kernel(motivo_io, nombre_interfaz, tamanio_std, tamanio_disponible,direc_fisica);
     free(tamanio_std);
     
     tamanio_data =- tamanio_disponible;
@@ -208,10 +208,10 @@ void solicitar_truncate_fs_a_kernel(t_instruccion motivo_io, char* nombre_interf
 //tamanio_data1 -> si tamanio_fs es sizeof(uint32) o sizeof(uint8)
 
 void solicitudes_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo,
-                                t_buffer buffer, uint32_t tamanio_data1,
+                                t_buffer* buffer, uint32_t tamanio_data1,
                                 void* puntero_archivo, uint32_t tamanio_data2){ 
     uint32_t direc_fisica = mmu(tlb, dir_logica);                        
-    uint32_t offset = direc_fisica % tamano_pagina;
+    uint32_t offset = direc_fisica % tamanio_pagina;
     uint32_t tamanio_disponible = min(direc_fisica - offset, tamanio_data1);
     void* tamanio_fs = malloc(tamanio_disponible);
     
@@ -251,9 +251,9 @@ void solicitar_write_read_fs_a_kernel(t_instruccion motivo_io, char* nombre_inte
     enviar_paquete(paquete, sockets.socket_server_D);
 }
 
-void solicitar_tamano_pagina(){
+void solicitar_tamanio_pagina(){
     op_code* codigo_operacion;
-    *codigo_operacion = SOLICITUD_TAMANO_PAGINA;
+    *codigo_operacion = SOLICITUD_TAMANIO_PAGINA;
 
     send(sockets.socket_memoria, codigo_operacion, sizeof(op_code),0);
 
@@ -261,7 +261,7 @@ void solicitar_tamano_pagina(){
     
     int cod_op = recibir_operacion(sockets.socket_memoria);
     
-    if(cod_op == TAMANO_PAGINA){
+    if(cod_op == TAMANIO_PAGINA){
         t_buffer* buffer_memoria = recibir_todo_elbuffer(sockets.socket_memoria);
 
         tamanio_pagina =  buffer_read_uint32(buffer_memoria);
@@ -317,13 +317,13 @@ void recibir_respuesta_resize_memoria(uint32_t PID){
 }
 
 uint32_t cantidad_paginas_que_ocupa(uint32_t tamanio, uint32_t desplazamiento){
-    return ((tamanio - tamano_pagina + desplazamiento) / tamano_pagina) + 1;
+    return ((tamanio - tamanio_pagina + desplazamiento) / tamanio_pagina) + 1;
 }
 
-void* leer_en_memoria_mas_de_una_pagina(t_buffer buffer_auxiliar, uint32_t tamanio_auxiliar, uint32_t tamanio_total){
+void* leer_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t tamanio_auxiliar, uint32_t tamanio_total){
     uint32_t direccion_fisica = mmu(tlb, dir_logica);
-    uint32_t offset = direccion_fisica % tamano_pagina;
-    uint32_t tamanio_a_leer = min(tamanio_auxiliar, tamano_pagina-offset);
+    uint32_t offset = direccion_fisica % tamanio_pagina;
+    uint32_t tamanio_a_leer = min(tamanio_auxiliar, tamanio_pagina-offset);
     
     buffer_add(buffer_auxiliar, solicitar_leer_en_memoria(dir_fisica, tamanio_a_leer), tamanio_a_leer);
     tamanio_auxiliar =- tamanio_a_leer;
@@ -342,10 +342,10 @@ void* leer_en_memoria_mas_de_una_pagina(t_buffer buffer_auxiliar, uint32_t taman
     }
 }
 
-void escribir_en_memoria_mas_de_una_pagina(t_buffer buffer_auxiliar, uint32_t tamanio_total){
+void escribir_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t tamanio_total){
     uint32_t direccion_fisica = mmu(tlb, dir_logica);
-    uint32_t offset = direccion_fisica % tamano_pagina;
-    uint32_t tamanio_a_escribir = min(tamanio_total, tamano_pagina-offset);
+    uint32_t offset = direccion_fisica % tamanio_pagina;
+    uint32_t tamanio_a_escribir = min(tamanio_total, tamanio_pagina-offset);
     void* data_a_escribir = malloc(tamanio_a_escribir);
     
     buffer_read(buffer_auxiliar, data_a_escribir, tamanio_a_escribir);
