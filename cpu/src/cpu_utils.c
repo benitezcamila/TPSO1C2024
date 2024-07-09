@@ -134,8 +134,31 @@ void enviar_contexto_a_kernel(motivo_desalojo motivo){
     enviar_paquete(paquete, sockets.socket_server_D);
 }
 
+void envios_de_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
+                           uint32_t tamanio_data, t_buffer buffer){ // tamanio std
+    uint32_t direc_fisica = mmu(tlb, dir_logica);                        
+    uint32_t offset = direc_fisica % tamano_pagina;
+    uint32_t tamanio_disponible = min(tamano_pagina - offset, tamanio_data);
+    void* tamanio_std = malloc(tamanio_disponible);
+    
+    buffer_read(buffer, tamanio_std, tamanio_data);
+    enviar_std_a_kernel(motivo_io, nombre_interfaz, tamanio_disponible, tamanio_std, direc_fisica);
+    free(tamanio_std);
+    
+    tamanio_data =- tamanio_disponible;
+
+    if(tamanio_data > 0){
+        dir_logica = floor(dir_logica) + 1;
+        envios_de_std_a_kernel(motivo_io, nombre_interfaz, tamanio_data, buffer);
+    }
+    else{
+        return;
+    }
+    
+}
+
 void enviar_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
-                                void* tamanio_std, uint32_t tamanio_data, uint32_t dir_fisica){
+                                void* tamanio_std, uint32_t tamanio_data, uint32_t direc_fisica){
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(t_instruccion) + sizeof(registros_CPU)
                                         + string_length(nombre_interfaz)+1 + tamanio_data + sizeof(uint32_t));
     motivo_desalojo mot_des = PETICION_IO;
@@ -145,7 +168,7 @@ void enviar_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_uint32(paquete->buffer, tamanio_data);
     buffer_add(paquete->buffer, tamanio_std, tamanio_data);
-    buffer_add_uint32(paquete->buffer, dir_fisica);
+    buffer_add_uint32(paquete->buffer, direc_fisica);
 
     enviar_paquete(paquete, sockets.socket_server_D);
 }
@@ -178,6 +201,33 @@ void solicitar_truncate_fs_a_kernel(t_instruccion motivo_io, char* nombre_interf
     buffer_add(paquete->buffer, tamanio_fs, tamanio_data);
 
     enviar_paquete(paquete, sockets.socket_server_D);
+}
+
+
+//tamanio_fs -> contiene cant. Bytes
+//tamanio_data1 -> si tamanio_fs es sizeof(uint32) o sizeof(uint8)
+
+void solicitudes_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo,
+                                t_buffer buffer, uint32_t tamanio_data1,
+                                void* puntero_archivo, uint32_t tamanio_data2){ 
+    uint32_t direc_fisica = mmu(tlb, dir_logica);                        
+    uint32_t offset = direc_fisica % tamano_pagina;
+    uint32_t tamanio_disponible = min(direc_fisica - offset, tamanio_data1);
+    void* tamanio_fs = malloc(tamanio_disponible);
+    
+    buffer_read(buffer, tamanio_fs, tamanio_data1);
+    solicitar_write_read_fs_a_kernel(motivo_io, nombre_interfaz, nombre_archivo, tamanio_fs, tamanio_disponible, direc_fisica, puntero_archivo,tamanio_data2);
+    free(tamanio_fs);
+    
+    tamanio_data1 =- tamanio_disponible;
+
+    if(tamanio_data1 > 0){
+        dir_logica = floor(dir_logica) + 1;
+        solicitudes_fs_a_kernel(motivo_io, nombre_interfaz, nombre_archivo, buffer, tamanio_data1, puntero_archivo, tamanio_data2);
+    }
+    else{
+        return;
+    }
 }
 
 void solicitar_write_read_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo,
@@ -279,13 +329,15 @@ void* leer_en_memoria_mas_de_una_pagina(t_buffer buffer_auxiliar, uint32_t taman
     tamanio_auxiliar =- tamanio_a_leer;
     
     if(tamanio_auxiliar >= 0){
-        auxiliar = floor(dir_logica)+ 1;    
-        dir_logica = auxiliar;
+        dir_logica = floor(dir_logica)+ 1;    
+     
         leer_en_memoria_mas_de_una_pagina(buffer_auxiliar, tamanio_auxiliar, tamanio_total);    
     }
     else{
         void* retorno = malloc(tamanio_total);
         buffer_read(buffer_auxiliar, retorno, tamanio_total);
+        buffer_destroy(buffer_auxiliar); // No estoy seguro, pero por las dudas...
+
         return retorno;
     }
 }
@@ -293,17 +345,16 @@ void* leer_en_memoria_mas_de_una_pagina(t_buffer buffer_auxiliar, uint32_t taman
 void escribir_en_memoria_mas_de_una_pagina(t_buffer buffer_auxiliar, uint32_t tamanio_total){
     uint32_t direccion_fisica = mmu(tlb, dir_logica);
     uint32_t offset = direccion_fisica % tamano_pagina;
-    uint32_t tamanio_a_escribir = min(tamanio_auxiliar, tamano_pagina-offset);
+    uint32_t tamanio_a_escribir = min(tamanio_total, tamano_pagina-offset);
     void* data_a_escribir = malloc(tamanio_a_escribir);
     
     buffer_read(buffer_auxiliar, data_a_escribir, tamanio_a_escribir);
-    tamanio_auxiliar -= tamanio_a_escribir;
+    tamanio_total -= tamanio_a_escribir;
     solicitar_escribir_en_memoria(direccion_fisica, data_a_escribir, tamanio_a_escribir);
     
-    if(tamanio_auxiliar > 0){
-        auxiliar = floor(dir_logica)+1;
-        dir_logica = auxiliar;
-        escribir_en_memoria_mas_de_una_pagina(buffer_auxiliar, tamanio_auxiliar);
+    if(tamanio_total > 0){
+        dir_logica = floor(dir_logica) + 1;
+        escribir_en_memoria_mas_de_una_pagina(buffer_auxiliar, tamanio_total);
     }
     else{
         return;

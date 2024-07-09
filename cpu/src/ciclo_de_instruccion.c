@@ -191,12 +191,6 @@ void set(char* registro, uint32_t valor){
     }
 }
 
-
-// mov_in mov_out copy_string de instrucciones
-
-
-// 
-
 void mov_in(char* registro_datos, char* registro_direccion){
     uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
 
@@ -235,9 +229,6 @@ void mov_in(char* registro_datos, char* registro_direccion){
     free(contenido_auxiliar);
 }
 
-
-
-
 void mov_out(char* registro_direccion, char* registro_datos){
     uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
 
@@ -253,10 +244,11 @@ void mov_out(char* registro_direccion, char* registro_datos){
         void* datos_de_registro = obtener_contenido_registro(registro_datos);
         t_buffer buffer = buffer_create(sizeof(uint32_t));
         
-        buffer_add(buffer, datos_de_registro, sizeof(uint32_t) ) ;
+        buffer_add(buffer, datos_de_registro, sizeof(uint32_t));
 
-        solicitar_escribir_en_memoria(dir_fisica, datos_de_registro, sizeof(uint32_t));
+        escribir_en_memoria_mas_de_una_pagina(buffer, sizeof(uint32_t));
 
+        buffer_destroy(buffer);
         free(datos_de_registro);
         //Seguro tenga que usar una función auxiliar para asegurarme que la escritura haya sido exitosa,
         //y ahí mismo hago el loggeo de la escritura.
@@ -265,10 +257,11 @@ void mov_out(char* registro_direccion, char* registro_datos){
         void* datos_de_registro = obtener_contenido_registro(registro_datos);
         t_buffer buffer = buffer_create(sizeof(uint8_t));
 
-        buffer_add(buffer,datos_de_registro,sizeof(uint8_t));
+        buffer_add(buffer, datos_de_registro, sizeof(uint8_t));
 
-        solicitar_escribir_en_memoria(dir_fisica, datos_de_registro, sizeof(uint8_t));
+        escribir_en_memoria_mas_de_una_pagina(buffer, sizeof(uint8_t));
 
+        buffer_destroy(buffer);
         free(datos_de_registro);
         //Seguro tenga que usar una función auxiliar para asegurarme que la escritura haya sido exitosa,
         //y ahí mismo hago el loggeo de la escritura.
@@ -397,6 +390,7 @@ void copy_string(uint32_t tamanio){
 
     escribir_en_memoria_mas_de_una_pagina(buffer, tamanio);
 
+    buffer_destroy(buffer_auxiliar);
     free(contenido_auxiliar);
     free(datos_de_memoria);
 }
@@ -443,6 +437,9 @@ void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
     enviar_paquete(paquete, sockets.socket_server_D);
 }
 
+
+
+
 void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* registro_tamanio){
     ind_contexto_kernel = 0;
     uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
@@ -453,20 +450,25 @@ void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* regist
     }
 
     dir_logica = *contenido_auxiliar;
-    dir_fisica = mmu(tlb, PID);
 
     if(!(registro_tamanio[1] == 'X')){
         void* tamanio = obtener_contenido_registro(registro_tamanio);
-
-        enviar_std_a_kernel(STDIN_READ, nombre_interfaz, tamanio, sizeof(uint32_t), dir_fisica);
-
+        t_buffer buffer = buffer_create(sizeof(uint32_t));
+        
+        buffer_read(buffer, tamanio, sizeof(uint32_t));
+        envios_de_std_a_kernel(STDIN_READ, nombre_interfaz, sizeof(uint32_t), buffer);
+        
+        buffer_destroy(buffer);
         free(tamanio);
     }
     else{
         void* tamanio = obtener_contenido_registro(registro_tamanio);
+        t_buffer buffer = buffer_create(uint8_t);
 
-        enviar_std_a_kernel(STDIN_READ, nombre_interfaz, tamanio, sizeof(uint8_t), dir_fisica);
-
+        buffer_read(buffer, tamanio, sizeof(uint8_t));
+        envios_de_std_a_kernel(STDIN_READ, nombre_interfaz, sizeof(uint8_t), buffer);
+        
+        buffer_destroy(buffer);
         free(tamanio);
     }
 
@@ -483,22 +485,27 @@ void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* regi
     }
 
     dir_logica = *contenido_auxiliar;
-    dir_fisica = mmu(tlb, PID);
 
     if(!(registro_tamanio[1] == 'X')){
         void* tamanio = obtener_contenido_registro(registro_tamanio);
-
-        enviar_std_a_kernel(STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint32_t), dir_fisica);
-
+        t_buffer buffer = buffer_create(sizeof(uint32_t));
+        
+        buffer_read(buffer, tamanio, sizeof(uint32_t));
+        envios_de_std_a_kernel(STDIN_READ, nombre_interfaz, sizeof(uint32_t), buffer);
+        
+        buffer_destroy(buffer);
         free(tamanio);
     }
     else{
         void* tamanio = obtener_contenido_registro(registro_tamanio);
+        t_buffer buffer = buffer_create(uint8_t);
 
-        enviar_std_a_kernel(STDOUT_WRITE, nombre_interfaz, tamanio, sizeof(uint8_t), dir_fisica);
-
+        buffer_read(buffer, tamanio, sizeof(uint8_t));
+        envios_de_std_a_kernel(STDOUT_WRITE, nombre_interfaz, sizeof(uint8_t), buffer);
+        
+        buffer_destroy(buffer);
         free(tamanio);
-    }
+ }
 
     free(contenido_auxiliar);
 }
@@ -534,6 +541,7 @@ void io_fs_truncate(char* nombre_interfaz, char* nombre_archivo, char* registro_
     }
 }
 
+
 void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_direccion,
                 char* registro_tamanio, char* registro_puntero_archivo){
     ind_contexto_kernel = 0;
@@ -549,11 +557,14 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
 
     if(!(registro_tamanio[1] == 'X')){
         void* tamanio = obtener_contenido_registro(registro_tamanio);
+        t_buffer buffer = buffer_create(sizeof(uint32_t));
+        
+        buffer_add_uint32(buffer, tamanio);
 
         if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
+            solicitudes_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo,buffer , sizeof(uint32_t),
                                             dir_fisica, puntero_registro, sizeof(uint32_t));
         
             free(puntero_registro);
@@ -561,21 +572,25 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
         else{
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
+            solicitudes_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo,buffer , sizeof(uint32_t),
                                             dir_fisica, puntero_registro, sizeof(uint8_t));
         
             free(puntero_registro);
         }
-
+        
+        buffer_destroy(buffer);
         free(tamanio);
     }
     else{
         void* tamanio = obtener_contenido_registro(registro_tamanio);
+        t_buffer buffer = buffer_create(sizeof(uint8_t));
+
+        buffer = buffer_add_uint32(buffer, tamanio);
 
         if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
+            solicitudes_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, buffer, sizeof(uint8_t),
                                             dir_fisica, puntero_registro, sizeof(uint32_t));
         
             free(puntero_registro);
@@ -583,12 +598,14 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
         else{
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
+
+            solicitudes_fs_a_kernel(FS_WRITE, nombre_interfaz, nombre_archivo, buffer, sizeof(uint8_t),
                                             dir_fisica, puntero_registro, sizeof(uint8_t));
 
             free(puntero_registro);
         }
 
+        buffer_destroy(buffer);
         free(tamanio);
     }
 
@@ -599,7 +616,7 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
                 char* registro_tamanio, char* registro_puntero_archivo){
     ind_contexto_kernel = 0;
     uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
-
+    
     if(contenido_auxiliar == NULL){
         log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
         return;
@@ -610,11 +627,13 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
 
     if(!(registro_tamanio[1] == 'X')){
         void* tamanio = obtener_contenido_registro(registro_tamanio);
+        t_buffer buffer = buffer_create(sizeof(uint32_t));
+        buffer = buffer_add_uint32(buffer, tamanio);
 
         if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
+            solicitudes_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, buffer, sizeof(uint32_t),
                                             dir_fisica, puntero_registro, sizeof(uint32_t));
         
             free(puntero_registro);
@@ -622,21 +641,26 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
         else{
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t),
+            solicitudes_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, buffer, sizeof(uint32_t),
                                             dir_fisica, puntero_registro, sizeof(uint8_t));
         
             free(puntero_registro);
         }
 
+        buffer_destroy(buffer);
         free(tamanio);
     }
     else{
         void* tamanio = obtener_contenido_registro(registro_tamanio);
+        t_buffer buffer = buffer_create(sizeof(uint8_t));
+        buffer = buffer_add_uint32(buffer, tamanio);
 
         if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
+            t_buffer buffer = buffer_create(sizeof(uint8_t));
+            buffer = buffer_add_uint32(buffer, tamanio);
 
-            solicitar_write_read_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
+            solicitudes_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, buffer, sizeof(uint8_t),
                                             dir_fisica, puntero_registro, sizeof(uint32_t));
         
             free(puntero_registro);
@@ -644,12 +668,13 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
         else{
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
-            solicitar_write_read_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t),
+            solicitudes_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, buffer, sizeof(uint8_t),
                                             dir_fisica, puntero_registro, sizeof(uint8_t));
 
             free(puntero_registro);
         }
-
+        
+        buffer_destroy(buffer);
         free(tamanio);
     }
 
