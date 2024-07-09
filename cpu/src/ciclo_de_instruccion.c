@@ -140,19 +140,12 @@ uint32_t mmu(t_TLB* tlb, uint32_t pid){
         }
     }
 
-
-    //
-
-
     //No sé si este log está bien puesto acá
     log_info(logger_cpu, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d", PID, numero_pagina, marco);
     actualizar_TLB(tlb, pid, numero_pagina, marco);
 
     return (marco * tamanio_pagina) + desplazamiento;
 }
-
-
-
 
 //Funciones de instrucciones.
 void set(char* registro, uint32_t valor){
@@ -372,7 +365,7 @@ void copy_string(uint32_t tamanio){
 
     t_buffer* buffer = buffer_create(tamanio);
     
-    void* datos_de_memoria = leer_en_memoria_mas_de_una_pagina(buffer, tamanio, tamanio);// uno voy a ir modificandolo y el otro tamanio abs
+    void* datos_de_memoria = leer_en_memoria_mas_de_una_pagina(buffer, tamanio, tamanio); // Uno voy a ir modificandolo y el otro tamanio abs
     
     buffer_destroy(buffer);
     
@@ -433,9 +426,6 @@ void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
 
     enviar_paquete(paquete, sockets.socket_server_D);
 }
-
-
-
 
 void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* registro_tamanio){
     ind_contexto_kernel = 0;
@@ -553,10 +543,10 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
     dir_fisica = mmu(tlb, PID);
 
     if(!(registro_tamanio[1] == 'X')){
-        uint32_t* tamanio = obtener_contenido_registro(registro_tamanio);
+        void* tamanio = obtener_contenido_registro(registro_tamanio);
         t_buffer* buffer = buffer_create(sizeof(uint32_t));
         
-        buffer_add_uint32(buffer, *tamanio);
+        buffer_add_uint32(buffer, *(uint32_t*)tamanio);
 
         if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
@@ -579,10 +569,10 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
         free(tamanio);
     }
     else{
-        uint32_t* tamanio = obtener_contenido_registro(registro_tamanio);
+        void* tamanio = obtener_contenido_registro(registro_tamanio);
         t_buffer* buffer = buffer_create(sizeof(uint8_t));
 
-        buffer_add_uint32(buffer, *tamanio);
+        buffer_add_uint8(buffer, *(uint8_t*)tamanio);
 
         if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
@@ -623,9 +613,10 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
     dir_fisica = mmu(tlb, PID);
 
     if(!(registro_tamanio[1] == 'X')){
-        uint32_t* tamanio = obtener_contenido_registro(registro_tamanio);
+        void* tamanio = obtener_contenido_registro(registro_tamanio);
         t_buffer* buffer = buffer_create(sizeof(uint32_t));
-        buffer_add_uint32(buffer, *tamanio);
+
+        buffer_add_uint32(buffer, *(uint32_t*)tamanio);
 
         if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
@@ -648,9 +639,10 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
         free(tamanio);
     }
     else{
-        uint32_t* tamanio = obtener_contenido_registro(registro_tamanio);
+        void* tamanio = obtener_contenido_registro(registro_tamanio);
         t_buffer* buffer = buffer_create(sizeof(uint8_t));
-        buffer_add_uint32(buffer, *tamanio);
+
+        buffer_add_uint8(buffer, *(uint8_t*)tamanio);
 
         if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);

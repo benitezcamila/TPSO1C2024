@@ -203,10 +203,6 @@ void solicitar_truncate_fs_a_kernel(t_instruccion motivo_io, char* nombre_interf
     enviar_paquete(paquete, sockets.socket_server_D);
 }
 
-
-//tamanio_fs -> contiene cant. Bytes
-//tamanio_data1 -> si tamanio_fs es sizeof(uint32) o sizeof(uint8)
-
 void solicitudes_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo,
                                 t_buffer* buffer, uint32_t tamanio_data1,
                                 void* puntero_archivo, uint32_t tamanio_data2){ 
@@ -325,7 +321,7 @@ void* leer_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t tama
     uint32_t offset = direccion_fisica % tamanio_pagina;
     uint32_t tamanio_a_leer = min(tamanio_auxiliar, tamanio_pagina-offset);
     
-    buffer_add(buffer_auxiliar, solicitar_leer_en_memoria(dir_fisica, tamanio_a_leer), tamanio_a_leer);
+    buffer_add(buffer_auxiliar, solicitar_leer_en_memoria(direccion_fisica, tamanio_a_leer), tamanio_a_leer);
     tamanio_auxiliar =- tamanio_a_leer;
     
     if(tamanio_auxiliar >= 0){
@@ -362,12 +358,12 @@ void escribir_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t t
 }
 
 
-void* solicitar_leer_en_memoria(uint32_t dir_fisica, uint32_t tamanio){
+void* solicitar_leer_en_memoria(uint32_t direccion_fisica, uint32_t tamanio){
     t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_CPU, sizeof(uint32_t) * 4);
     
     buffer_add_uint32(paquete->buffer, PID);
     buffer_add_uint32(paquete->buffer, (uint32_t) 0 ); // 1 escribir, 0 leer
-    buffer_add_uint32(paquete->buffer, dir_fisica);
+    buffer_add_uint32(paquete->buffer, direccion_fisica);
     buffer_add_uint32(paquete->buffer, tamanio);
 
     enviar_paquete(paquete, sockets.socket_memoria);
@@ -408,12 +404,12 @@ void* leer_de_memoria(uint32_t tamanio){
     }
 }
 
-void solicitar_escribir_en_memoria(uint32_t dir_fisica, void* datos_de_registro, uint32_t tamanio){
+void solicitar_escribir_en_memoria(uint32_t direccion_fisica, void* datos_de_registro, uint32_t tamanio){
     t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_CPU, sizeof(uint32_t) * 4 + tamanio);
     
     buffer_add_uint32(paquete->buffer, PID);
     buffer_add_uint32(paquete->buffer, (uint32_t) 1 ); // 1 escribir, 0 leer
-    buffer_add_uint32(paquete->buffer, dir_fisica);
+    buffer_add_uint32(paquete->buffer, direccion_fisica);
     
     buffer_add_uint32(paquete->buffer, tamanio);
     buffer_add(paquete->buffer, datos_de_registro, tamanio);
