@@ -1,5 +1,7 @@
 #include "cpu_utils.h"
 
+#define min(a,b) (a<b?a:b)
+
 int ind_contexto_kernel = 0;
 sem_t sem_contexto_kernel;
 str_sockets sockets;
@@ -264,19 +266,62 @@ void recibir_respuesta_resize_memoria(uint32_t PID){
     }
 }
 
-uint32_t cantidad_paginas_que_ocupa( uint32_t tamanio, uint32_t offset){
-    return ((tamanio-tamanio_pagina+offset) / tamanio_pagina) + 1 ;
+uint32_t cantidad_paginas_que_ocupa(uint32_t tamanio, uint32_t desplazamiento){
+    return ((tamanio - tamano_pagina + desplazamiento) / tamano_pagina) + 1;
 }
 
-void solicitar_leer_en_memoria(uint32_t dir_fisica, uint32_t tamanio){
+void* leer_en_memoria_mas_de_una_pagina(t_buffer buffer_auxiliar, uint32_t tamanio_auxiliar, uint32_t tamanio_total){
+    uint32_t direccion_fisica = mmu(tlb, dir_logica);
+    uint32_t offset = direccion_fisica % tamano_pagina;
+    uint32_t tamanio_a_leer = min(tamanio_auxiliar, tamano_pagina-offset);
+    
+    buffer_add(buffer_auxiliar, solicitar_leer_en_memoria(dir_fisica, tamanio_a_leer), tamanio_a_leer);
+    tamanio_auxiliar =- tamanio_a_leer;
+    
+    if(tamanio_auxiliar >= 0){
+        auxiliar = floor(dir_logica)+ 1;    
+        dir_logica = auxiliar;
+        leer_en_memoria_mas_de_una_pagina(buffer_auxiliar, tamanio_auxiliar, tamanio_total);    
+    }
+    else{
+        void* retorno = malloc(tamanio_total);
+        buffer_read(buffer_auxiliar, retorno, tamanio_total);
+        return retorno;
+    }
+}
+
+void escribir_en_memoria_mas_de_una_pagina(t_buffer buffer_auxiliar, uint32_t tamanio_total){
+    uint32_t direccion_fisica = mmu(tlb, dir_logica);
+    uint32_t offset = direccion_fisica % tamano_pagina;
+    uint32_t tamanio_a_escribir = min(tamanio_auxiliar, tamano_pagina-offset);
+    void* data_a_escribir = malloc(tamanio_a_escribir);
+    
+    buffer_read(buffer_auxiliar, data_a_escribir, tamanio_a_escribir);
+    tamanio_auxiliar -= tamanio_a_escribir;
+    solicitar_escribir_en_memoria(direccion_fisica, data_a_escribir, tamanio_a_escribir);
+    
+    if(tamanio_auxiliar > 0){
+        auxiliar = floor(dir_logica)+1;
+        dir_logica = auxiliar;
+        escribir_en_memoria_mas_de_una_pagina(buffer_auxiliar, tamanio_auxiliar);
+    }
+    else{
+        return;
+    } 
+}
+
+
+void* solicitar_leer_en_memoria(uint32_t dir_fisica, uint32_t tamanio){
     t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_CPU, sizeof(uint32_t) * 4);
-    while()
+    
     buffer_add_uint32(paquete->buffer, PID);
     buffer_add_uint32(paquete->buffer, (uint32_t) 0 ); // 1 escribir, 0 leer
     buffer_add_uint32(paquete->buffer, dir_fisica);
     buffer_add_uint32(paquete->buffer, tamanio);
 
     enviar_paquete(paquete, sockets.socket_memoria);
+    return leer_de_memoria(tamanio);
+
 }
 
 void* leer_de_memoria(uint32_t tamanio){

@@ -141,7 +141,7 @@ uint32_t mmu(t_TLB* tlb, uint32_t pid){
     }
 
 
-    
+    //
 
 
     //No sé si este log está bien puesto acá
@@ -191,6 +191,12 @@ void set(char* registro, uint32_t valor){
     }
 }
 
+
+// mov_in mov_out copy_string de instrucciones
+
+
+// 
+
 void mov_in(char* registro_datos, char* registro_direccion){
     uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
 
@@ -204,12 +210,9 @@ void mov_in(char* registro_datos, char* registro_direccion){
     uint32_t offset = dir_fisica % tamano_pagina;
 
     if(!(registro_datos[1] == 'X')){
-    
-    
-        solicitar_leer_en_memoria(dir_fisica, sizeof(uint32_t));
-        
-        void* datos_de_memoria = leer_de_memoria(sizeof(uint32_t));
-
+        void* datos_de_memoria = malloc(sizeof(uint32_t));
+        t_buffer buffer_auxiliar = buffer_create(sizeof(uint32_t));
+        void* datos_de_memoria = leer_en_memoria_mas_de_una_pagina(buffer_auxiliar, sizeof(uint32_t), sizeof(uint32_t));
         uint32_t valor = *(uint32_t*)datos_de_memoria;
         
         set(registro_datos, valor);
@@ -217,9 +220,10 @@ void mov_in(char* registro_datos, char* registro_direccion){
         free(datos_de_memoria);
     }
     else{
-        solicitar_leer_en_memoria(dir_fisica, sizeof(uint8_t));
-        
-        void* datos_de_memoria = leer_de_memoria(sizeof(uint8_t));
+        void* datos_de_memoria = malloc(sizeof(uint8_t));
+
+        t_buffer buffer_auxiliar = buffer_create(sizeof(uint8_t));
+        void* datos_de_memoria = (uint8_t*)leer_en_memoria_mas_de_una_pagina(buffer_auxiliar, sizeof(uint8_t), sizeof(uint8_t) );
 
         uint8_t valor = *(uint8_t*)datos_de_memoria;
         
@@ -230,6 +234,9 @@ void mov_in(char* registro_datos, char* registro_direccion){
 
     free(contenido_auxiliar);
 }
+
+
+
 
 void mov_out(char* registro_direccion, char* registro_datos){
     uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
@@ -244,6 +251,9 @@ void mov_out(char* registro_direccion, char* registro_datos){
     
     if(!(registro_datos[1] == 'X')){
         void* datos_de_registro = obtener_contenido_registro(registro_datos);
+        t_buffer buffer = buffer_create(sizeof(uint32_t));
+        
+        buffer_add(buffer, datos_de_registro, sizeof(uint32_t) ) ;
 
         solicitar_escribir_en_memoria(dir_fisica, datos_de_registro, sizeof(uint32_t));
 
@@ -253,6 +263,9 @@ void mov_out(char* registro_direccion, char* registro_datos){
     }
     else{
         void* datos_de_registro = obtener_contenido_registro(registro_datos);
+        t_buffer buffer = buffer_create(sizeof(uint8_t));
+
+        buffer_add(buffer,datos_de_registro,sizeof(uint8_t));
 
         solicitar_escribir_en_memoria(dir_fisica, datos_de_registro, sizeof(uint8_t));
 
@@ -362,18 +375,27 @@ void resize(uint32_t tamanio){
 }
 
 void copy_string(uint32_t tamanio){
-    uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro("SI");
+    uint32_t* contenido_auxiliar = malloc(uint32_t); 
+    contenido_auxiliar = (uint32_t*)obtener_contenido_registro("SI");
     dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
 
-    solicitar_leer_en_memoria(dir_fisica, tamanio);
-    void* datos_de_memoria = leer_de_memoria(tamanio);
+    t_buffer buffer = buffer_create(tamanio);
+    
+    void* datos_de_memoria = leer_en_memoria_mas_de_una_pagina(buffer, tamanio, tamanio);// uno voy a ir modificandolo y el otro tamanio abs
+    
+    buffer_destroy(buffer);
+    
+    t_buffer buffer_auxiliar = buffer_create(tamanio);
+    
+    buffer_add(buffer_auxiliar, datos_de_memoria, tamanio);
 
     contenido_auxiliar = (uint32_t*)obtener_contenido_registro("DI");
+
     dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(tlb, PID);
 
-    solicitar_escribir_en_memoria(dir_fisica, datos_de_memoria, tamanio);
+    escribir_en_memoria_mas_de_una_pagina(buffer, tamanio);
 
     free(contenido_auxiliar);
     free(datos_de_memoria);
