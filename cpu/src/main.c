@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <main.h>
 
-t_TLB* tlb;
 
 int main(int argc, char* argv[]) {
     pthread_t levantar_server, conexion, escuchar_conexiones;

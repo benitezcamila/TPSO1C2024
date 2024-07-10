@@ -1,7 +1,4 @@
-r#include <ciclo_de_instruccion.h>
-#include <tlb.h>
-#include <cpu_utils.h>
-#include <math.h>
+#include "ciclo_de_instruccion.h"
 
 uint32_t PID;
 registros_CPU* contexto_registros;
@@ -132,12 +129,12 @@ void check_interrupt(){
 uint32_t mmu(uint32_t pid){
     uint32_t numero_pagina = floor(dir_logica / tamanio_pagina);
     uint32_t desplazamiento = dir_logica - (numero_pagina * tamanio_pagina);
-    uint32_t marco = buscar_en_TLB(tlb, pid, numero_pagina);
+    uint32_t marco = buscar_en_TLB(pid, numero_pagina);
 
     if(marco == -1){ //TLB Miss
         log_info(logger_cpu, "PID: %d - TLB MISS - Pagina: %d", PID, numero_pagina);
         marco = solicitar_marco_a_memoria(numero_pagina);
-        actualizar_TLB(tlb, pid, numero_pagina, marco);
+        actualizar_TLB(pid, numero_pagina, marco);
         
         if(marco == -1){
             log_info(logger_errores_cpu, "La memoria no envió el MARCO_BUSCADO.");
@@ -197,7 +194,7 @@ void mov_in(char* registro_datos, char* registro_direccion){
     }
 
     dir_logica = *contenido_auxiliar;
-    dir_fisica = mmu(tlb, PID);
+    dir_fisica = mmu(PID);
     uint32_t offset = dir_fisica % tamanio_pagina;
 
     if(!(registro_datos[1] == 'X')){
@@ -230,7 +227,7 @@ void mov_out(char* registro_direccion, char* registro_datos){
     }
 
     dir_logica = *contenido_auxiliar;
-    dir_fisica = mmu(tlb, PID);
+    dir_fisica = mmu(PID);
     
     if(!(registro_datos[1] == 'X')){
         void* datos_de_registro = obtener_contenido_registro(registro_datos);
@@ -363,7 +360,7 @@ void copy_string(uint32_t tamanio){
     uint32_t* contenido_auxiliar = malloc(sizeof(uint32_t)); 
     contenido_auxiliar = (uint32_t*)obtener_contenido_registro("SI");
     dir_logica = *contenido_auxiliar;
-    dir_fisica = mmu(tlb, PID);
+    dir_fisica = mmu(PID);
 
     t_buffer* buffer = buffer_create(tamanio);
     
@@ -378,7 +375,7 @@ void copy_string(uint32_t tamanio){
     contenido_auxiliar = (uint32_t*)obtener_contenido_registro("DI");
 
     dir_logica = *contenido_auxiliar;
-    dir_fisica = mmu(tlb, PID);
+    dir_fisica = mmu(PID);
 
     escribir_en_memoria_mas_de_una_pagina(buffer, tamanio);
 
@@ -542,7 +539,7 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
     }
 
     dir_logica = *contenido_auxiliar;
-    dir_fisica = mmu(tlb, PID);
+    dir_fisica = mmu(PID);
 
     if(!(registro_tamanio[1] == 'X')){
         void* tamanio = obtener_contenido_registro(registro_tamanio);
@@ -612,7 +609,7 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
     }
 
     dir_logica = *contenido_auxiliar;
-    dir_fisica = mmu(tlb, PID);
+    dir_fisica = mmu(PID);
 
     if(!(registro_tamanio[1] == 'X')){
         void* tamanio = obtener_contenido_registro(registro_tamanio);
@@ -648,8 +645,8 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
 
         if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
-            t_buffer* buffer = buffer_create(sizeof(uint8_t));
-            buffer_add_uint32(buffer, *tamanio);
+            t_buffer* buffer = buffer_create(sizeof(uint32_t));
+            buffer_add_uint32(buffer, *(uint32_t*)tamanio);
 
             solicitudes_fs_a_kernel(FS_READ, nombre_interfaz, nombre_archivo, buffer, sizeof(uint8_t),
                                             puntero_registro, sizeof(uint32_t));

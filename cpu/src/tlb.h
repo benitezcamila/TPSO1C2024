@@ -19,9 +19,11 @@ typedef struct {
     t_entrada_TLB* entradas;
     uint32_t capacidad;
     uint32_t count;
-    temporal_t* tiempo_actual; // Para llevar el tiempo en FIFO
+    t_temporal* tiempo_actual; // Para llevar el tiempo en FIFO
     char* algoritmo; // Algoritmo de reemplazo ("FIFO" o "LRU")
 } t_TLB;
+
+extern t_TLB* tlb;
 
 void inicializar_TLB(uint32_t, char*);
 void destruir_TLB();

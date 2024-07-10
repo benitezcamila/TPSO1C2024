@@ -11,6 +11,7 @@
 #include <semaphore.h>
 #include <ciclo_de_instruccion.h>
 #include <utils/estructuras.h>
+#include "tlb.h"
 
 typedef struct{
     int socket_server_I;

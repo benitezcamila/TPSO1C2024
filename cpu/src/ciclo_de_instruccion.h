@@ -4,6 +4,10 @@
 #include <utils/estructuras.h>
 #include <commons/string.h>
 #include "tlb.h"
+#include <cpu_utils.h>
+#include <math.h>
+
+
 
 extern uint32_t PID;
 extern registros_CPU* contexto_registros;

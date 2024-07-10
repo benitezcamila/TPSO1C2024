@@ -136,7 +136,7 @@ void enviar_contexto_a_kernel(motivo_desalojo motivo){
 
 void envios_de_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
                            uint32_t tamanio_data, t_buffer* buffer){ // tamanio std
-    uint32_t direc_fisica = mmu(tlb, dir_logica);                        
+    uint32_t direc_fisica = mmu(dir_logica);                        
     uint32_t offset = direc_fisica % tamanio_pagina;
     uint32_t tamanio_disponible = min(tamanio_pagina - offset, tamanio_data);
     void* tamanio_std = malloc(tamanio_disponible);
@@ -206,7 +206,7 @@ void solicitar_truncate_fs_a_kernel(t_instruccion motivo_io, char* nombre_interf
 void solicitudes_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo,
                                 t_buffer* buffer, uint32_t tamanio_data1,
                                 void* puntero_archivo, uint32_t tamanio_data2){ 
-    uint32_t direc_fisica = mmu(tlb, dir_logica);                        
+    uint32_t direc_fisica = mmu(dir_logica);                        
     uint32_t offset = direc_fisica % tamanio_pagina;
     uint32_t tamanio_disponible = min(direc_fisica - offset, tamanio_data1);
     void* tamanio_fs = malloc(tamanio_disponible);
@@ -317,7 +317,7 @@ uint32_t cantidad_paginas_que_ocupa(uint32_t tamanio, uint32_t desplazamiento){
 }
 
 void* leer_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t tamanio_auxiliar, uint32_t tamanio_total){
-    uint32_t direccion_fisica = mmu(tlb, dir_logica);
+    uint32_t direccion_fisica = mmu(dir_logica);
     uint32_t offset = direccion_fisica % tamanio_pagina;
     uint32_t tamanio_a_leer = min(tamanio_auxiliar, tamanio_pagina-offset);
     void* leido =  solicitar_leer_en_memoria(direccion_fisica, tamanio_a_leer);
@@ -342,7 +342,7 @@ void* leer_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t tama
 }
 
 void escribir_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t tamanio_total){
-    uint32_t direccion_fisica = mmu(tlb, dir_logica);
+    uint32_t direccion_fisica = mmu(dir_logica);
     uint32_t offset = direccion_fisica % tamanio_pagina;
     uint32_t tamanio_a_escribir = min(tamanio_total, tamanio_pagina-offset);
     void* data_a_escribir = malloc(tamanio_a_escribir);

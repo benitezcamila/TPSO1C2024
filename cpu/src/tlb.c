@@ -1,12 +1,14 @@
 #include <tlb.h>
 #include <cpu_utils.h>
 
+t_TLB* tlb;
+
 //Función que inicializa la TLB.
 void inicializar_TLB(uint32_t capacidad, char* algoritmo){
     tlb->entradas = malloc(sizeof(t_entrada_TLB) * capacidad);
     tlb->capacidad = capacidad;
     tlb->count = 0;
-    tlb->tiempo_actual = temporal_create(void);
+    tlb->tiempo_actual = temporal_create();
     tlb->algoritmo = string_duplicate(algoritmo);
 }
 
@@ -37,12 +39,12 @@ uint32_t buscar_en_TLB(uint32_t PID, uint32_t pagina){
 
 //Función para agregar entrada a la TLB.
 void actualizar_TLB(uint32_t pid, uint32_t pagina, uint32_t marco){
-    t_entrada_TLB nueva_entrada = {pid, pagina, marco, gettime(tlb->tiempo_actual)};
+    t_entrada_TLB nueva_entrada = {pid, pagina, marco, temporal_gettime(tlb->tiempo_actual)};
     
     if(tlb->count < tlb->capacidad){
         tlb->entradas[tlb->count++] = nueva_entrada;
     } else{
-        reemplazo_en_TLB(tlb, nueva_entrada);
+        reemplazo_en_TLB(nueva_entrada);
     }
 }
 
