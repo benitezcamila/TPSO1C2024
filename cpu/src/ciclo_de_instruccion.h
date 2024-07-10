@@ -20,7 +20,7 @@ void decode();
 void execute();
 void check_interrupt();
 void ciclo_de_instruccion();
-uint32_t mmu(t_TLB*, uint32_t);
+uint32_t mmu(uint32_t);
 
 //Funciones de instrucciones.
 void set(char*, uint32_t);

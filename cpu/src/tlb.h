@@ -23,10 +23,10 @@ typedef struct {
     char* algoritmo; // Algoritmo de reemplazo ("FIFO" o "LRU")
 } t_TLB;
 
-void inicializar_TLB(t_TLB*, uint32_t, char*);
-void destruir_TLB(t_TLB*);
-uint32_t buscar_en_TLB(t_TLB*, uint32_t, uint32_t);
-void actualizar_TLB(t_TLB*, uint32_t, uint32_t, uint32_t);
-void reemplazo_en_TLB(t_TLB*, t_entrada_TLB);
+void inicializar_TLB(uint32_t, char*);
+void destruir_TLB();
+uint32_t buscar_en_TLB(uint32_t, uint32_t);
+void actualizar_TLB(uint32_t, uint32_t, uint32_t);
+void reemplazo_en_TLB(t_entrada_TLB);
 
 #endif

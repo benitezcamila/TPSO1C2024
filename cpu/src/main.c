@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
     iniciar_logger();
     obtener_config();
     tlb = malloc(sizeof(t_TLB));
-    inicializar_TLB(tlb, configuracion.CANTIDAD_ENTRADAS_TLB, configuracion.ALGORITMO_TLB);
+    inicializar_TLB(configuracion.CANTIDAD_ENTRADAS_TLB, configuracion.ALGORITMO_TLB);
 
     pthread_create(&levantar_server, NULL,(void*)iniciar_server_kernel, NULL);
     pthread_create(&conexion, NULL, (void*)establecer_conexion_memoria, NULL);
@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     sem_init(&semaforo, 0, 0);
     sem_wait(&semaforo);
 
-    destruir_TLB(tlb);
+    destruir_TLB();
 
     return 0;
 }

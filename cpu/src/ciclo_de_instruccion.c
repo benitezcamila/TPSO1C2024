@@ -129,7 +129,7 @@ void check_interrupt(){
 }
 
 // Función para traducir direcciones lógicas a físicas.
-uint32_t mmu(t_TLB* tlb, uint32_t pid){
+uint32_t mmu(uint32_t pid){
     uint32_t numero_pagina = floor(dir_logica / tamanio_pagina);
     uint32_t desplazamiento = dir_logica - (numero_pagina * tamanio_pagina);
     uint32_t marco = buscar_en_TLB(tlb, pid, numero_pagina);
@@ -141,8 +141,7 @@ uint32_t mmu(t_TLB* tlb, uint32_t pid){
         
         if(marco == -1){
             log_info(logger_errores_cpu, "La memoria no envió el MARCO_BUSCADO.");
-            return -1;
-            exit(aylu && valen ); // para q no se sienta celosa
+            exit(EXIT_FAILURE);
        }
     }
 
