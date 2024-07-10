@@ -320,15 +320,15 @@ void* leer_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t tama
     uint32_t direccion_fisica = mmu(tlb, dir_logica);
     uint32_t offset = direccion_fisica % tamanio_pagina;
     uint32_t tamanio_a_leer = min(tamanio_auxiliar, tamanio_pagina-offset);
+    void* leido =  solicitar_leer_en_memoria(direccion_fisica, tamanio_a_leer);
     
-    buffer_add(buffer_auxiliar, solicitar_leer_en_memoria(direccion_fisica, tamanio_a_leer), tamanio_a_leer);
+    buffer_add(buffer_auxiliar, leido, tamanio_a_leer);
     tamanio_auxiliar =- tamanio_a_leer;
     
-    //TODO agregar el VALOR que se lee del buffer.
-    log_info(logger_cpu, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, direccion_fisica, 0);
+    log_info(logger_cpu, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, direccion_fisica, leido);
     
     if(tamanio_auxiliar >= 0){
-        dir_logica = floor(dir_logica)+ 1;    
+        dir_logica = floor(dir_logica)+ 1;
      
         leer_en_memoria_mas_de_una_pagina(buffer_auxiliar, tamanio_auxiliar, tamanio_total);    
     }
@@ -351,8 +351,7 @@ void escribir_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t t
     tamanio_total -= tamanio_a_escribir;
     solicitar_escribir_en_memoria(direccion_fisica, data_a_escribir, tamanio_a_escribir);
     
-    //TODO agregar el VALOR que se escribe del buffer.
-    log_info(logger_cpu, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d", PID, direccion_fisica, 0);
+    log_info(logger_cpu, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d", PID, direccion_fisica, data_a_escribir);
 
     if(tamanio_total > 0){
         dir_logica = floor(dir_logica) + 1;
@@ -360,7 +359,7 @@ void escribir_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t t
     }
     else{
         return;
-    } 
+    }
 }
 
 
@@ -469,6 +468,3 @@ pthread_join(hilo_kernel_dispatch,NULL);
 pthread_join(hilo_memoria,NULL);
 }
 */
-
-
-
