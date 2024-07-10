@@ -8,6 +8,8 @@
 #include <readline/history.h>
 #include <cpu_utils.h>
 
+extern t_TLB* tlb;
+
 void iniciar_semaforos();
 
 #endif

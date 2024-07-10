@@ -1,4 +1,4 @@
-#include <ciclo_de_instruccion.h>
+r#include <ciclo_de_instruccion.h>
 #include <tlb.h>
 #include <cpu_utils.h>
 #include <math.h>
@@ -105,6 +105,10 @@ void execute(){
 
 //NO SÉ SI LE FALTA ALGO. CHECKEAR.
 void check_interrupt(){
+    char* motivo_interr[]= {
+        "DESALOJO_QUANTUM", "DESALOJO_POR_USUARIO"
+    };
+
     if(llego_interrupcion == 1){
         llego_interrupcion = 0;
 
@@ -118,7 +122,7 @@ void check_interrupt(){
             break;
 
         default:
-            log_info(logger_errores_cpu, "Ups! Pasó algo raro. El motivo de interrupción obtenido es: %d", motivo_interrupcion);
+            log_info(logger_errores_cpu, "Ups! Pasó algo raro. El motivo de interrupción obtenido es: %s", motivo_interr[motivo_interrupcion]);
             break;
         }
     }
@@ -128,22 +132,23 @@ void check_interrupt(){
 uint32_t mmu(t_TLB* tlb, uint32_t pid){
     uint32_t numero_pagina = floor(dir_logica / tamanio_pagina);
     uint32_t desplazamiento = dir_logica - (numero_pagina * tamanio_pagina);
-    int marco = buscar_en_TLB(tlb, pid, numero_pagina);
+    uint32_t marco = buscar_en_TLB(tlb, pid, numero_pagina);
 
-    if (marco == -1) { //TLB Miss
+    if(marco == -1){ //TLB Miss
         log_info(logger_cpu, "PID: %d - TLB MISS - Pagina: %d", PID, numero_pagina);
         marco = solicitar_marco_a_memoria(numero_pagina);
-
+        actualizar_TLB(tlb, pid, numero_pagina, marco);
+        
         if(marco == -1){
             log_info(logger_errores_cpu, "La memoria no envió el MARCO_BUSCADO.");
-            return -1; //Entiendo que este return es válido.
-        }
+            return -1;
+            exit(aylu && valen ); // para q no se sienta celosa
+       }
     }
 
     //No sé si este log está bien puesto acá
     log_info(logger_cpu, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d", PID, numero_pagina, marco);
-    actualizar_TLB(tlb, pid, numero_pagina, marco);
-
+  
     return (marco * tamanio_pagina) + desplazamiento;
 }
 
