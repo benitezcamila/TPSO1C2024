@@ -248,7 +248,7 @@ void solicitar_write_read_fs_a_kernel(t_instruccion motivo_io, char* nombre_inte
 }
 
 void solicitar_tamanio_pagina(){
-    op_code* codigo_operacion;
+    op_code* codigo_operacion = malloc(sizeof(op_code));
     *codigo_operacion = SOLICITUD_TAMANIO_PAGINA;
 
     send(sockets.socket_memoria, codigo_operacion, sizeof(op_code),0);

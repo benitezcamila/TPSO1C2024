@@ -118,7 +118,7 @@ void procesar_conexion(void* void_args) {
             buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
             a_enviar = buscar_marco_pagina (buffer_de_cpu);
             enviar_paquete((t_paquete*) a_enviar, sockets.socket_cliente_CPU);
-        case SOLICITUD_TAMANO_PAGINA: //a cpu
+        case SOLICITUD_TAMANIO_PAGINA: //a cpu
             enviar_paquete(enviar_tam_memoria(), sockets.socket_cliente_CPU);
         default:
             break;

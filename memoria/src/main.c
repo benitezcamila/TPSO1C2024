@@ -18,6 +18,9 @@ int main(int argc, char* argv[]) {
     pthread_join(escuchar,NULL);
     sem_destroy(&sem_escuchar);
     list_destroy(listaDeProcesos);
-    
+    sem_t semaforo;
+    sem_init(&semaforo, 0, 0);
+    sem_wait(&semaforo);
+
     return 0;
 }

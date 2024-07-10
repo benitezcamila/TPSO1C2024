@@ -217,7 +217,7 @@ t_paquete* buscar_marco_pagina (t_buffer* buffer_de_cpu){
 }
 
 t_paquete* enviar_tam_memoria(){
-    t_paquete* paquete = crear_paquete(TAMANO_PAGINA, sizeof(uint32_t));
+    t_paquete* paquete = crear_paquete(TAMANIO_PAGINA, sizeof(uint32_t));
     buffer_add_uint32 (paquete->buffer, configuracion.TAM_PAGINA);
     return paquete;
 }

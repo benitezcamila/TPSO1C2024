@@ -12,7 +12,9 @@ char* mensaje_listado;
 void ejecutar_consola_kernel() {
     char *input;
     while ((input = readline("Kernel> ")) != NULL) {
-        add_history(input);
+        if (strlen(input) > 0) {
+            add_history(input);
+        }
 
         int tipo_comando = get_tipo_comando(input);
         switch (tipo_comando) {
