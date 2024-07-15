@@ -5,6 +5,7 @@
 #include <commons/collections/list.h>
 #include <commons/log.h>
 #include <utils/conexion.h>
+#include "utils/estructuras.h"
 
 
 

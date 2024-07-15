@@ -5,6 +5,7 @@
 #include <commons/collections/list.h>
 #include <commons/log.h>
 #include <stdint.h>
+#include "utils/estructuras.h"
 
 typedef struct {
     uint16_t PUERTO_ESCUCHA;

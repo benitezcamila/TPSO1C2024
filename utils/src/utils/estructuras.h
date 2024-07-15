@@ -1,6 +1,9 @@
 #ifndef ESTRUCTURAS_H_
 #define ESTRUCTURAS_H_
 
+#define BASE_DIR "/home/utnso/Desktop/tp-2024-1c-Chiripiorca/"
+#define PATH_ABSOLUTO(path) BASE_DIR path
+
 #include <commons/log.h>
 #include <stdint.h>
 

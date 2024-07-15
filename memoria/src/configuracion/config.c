@@ -16,6 +16,6 @@ void obtener_config(){
 }
 
 void iniciar_logger(){
-    logger_memoria = log_create("logs/memoria.log","Memoria",1,LOG_LEVEL_INFO);
-    logger_conexiones = log_create("logs/conexiones.log","Conexion",1,LOG_LEVEL_INFO);
+    logger_memoria = log_create(PATH_ABSOLUTO("memoria/logs/memoria.log"),"Memoria",1,LOG_LEVEL_INFO);
+    logger_conexiones = log_create(PATH_ABSOLUTO("memoria/logs/conexiones.log"),"Conexion",1,LOG_LEVEL_INFO);
 }

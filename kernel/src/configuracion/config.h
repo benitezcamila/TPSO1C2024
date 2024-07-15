@@ -6,6 +6,7 @@
 #include <commons/string.h>
 #include <commons/log.h>
 #include <stdint.h>
+#include "utils/estructuras.h"
 
 
 typedef struct {
