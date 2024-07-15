@@ -137,8 +137,8 @@ void ejecutar_FIFO(t_pcb *a_ejecutar){
 
     sem_wait(&proceso_ejecutando);
     a_ejecutar->estado = EXEC;
-    log_info(logger_kernel, "PID: %u - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
     crear_paquete_contexto_exec(a_ejecutar);
+    log_info(logger_kernel, "PID: %u - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
 
 
 }
@@ -147,9 +147,9 @@ void ejecutar_RR(t_pcb *a_ejecutar){
 
     sem_wait(&proceso_ejecutando);
     a_ejecutar->estado = EXEC;
-    log_info(logger_kernel, "PID: %u - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
     //creo y envio el contexto de ejecucion
     ejecutar_con_quantum(a_ejecutar);
+    log_info(logger_kernel, "PID: %u - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
     
 
 }
@@ -158,9 +158,9 @@ void ejecutar_VRR(t_pcb *a_ejecutar){
 
     sem_wait(&proceso_ejecutando);
     a_ejecutar->estado = EXEC;
-    log_info(logger_kernel, "PID: %u - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
     //creo y envio el contexto de ejecucion
     ejecutar_con_quantum(a_ejecutar);
+    log_info(logger_kernel, "PID: %u - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);
 
 }
 
