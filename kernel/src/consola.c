@@ -9,20 +9,33 @@
 
 char* mensaje_listado;
 
-void ejecutar_consola_kernel() {
-    char *input;
-    while ((input = readline("Kernel> ")) != NULL) {
-        if (strlen(input) > 0) {
-            add_history(input);
-        }
+char* construir_ruta(const char* path_relativo) {
+    size_t len_base = strlen(BASE_DIR);
+    size_t len_relativo = strlen(path_relativo);
+    char* path_completo = malloc(len_base + len_relativo + 1); // +1 para el null terminator
+    if (path_completo == NULL) {
+        perror("No se pudo asignar memoria para el path completo");
+        exit(EXIT_FAILURE);
+    }
+    strcpy(path_completo, BASE_DIR);
+    strcat(path_completo, path_relativo);
+    return path_completo;
+}
 
-        int tipo_comando = get_tipo_comando(input);
+void ejecutar_comandos(char* input){
+    int tipo_comando = get_tipo_comando(input);
         switch (tipo_comando) {
-            case EJECUTAR_SCRIPT:
-                ejecutar_script(input + 16);
-                break;
-            case INICIAR_PROCESO_CONSOLA:
-                iniciar_proceso(input + 16);
+            case EJECUTAR_SCRIPT:{
+                char* path = construir_ruta(input + 16);
+                ejecutar_script(path);
+                free(path);
+            }
+                break; 
+            case INICIAR_PROCESO_CONSOLA:{
+                char* path = construir_ruta(input + 16);
+                iniciar_proceso(path);
+                free(path);
+            }
                 break;
             case FINALIZAR_PROCESO_CONSOLA:
                 finalizar_proceso(input + 18);
@@ -44,6 +57,16 @@ void ejecutar_consola_kernel() {
                 break;
         }
 
+}
+
+void ejecutar_consola_kernel() {
+    char *input;
+    while ((input = readline("Kernel> ")) != NULL) {
+        if (strlen(input) > 0) {
+            add_history(input);
+        }
+        ejecutar_comandos(input);
+
         free(input);
     }
 }
@@ -60,6 +83,7 @@ void ejecutar_script(const char *path) {
         line[strcspn(line, "\n")] = '\0';
         printf("Ejecutando comando: %s\n", line);
         // Add your command execution logic here
+        ejecutar_comandos(line);
     }
     fclose(file);
 }

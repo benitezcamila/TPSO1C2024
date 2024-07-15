@@ -140,6 +140,7 @@ void procesar_conexion(void* void_args) {
 }
 
 void establecer_conexiones(){
+    sleep(1);
     pthread_t cpu_D, cpu_I, memoria;
     pthread_create(&cpu_D,NULL, (void*) establecer_conexion_cpu_D, NULL);
     pthread_create(&cpu_I,NULL, (void*) establecer_conexion_cpu_I, NULL);
