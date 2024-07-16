@@ -35,6 +35,7 @@ void establecer_conexion_memoria(){
 }
 
 void atender_conexiones(){
+    sleep(1);
     pthread_t ki, kd;
     pthread_create(&ki,NULL,(void*)server_escuchar,(void*)(sockets.socket_server_I));
     pthread_create(&kd,NULL,(void*)server_escuchar,(void*)(sockets.socket_server_D));
@@ -79,6 +80,7 @@ void procesar_conexion(void* void_args) {
         switch (codigo_op) {
         case CONTEXTO_EXEC:
             ind_contexto_kernel = 1;
+            recibir_contexto_ejecucion(cliente_socket);
             while(ind_contexto_kernel == 1){
                 ciclo_de_instruccion();
             }
@@ -100,23 +102,15 @@ void procesar_conexion(void* void_args) {
     free(nombre_cliente);
 }
 
-void recibir_contexto_ejecucion(){
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    recv(sockets.socket_server_D, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
+void recibir_contexto_ejecucion(int cliente_socket){
 
-    if(paquete->codigo_operacion == CONTEXTO_EXEC){
-        recv(sockets.socket_server_D, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
-        paquete->buffer->stream = malloc(paquete->buffer->size);
-
-        recv(sockets.socket_server_D, paquete->buffer->stream, sizeof(uint32_t), MSG_WAITALL);
-        PID =  buffer_read_uint32(paquete->buffer);
-
-        recv(sockets.socket_server_D, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
-        buffer_read(paquete->buffer, contexto_registros, sizeof(registros_CPU));
-    }
-    else{
-        log_info(logger_errores_cpu, "El contexto de ejecución no fue recibido correctamente. El código de operación recibido fue: %d", paquete->codigo_operacion);
-    }
+        
+        t_buffer* buffer = recibir_todo_elbuffer(cliente_socket);
+        PID =  buffer_read_uint32(buffer);
+        buffer_read(buffer,contexto_registros, sizeof(registros_CPU));
+        
+        buffer_destroy(buffer);
+    
 }
 
 //NO SÉ SI ESTÁ BIEN. CHECKEAR.
@@ -268,30 +262,30 @@ void solicitar_tamanio_pagina(){
 }
 
 void solicitar_instruccion_a_memoria(){
-    t_paquete* paquete = crear_paquete(SOLICITUD_INSTRUCCION, sizeof(uint32_t));
+    t_paquete* paquete = crear_paquete(SOLICITUD_INSTRUCCION, sizeof(uint32_t) * 2);
+    buffer_add_uint32(paquete->buffer, PID);
     buffer_add_uint32(paquete->buffer, contexto_registros->PC);
 
     enviar_paquete(paquete, sockets.socket_memoria);
 }
 
 void recibir_instruccion_de_memoria(uint32_t* longitud_linea_instruccion){
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    recv(sockets.socket_memoria, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
-
-    if(paquete->codigo_operacion == INSTRUCCION){
-        recv(sockets.socket_memoria, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+    op_code* codigo = malloc(sizeof(op_code));
+    recv(sockets.socket_memoria, codigo, sizeof(op_code), MSG_WAITALL);
+    if(*codigo == INSTRUCCION){
+        uint32_t size =0;
+        recv(sockets.socket_memoria, &size, sizeof(uint32_t), MSG_WAITALL);
+        t_paquete* paquete = crear_paquete(*codigo,size);
         paquete->buffer->stream = malloc(paquete->buffer->size);
 
         recv(sockets.socket_memoria, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
         linea_de_instruccion = buffer_read_string(paquete->buffer, longitud_linea_instruccion);
+        eliminar_paquete(paquete);
     }
     else{
-        log_info(logger_errores_cpu, "El código de operación recibido de Memoria no fue una instrucción. El código de operación recibido fue: %d", paquete->codigo_operacion);
+        log_info(logger_errores_cpu, "El código de operación recibido de Memoria no fue una instrucción. El código de operación recibido fue: %d", *codigo);
     }
-
-    free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
+    free(codigo);
 }
 
 void recibir_respuesta_resize_memoria(uint32_t PID){

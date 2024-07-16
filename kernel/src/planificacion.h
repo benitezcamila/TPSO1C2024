@@ -40,6 +40,7 @@ t_pcb* proximo_ejecutar_VRR();
 void ejecutar_con_quantum(t_pcb *);
 void ejecutar_FIFO(t_pcb *);
 void ejecutar_RR(t_pcb *);
+void ejecutar_VRR(t_pcb *);
 void esperar_interrupcion_quantum(t_pcb *);
 void pausar_planificacion();
 void reanudar_planificacion();

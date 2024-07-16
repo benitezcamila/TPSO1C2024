@@ -78,7 +78,7 @@ void procesar_conexion(void* void_args) {
 
         switch (cop)
         {
-        case ENVIAR_INSTRUCCION:
+        case SOLICITUD_INSTRUCCION:
             t_buffer* buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
             enviar_instrucciones_cpu(buffer_de_cpu);
             log_info(logger_memoria, "Inicio envio de instrucciones");
@@ -139,11 +139,11 @@ t_list* leer_instrucciones_del_path(char* rutaKernel) {
    
 
     // Concatenar la ruta de configuracion.PATH_INSTRUCCIONES
-    strcat(rutaKernel, configuracion.PATH_INSTRUCCIONES); 
-
+    char *archivo = strdup(configuracion.PATH_INSTRUCCIONES);
+    string_append(&archivo, rutaKernel);
     // Abrir el archivo
-   
-    FILE* archivo_instrucciones = fopen(rutaKernel, "rb");
+
+    FILE* archivo_instrucciones = fopen(archivo, "rb");
    
     if (archivo_instrucciones == NULL) {
         perror("Error opening file");

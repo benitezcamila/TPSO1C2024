@@ -31,7 +31,7 @@ void establecer_conexion_memoria();
 void atender_conexiones();
 void procesar_conexion(void*);
 int server_escuchar(int);
-void recibir_contexto_ejecucion();
+void recibir_contexto_ejecucion(int);
 void recibir_interrupcion_de_kernel();
 void enviar_contexto_a_kernel(motivo_desalojo);
 void envios_de_std_a_kernel(t_instruccion, char*, uint32_t, t_buffer*);

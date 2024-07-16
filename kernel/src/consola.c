@@ -32,9 +32,7 @@ void ejecutar_comandos(char* input){
             }
                 break; 
             case INICIAR_PROCESO_CONSOLA:{
-                char* path = construir_ruta(input + 16);
-                iniciar_proceso(path);
-                free(path);
+                iniciar_proceso(input + 16);
             }
                 break;
             case FINALIZAR_PROCESO_CONSOLA:

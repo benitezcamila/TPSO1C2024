@@ -63,7 +63,7 @@ void crear_proceso(char* path){
     queue_push(cola_new,pcb);
     sem_post(&hay_procesos_nuevos);
     uint32_t tam_string = string_length(pcb->pathOperaciones)+1;
-    t_paquete* paquete = crear_paquete(INICIAR_PROCESO,sizeof(uint32_t)*2+tam_string);
+    t_paquete* paquete = crear_paquete(INICIAR_PROCESO,sizeof(uint32_t)+tam_string);
     buffer_add_uint32(paquete->buffer,pcb->pid);
     buffer_add_string(paquete->buffer,tam_string,pcb->pathOperaciones);
     enviar_paquete(paquete,sockets.socket_memoria);
@@ -92,30 +92,31 @@ void planificar_a_largo_plazo(){
 
 void planificar_a_corto_plazo_segun_algoritmo(){
     char *algoritmo_planificador = configuracion.ALGORITMO_PLANIFICACION;
-    sem_wait(&sem_proceso_en_ready);
     while(1){
+    sem_wait(&sem_proceso_en_ready);
     if(pausar_plani){
             sem_wait(&sem_pausa_planificacion_corto_plazo);
             reanudar_planificacion();
         }
 
-    if(strcmp(algoritmo_planificador,"FIFO")){ 
+    if(strcmp(algoritmo_planificador,"FIFO") == 0){ 
         
         t_pcb *a_ejecutar = proximo_ejecutar_FIFO();
         ejecutar_FIFO(a_ejecutar);
         }
 
-    else if (strcmp(algoritmo_planificador, "RR")){
+    else if (strcmp(algoritmo_planificador, "RR") == 0){
 
         t_pcb* a_ejecutar = proximo_ejecutar_RR();
         ejecutar_RR(a_ejecutar);
         }
 
-    else if (strcmp(algoritmo_planificador, "VRR")){
+    else if (strcmp(algoritmo_planificador, "VRR") == 0){
         t_pcb* a_ejecutar = proximo_ejecutar_VRR();
-        ejecutar_RR(a_ejecutar);
+        ejecutar_VRR(a_ejecutar);
         }
     }
+    free(algoritmo_planificador);
 }
 
 t_pcb* proximo_ejecutar_FIFO(){
