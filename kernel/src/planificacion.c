@@ -63,7 +63,7 @@ void crear_proceso(char* path){
     queue_push(cola_new,pcb);
     sem_post(&hay_procesos_nuevos);
     uint32_t tam_string = string_length(pcb->pathOperaciones)+1;
-    t_paquete* paquete = crear_paquete(INICIAR_PROCESO,sizeof(uint32_t)+tam_string);
+    t_paquete* paquete = crear_paquete(INICIAR_PROCESO,sizeof(uint32_t)*2+tam_string);
     buffer_add_uint32(paquete->buffer,pcb->pid);
     buffer_add_string(paquete->buffer,tam_string,pcb->pathOperaciones);
     enviar_paquete(paquete,sockets.socket_memoria);

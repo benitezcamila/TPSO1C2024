@@ -16,16 +16,15 @@ void inicializar_memoria(){
     bitMap = (int *)malloc(cantFrames * sizeof(int));
     memset(bitMap, 0 , sizeof(int) * cantFrames);
     tabla_global = dictionary_create();
+    listaDeProcesos = list_create();
 } 
 
 void iniciar_proceso(t_buffer* bufferDeKernel){
     procesoListaInst* procesos = malloc(sizeof(procesoListaInst));
-
 // ------------ cargar buffer kernel -------//
     procesos->pid = buffer_read_uint32(bufferDeKernel);
     procesos->instruccionesParaCpu = list_create();
-    uint32_t sizeDelProceso = buffer_read_uint8(bufferDeKernel);    
-
+    uint32_t sizeDelProceso = 0;
 // ------------ leo archivo instrucciones ---------//    
     procesos->instruccionesParaCpu = leer_instrucciones_del_path(buffer_read_string(bufferDeKernel,&sizeDelProceso));
 
@@ -79,43 +78,43 @@ void procesar_conexion(void* void_args) {
         switch (cop)
         {
         case SOLICITUD_INSTRUCCION:
-            t_buffer* buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
+            t_buffer* buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
             enviar_instrucciones_cpu(buffer_de_cpu);
             log_info(logger_memoria, "Inicio envio de instrucciones");
             break;
         case INICIAR_PROCESO:
-            t_buffer* buffer_de_kernel = recibir_todo_elbuffer(sockets.socket_cliente_kernel);
+            t_buffer* buffer_de_kernel = recibir_todo_elbuffer(cliente_socket);
             iniciar_proceso(buffer_de_kernel);
             log_info(logger_memoria, "Inicio proceso");
             break;
     
 
         case AJUSTAR_TAMANIO:
-            buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
+            buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
             ajustar_tam_proceso( buffer_de_cpu);
             log_info(logger_memoria, "Ajusto tamanio proceso");
             break;
 
         case FINALIZAR_PROCESO:
-             buffer_de_kernel = recibir_todo_elbuffer(sockets.socket_cliente_kernel);
+             buffer_de_kernel = recibir_todo_elbuffer(cliente_socket);
              finalizar_proceso(buffer_de_kernel);
              log_info(logger_memoria, "Finalizo el proceso");
             break;
         case ACCESS_ESPACIO_USUARIO_ES:
-            t_buffer* buffer_ENTRADA_SALIDA = recibir_todo_elbuffer(sockets.socket_cliente_E_S);
+            t_buffer* buffer_ENTRADA_SALIDA = recibir_todo_elbuffer(cliente_socket);
             a_enviar = access_espacio_usuario(buffer_ENTRADA_SALIDA);
             if(a_enviar == NULL) enviar_hanshake(sockets.socket_cliente_E_S,"ok!");//lectura
             enviar_paquete((t_paquete*)a_enviar, sockets.socket_cliente_E_S); //escritura
             break;
         case ACCESS_ESPACIO_USUARIO_CPU:
-            buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
-            a_enviar = access_espacio_usuario(buffer_ENTRADA_SALIDA);
-            if(a_enviar == NULL) enviar_hanshake(sockets.socket_cliente_CPU,"ok!");//escritura
-            enviar_paquete((t_paquete*)a_enviar, sockets.socket_cliente_CPU);//lectura
+            buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
+            a_enviar = access_espacio_usuario(buffer_de_cpu);
+            if(a_enviar == NULL) enviar_hanshake(cliente_socket,"ok!");//escritura
+            enviar_paquete((t_paquete*)a_enviar, cliente_socket);//lectura
         break;
 
         case ACCESO_TABLA_PAGINAS://cpu
-            buffer_de_cpu = recibir_todo_elbuffer(sockets.socket_cliente_CPU);
+            buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
             a_enviar = buscar_marco_pagina (buffer_de_cpu);
             enviar_paquete((t_paquete*) a_enviar, sockets.socket_cliente_CPU);
         case SOLICITUD_TAMANIO_PAGINA: //a cpu
