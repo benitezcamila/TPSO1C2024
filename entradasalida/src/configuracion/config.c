@@ -46,6 +46,8 @@ void obtener_config(char* path_config){
             configuracion.TIEMPO_UNIDAD_TRABAJO = config_get_int_value(config,"TIEMPO_UNIDAD_TRABAJO");
             configuracion.IP_KERNEL = config_get_string_value(config,"IP_KERNEL");
             configuracion.PUERTO_KERNEL = config_get_int_value(config,"PUERTO_KERNEL");
+            configuracion.IP_MEMORIA = config_get_string_value(config,"IP_MEMORIA");
+            configuracion.PUERTO_MEMORIA = config_get_int_value(config,"PUERTO_MEMORIA");
             break;
         case STDIN:
             configuracion.IP_KERNEL = config_get_string_value(config,"IP_KERNEL");

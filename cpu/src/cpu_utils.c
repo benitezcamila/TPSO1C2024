@@ -94,12 +94,12 @@ void procesar_conexion(void* void_args) {
 
         case INTERRUPT_PROC:
             log_info(logger_cpu, "Se recibió una interrupción de proceso de parte del Kernel.");
-            llego_interrupcion = 1;
             recibir_interrupcion_de_kernel();
+            llego_interrupcion++;
             break;
         
         default:
-            log_info(logger_errores_cpu, "Se recibió un código de operación incorrecto de parte del Kernel. El mismo fue: %d", codigo_op);
+            log_info(logger_errores_cpu, "Se recibió un código de operación incorrecto de parte del Kernel. El mismo fue: %s", string_itoa(codigo_op));
             break;
         }
         
@@ -121,10 +121,10 @@ void recibir_contexto_ejecucion(int cliente_socket){
 
 //NO SÉ SI ESTÁ BIEN. CHECKEAR.
 void recibir_interrupcion_de_kernel(){
-    recv(sockets.socket_server_I, &(motivo_interrupcion), sizeof(tipo_de_interrupcion), MSG_WAITALL);
-    ind_contexto_kernel = 0;
+    t_buffer* buffer = recibir_todo_elbuffer(sockets.socket_kernel_I);
+    buffer_read(buffer, &motivo_interrupcion, sizeof(tipo_de_interrupcion));
+    buffer_destroy(buffer);    
 }
-
 void inicializar_estructuras(){
     contexto_registros = malloc(sizeof(registros_CPU));
     longitud_linea_instruccion = malloc(sizeof(uint32_t));

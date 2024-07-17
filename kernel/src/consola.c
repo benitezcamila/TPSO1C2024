@@ -93,11 +93,10 @@ void iniciar_proceso(const char *path) {
 void finalizar_proceso(char* pid) {
     unsigned long int aux = strtoul(pid, NULL, 10);
     if(pcb_en_ejecucion->pid == (uint32_t) aux){
-        void* a_enviar = malloc(sizeof(tipo_de_interrupcion));
+        t_paquete* paquete = crear_paquete (INTERRUPT_PROC,sizeof(tipo_de_interrupcion));
         tipo_de_interrupcion inter = DESALOJO_POR_USUARIO;
-        memcpy(a_enviar,&(inter),sizeof(tipo_de_interrupcion));
-        send(sockets.socket_CPU_I, a_enviar, sizeof(tipo_de_interrupcion), 0);
-        free (a_enviar);
+        buffer_add(paquete->buffer,&inter,sizeof(tipo_de_interrupcion));
+        enviar_paquete(paquete,sockets.socket_CPU_I);
     }
     else{
     liberar_proceso((uint32_t)aux);

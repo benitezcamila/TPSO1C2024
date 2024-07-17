@@ -15,13 +15,10 @@ int main(int argc, char* argv[]) {
         contador_argumentos++;
         nombre_interfaz = argv[contador_argumentos];
         contador_argumentos++;
-        pthread_t memoria, kernel;
+        pthread_t conexion;
         obtener_config(path_config);
-        pthread_create(&memoria,NULL,(void*)establecer_conexion_memoria,NULL);
-        pthread_create(&kernel,NULL,(void*)establecer_conexion_kernel,NULL);
-        pthread_detach(memoria);
-        pthread_detach(kernel);
-        
+        pthread_create(&conexion,NULL,(void*)establecer_conexiones,NULL);
+        pthread_detach(conexion);
     }
     sem_t semaforo;
     sem_init(&semaforo,0,0);

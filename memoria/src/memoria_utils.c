@@ -31,7 +31,7 @@ void iniciar_proceso(t_buffer* bufferDeKernel){
     procesos->instruccionesParaCpu = leer_instrucciones_del_path(buffer_read_string(bufferDeKernel,&sizeDelProceso));
     agregarProcesoALaCola(procesos);
     crear_tabla_de_paginas(procesos->pid);
-   
+    
    }
 
 void atender_escuchas(){
@@ -74,7 +74,7 @@ void procesar_conexion(void* void_args) {
             free(nombre_cliente);
             return;
         }
-
+        usleep(configuracion.RETARDO_RESPUESTA *1000);
         switch (cop)
         {
         case SOLICITUD_INSTRUCCION:
@@ -86,9 +86,9 @@ void procesar_conexion(void* void_args) {
             t_buffer* buffer_de_kernel = recibir_todo_elbuffer(cliente_socket);
             iniciar_proceso(buffer_de_kernel);
             log_info(logger_memoria, "Inicio proceso");
+           // op_code cod = PROCESO_CREADO;
+          //  send(cliente_socket, &cod, sizeof(op_code), NULL);
             break;
-    
-
         case AJUSTAR_TAMANIO:
             buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
             ajustar_tam_proceso( buffer_de_cpu);
@@ -125,7 +125,7 @@ void procesar_conexion(void* void_args) {
             break;
         }
     }
-    usleep(configuracion.RETARDO_RESPUESTA *1000);
+    
     free(nombre_cliente);
 }
 

@@ -4,24 +4,34 @@ str_sockets sockets;
 char* nombre_interfaz;
 sem_t mutex_conexion;
 
-void establecer_conexion_kernel(){
-    motivo_desalojo instruccion_a_procesar;
-    int fd_kernel = crear_conexion(configuracion.IP_KERNEL ,string_itoa(configuracion.PUERTO_KERNEL),logger_entrada_salida,"Entrada Salida");
-    sockets.socket_kernel = fd_kernel;
+void establecer_conexion_kernel(int* socket_kernel){
+    //motivo_desalojo instruccion_a_procesar;
+    *socket_kernel = crear_conexion(configuracion.IP_KERNEL ,string_itoa(configuracion.PUERTO_KERNEL),logger_entrada_salida,"Entrada Salida");
     log_info(logger_entrada_salida, "Conectado Entrada/Salida-Kernel");
-    enviar_info_io_a_kernel();
+    enviar_info_io_a_kernel(*socket_kernel);
     sem_post(&mutex_conexion);
     log_info(logger_entrada_salida, "Info enviada");
-    recibir_instrucciones();
+    
 }
-void establecer_conexion_memoria(){
-    int fd_memoria = crear_conexion(configuracion.IP_MEMORIA ,string_itoa(configuracion.PUERTO_MEMORIA),logger_entrada_salida,nombre_interfaz);
-    sockets.socket_memoria = fd_memoria;
+void establecer_conexion_memoria(int* socket_memoria){
+    *socket_memoria = crear_conexion(configuracion.IP_MEMORIA ,string_itoa(configuracion.PUERTO_MEMORIA),logger_entrada_salida,"Entrada Salida");
     log_info(logger_entrada_salida, "Conectado Entrada/Salida-Memoria");
 }
 
+void establecer_conexiones(){
+    pthread_t memoria, kernel;
+    int socket_kernel = -1;
+    int socket_memoria = -1;
+    pthread_create(&memoria,NULL,(void*)establecer_conexion_memoria,(void*) &socket_memoria);
+    pthread_create(&kernel,NULL,(void*)establecer_conexion_kernel,(void*) &socket_kernel);
+    pthread_join(memoria,NULL);
+    pthread_join(kernel,NULL);
+    
+    recibir_instrucciones(socket_kernel, socket_memoria);
+}
 
-void procesar_io_gen_sleep (t_buffer* buffer_kernel) {
+
+void procesar_io_gen_sleep (t_buffer* buffer_kernel, int socket_kernel) {
     uint32_t milisegundos_de_espera;
     buffer_read (buffer_kernel,&milisegundos_de_espera, sizeof(uint32_t));
     t_temporal *temporal = temporal_create();
@@ -29,26 +39,26 @@ void procesar_io_gen_sleep (t_buffer* buffer_kernel) {
 	temporal_stop(temporal);
     log_info(logger_entrada_salida, "Tiempo esperado: %u", temporal_gettime(temporal));
     temporal_destroy(temporal);
-    enviar_fin_de_instruccion ();
+    enviar_fin_de_instruccion(socket_kernel);
 }
 
 
-void enviar_info_io_a_kernel(){
+void enviar_info_io_a_kernel(int socket_kernel){
     t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_interfaz)+ sizeof(uint32_t) + string_length(nombre_interfaz)+1);
     buffer_add(paquete->buffer, &configuracion.TIPO_INTERFAZ, sizeof(t_interfaz));
     
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
-    enviar_paquete(paquete, sockets.socket_kernel);
+    enviar_paquete(paquete, socket_kernel);
 
 }
 
 
-void procesar_io_stdin_read(t_buffer* buffer_kernel, uint32_t pid ) {
+void procesar_io_stdin_read(t_buffer* buffer_kernel, uint32_t pid, int socket_kernel, int socket_memoria) {
     uint32_t direccion_fisica_memoria_read;
-    buffer_read(buffer_kernel,&direccion_fisica_memoria_read, sizeof(uint32_t));
+    buffer_read(buffer_kernel, &direccion_fisica_memoria_read, sizeof(uint32_t));
     char* input_consola = leer_consola();
-    escribir_en_memoria(input_consola, direccion_fisica_memoria_read, pid);
-    enviar_fin_de_instruccion ();
+    escribir_en_memoria(input_consola, direccion_fisica_memoria_read, pid,socket_memoria );
+    enviar_fin_de_instruccion(socket_kernel);
 }
 
 char* leer_consola(){
@@ -59,7 +69,7 @@ char* leer_consola(){
 }
 
 
-void escribir_en_memoria(char* input_consola,uint32_t pid,uint32_t direccion_fisica_memoria_write) {
+void escribir_en_memoria(char* input_consola,uint32_t pid,uint32_t direccion_fisica_memoria_write, int socket_memoria) {
     uint32_t tamanio = strlen(input_consola)+1 ;
     uint32_t accion =1 ;//escribir
     t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_ES, tamanio * sizeof(char) + sizeof(uint32_t) * 4);
@@ -72,12 +82,12 @@ void escribir_en_memoria(char* input_consola,uint32_t pid,uint32_t direccion_fis
     buffer_add_uint32(paquete->buffer, tamanio * sizeof(char) );
     buffer_add(paquete->buffer, input_consola, tamanio * sizeof(char)); 
 
-    enviar_paquete(paquete, sockets.socket_memoria);//peticion escritura memoria.. si pone ok! escribio correctamente
+    enviar_paquete(paquete, socket_memoria);//peticion escritura memoria.. si pone ok! escribio correctamente
 
     eliminar_paquete(paquete);
     }
 
-void procesar_io_stdout_write(t_buffer* buffer_kernel, uint32_t pid) {
+void procesar_io_stdout_write(t_buffer* buffer_kernel, uint32_t pid, int socket_kernel, int socket_memoria) {
     //leer el valor que se encuentra en la o las direcciones físicas pedidas y mostrar el resultado por pantalla
     /*
     IO_STDOUT_WRITE (Interfaz, Registro Dirección, Registro Tamaño):
@@ -102,23 +112,23 @@ void procesar_io_stdout_write(t_buffer* buffer_kernel, uint32_t pid) {
     
     op_code codigo_leido;
     
-    recv(sockets.socket_memoria,&codigo_leido , sizeof(op_code), 0);
+    recv(socket_memoria,&codigo_leido , sizeof(op_code), 0);
     t_buffer* memoria = recibir_todo_elbuffer (sockets.socket_memoria);
     uint32_t* length = malloc(sizeof(uint32_t));
     char* mostrar_de_memoria = buffer_read_string(memoria, length); 
-    
     printf(mostrar_de_memoria);
+    
     free(length);
-    enviar_fin_de_instruccion();
+    enviar_fin_de_instruccion(socket_kernel);
 }
 
-
-void recibir_instrucciones (){
-    t_instruccion instruccion_a_procesar;
+//luego pasar socket memoria
+void recibir_instrucciones (int socket_kernel, int socket_memoria){
     uint32_t pid ;
+    t_instruccion instruccion_a_procesar;
     op_code cop;
-    while(sockets.socket_kernel!=-1) {
-        if (recv(sockets.socket_kernel, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
+    while(socket_kernel!=-1) {
+        if (recv(socket_kernel, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
                 log_info(logger_conexiones, "Error en el OpCode!");
                 return;
             }
@@ -126,7 +136,7 @@ void recibir_instrucciones (){
             log_info(logger_conexiones, "OpCode recibido no corresponde con ENTRADASALIDA");
             return;
         }
-        t_buffer* buffer_kernel = recibir_todo_elbuffer(sockets.socket_kernel);
+        t_buffer* buffer_kernel = recibir_todo_elbuffer(socket_kernel);
         buffer_read(buffer_kernel,&instruccion_a_procesar,sizeof(t_instruccion));
         char* instruccion_string = string_de_instruccion(instruccion_a_procesar);
         pid = buffer_read_uint32(buffer_kernel);
@@ -134,28 +144,28 @@ void recibir_instrucciones (){
         log_info(logger_entrada_salida, informar_pid);
         switch (instruccion_a_procesar) {
             case GEN_SLEEP:
-            procesar_io_gen_sleep(buffer_kernel);
+            procesar_io_gen_sleep(buffer_kernel,socket_kernel);
             break;
             case STDIN_READ:
-            procesar_io_stdin_read(buffer_kernel,pid);
+            procesar_io_stdin_read(buffer_kernel,pid,socket_kernel, socket_memoria);
             break;
             case STDOUT_WRITE:
-            procesar_io_stdout_write(buffer_kernel,pid);
+            procesar_io_stdout_write(buffer_kernel,pid,socket_kernel, socket_memoria);
             break;
             case FS_CREATE:
-            procesar_io_fs_create(buffer_kernel,pid);
+            procesar_io_fs_create(buffer_kernel,pid,socket_kernel);
             break;
             case FS_DELETE:
-            procesar_io_fs_delete(buffer_kernel,pid);
+            procesar_io_fs_delete(buffer_kernel,pid,socket_kernel);
             break;
             case FS_TRUNCATE:
-            procesar_io_fs_truncate(buffer_kernel,pid);
+            procesar_io_fs_truncate(buffer_kernel,pid,socket_kernel);
             break;
             case FS_WRITE:
-            procesar_io_fs_write(buffer_kernel,pid);
+            procesar_io_fs_write(buffer_kernel,pid,socket_kernel,socket_memoria);
             break;
             case FS_READ:
-            procesar_io_fs_read(buffer_kernel,pid);
+            procesar_io_fs_read(buffer_kernel,pid,socket_kernel,socket_memoria);
             break;
             default:
             log_info(logger_entrada_salida, "Instruccion invalida");
@@ -201,20 +211,20 @@ char* string_de_instruccion (t_instruccion instruccion_a_procesar){
 }
 
 
-void enviar_fin_de_instruccion () {
-    t_paquete* paquete = crear_paquete(ENTRADASALIDA_LIBERADO, sizeof(t_interfaz) + string_length(nombre_interfaz)+1);
+void enviar_fin_de_instruccion (int socket_fd) {
+    t_paquete* paquete = crear_paquete(ENTRADASALIDA_LIBERADO, sizeof(t_interfaz) + sizeof(uint32_t) +string_length(nombre_interfaz)+1);
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
-    enviar_paquete(paquete, sockets.socket_kernel);
+    enviar_paquete(paquete, socket_fd); // kernel
  }
 
-void procesar_io_fs_create(t_buffer* buffer_kernel, uint32_t pid ){
-    usleep(configuracion.TIEMPO_UNIDAD_TRABAJO*1000);
+void procesar_io_fs_create(t_buffer* buffer_kernel, uint32_t pid, int socket_kernel){
+    usleep(configuracion.TIEMPO_UNIDAD_TRABAJO * 1000);
     uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
-    char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
+    char* nombre_archivo = buffer_read_string(buffer_kernel, longitud_nombre_archivo);
     char* path_archivo = string_new();
-    string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
-    string_append(&path_archivo,"/");
-    string_append(&path_archivo,nombre_archivo);
+    string_append(&path_archivo, configuracion.PATH_BASE_DIALFS);
+    string_append(&path_archivo, "/");
+    string_append(&path_archivo, nombre_archivo);
     char* informar_crear_archivo = string_from_format("PID: %s - Crear Archivo: %s",string_itoa(pid),nombre_archivo); 
     log_info(logger_entrada_salida, informar_crear_archivo);
     free(informar_crear_archivo);
@@ -258,7 +268,7 @@ void procesar_io_fs_create(t_buffer* buffer_kernel, uint32_t pid ){
         bitarray_set_bit(bitmap,bloque_asignado);
         msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
         agregar_archivo_a_indice(fd_indice, nombre_archivo ,bloque_asignado);
-        enviar_fin_de_instruccion();
+        enviar_fin_de_instruccion(socket_kernel);
 }
 
 
@@ -339,17 +349,17 @@ int obtener_ultimo_bloque_de_archivo (char * nombre_archivo){
     return bloque_final;
 }
 
-void procesar_io_fs_delete(t_buffer* buffer_kernel, uint32_t pid){
+void procesar_io_fs_delete(t_buffer* buffer_kernel, uint32_t pid, int socket_kernel){
     /*
     IO_FS_DELETE (Interfaz, Nombre Archivo): Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, 
     se elimine un archivo en el FS montado en dicha interfaz
     */
-    usleep(configuracion.TIEMPO_UNIDAD_TRABAJO*1000);
+    usleep(configuracion.TIEMPO_UNIDAD_TRABAJO * 1000);
     uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
-    char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
+    char* nombre_archivo = buffer_read_string(buffer_kernel, longitud_nombre_archivo);
     char* path_archivo = string_new();
-    string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
-    string_append(&path_archivo,"/");
+    string_append(&path_archivo, configuracion.PATH_BASE_DIALFS);
+    string_append(&path_archivo, "/");
     string_append(&path_archivo,nombre_archivo);
     char* informar_eliminar_archivo = string_from_format("PID: %s - Eliminar Archivo: %s",string_itoa(pid),nombre_archivo); 
     log_info(logger_entrada_salida, informar_eliminar_archivo);
@@ -365,7 +375,7 @@ void procesar_io_fs_delete(t_buffer* buffer_kernel, uint32_t pid){
     eliminar_archivo_de_indice(fd_indice,nombre_archivo);
     free(nombre_archivo);
     free(path_archivo);
-    enviar_fin_de_instruccion();
+    enviar_fin_de_instruccion(socket_kernel);
 }
 
 int calcular_cantidad_de_bloques (int tamanio){
@@ -413,7 +423,7 @@ void procesar_io_fs_delete_prueba(char* nombre_archivo){
 }
 */
 
-void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid ){
+void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid, int socket_kernel){
     /*
     IO_FS_TRUNCATE (Interfaz, Nombre Archivo, Registro Tamaño): Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, 
     se modifique el tamaño del archivo en el FS montado en dicha interfaz, actualizando al valor que se encuentra en el registro indicado 
@@ -628,7 +638,7 @@ void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloqu
     free(path_archivo);
  }
 
-void procesar_io_fs_write(buffer_kernel,pid){
+void procesar_io_fs_write(t_buffer* buffer_kernel, uint32_t pid, int socket_kernel, int socket_memoria){
     /*
         IO_FS_WRITE (Interfaz, Nombre Archivo, Registro Dirección, Registro Tamaño, Registro Puntero Archivo): 
         Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, se lea desde Memoria la cantidad de bytes indicadas por el 
@@ -667,17 +677,17 @@ void procesar_io_fs_write(buffer_kernel,pid){
     buffer_add_uint32(paquete->buffer, accion);
     buffer_add_uint32(paquete->buffer, dir_fisica);
     buffer_add_uint32(paquete->buffer, bytes_a_escribir);
-    enviar_paquete(paquete, sockets.socket_memoria);
+    enviar_paquete(paquete, socket_memoria);
     eliminar_paquete(paquete);
     op_code codigo_leido;
-    recv(sockets.socket_memoria,&codigo_leido , sizeof(op_code), 0);
-    t_buffer* memoria = recibir_todo_elbuffer (sockets.socket_memoria);
+    recv(socket_memoria,&codigo_leido , sizeof(op_code), 0);
+    t_buffer* memoria = recibir_todo_elbuffer (socket_memoria);
     uint32_t* length = malloc(sizeof(uint32_t));
     char* info_de_memoria = buffer_read_string(memoria, length); 
     escribir_en_fs(bloque_inicial_archivo,offset_archivo,tamanio_bytes_escritura,&info_de_memoria);
     free(length);
     free(path_archivo);
-    enviar_fin_de_instruccion();
+    enviar_fin_de_instruccion(socket_kernel);
 }
 
 
@@ -702,7 +712,7 @@ void escribir_en_fs (int indice_bloques, uint32_t offset, uint32_t tamanio, void
 }
 
 
-void procesar_io_fs_read(buffer_kernel,pid){
+void procesar_io_fs_read(t_buffer* buffer_kernel, uint32_t pid, int socket_kernel, int socket_memoria){
     usleep(configuracion.TIEMPO_UNIDAD_TRABAJO*1000);
     uint32_t longitud_nombre_archivo = buffer_read_uint32(buffer_kernel);
     char* nombre_archivo = buffer_read_string(buffer_kernel,longitud_nombre_archivo);
@@ -727,7 +737,7 @@ void procesar_io_fs_read(buffer_kernel,pid){
     int bloque_inicial_archivo = config_get_int_value(path_archivo,"BLOQUE_INICIAL");
     config_destroy(config_archivo);
     memcpy(data_a_escribir,bloques+(bloque_inicial_archivo*configuracion.BLOCK_SIZE)+offset_archivo,bytes_a_leer);
-    escribir_en_memoria(data_a_escribir,pid,dir_fisica);
+    escribir_en_memoria(data_a_escribir,pid,dir_fisica,socket_memoria);
     free(data_a_escribir);
-    enviar_fin_de_instruccion();
+    enviar_fin_de_instruccion(socket_kernel);
 }

@@ -113,7 +113,7 @@ void crear_paquete_contexto_exec(t_pcb* pcb){
 void recibir_contexto_exec(t_pcb* pcb){
     uint64_t quantum_a_asignar = configuracion.QUANTUM;
 
-    if(strcmp(configuracion.ALGORITMO_PLANIFICACION, "VRR") == 0 || strcmp(configuracion.ALGORITMO_PLANIFICACION, "RR") == 0){
+    if(strcmp(configuracion.ALGORITMO_PLANIFICACION, "VRR") == 0){
         quantum_a_asignar = pcb->quantum - temporal_gettime(temp_quantum);
         temporal_destroy(temp_quantum);
     }
@@ -160,7 +160,7 @@ void recibir_contexto_exec(t_pcb* pcb){
         int cant_recurso;
         sem_getvalue(&(str_rec->cantidad_recursos),&cant_recurso);
         if(cant_recurso > 0){
-        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: BLOCKED", pcb->pid);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: BLOQUEADO", pcb->pid);
         log_info(logger_recurso_ES, "PID: %u - Bloqueado por: %s", pcb->pid, recurso);
         pcb->estado = BLOCKED;
         list_add(bloqueado, pcb);
@@ -201,15 +201,16 @@ void recibir_contexto_exec(t_pcb* pcb){
         break;
 
     case PETICION_IO:
+        pcb->quantum = quantum_a_asignar;
         t_instruccion* tipo_instruccion = malloc(sizeof(t_instruccion));
         buffer_read(buffer,tipo_instruccion,sizeof(t_instruccion));
         uint32_t len = 0;
         char* io = buffer_read_string(buffer,&len);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: BLOCKED", pcb->pid);
-        log_info(logger_recurso_ES, "PID: %u - Bloqueado por: %s", pcb->pid, io);
         pcb->estado = BLOCKED;
         list_add(bloqueado, pcb);
         procesar_peticion_IO(io,tipo_instruccion,pcb->pid, buffer);
+        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: BLOQUEADO", pcb->pid);
+        log_info(logger_recurso_ES, "PID: %u - Bloqueado por: %s", pcb->pid, io);
         free(io);
         free(tipo_instruccion);
         

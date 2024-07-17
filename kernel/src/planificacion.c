@@ -61,13 +61,22 @@ void liberar_proceso(uint32_t pid){
 void crear_proceso(char* path){
     t_pcb* pcb = crear_pcb(path);
     queue_push(cola_new,pcb);
-    log_info(logger_kernel,"Se crea el proceso %u en NEW",pcb->pid);
-    sem_post(&hay_procesos_nuevos);
     uint32_t tam_string = string_length(pcb->pathOperaciones)+1;
     t_paquete* paquete = crear_paquete(INICIAR_PROCESO,sizeof(uint32_t)*2+tam_string);
     buffer_add_uint32(paquete->buffer,pcb->pid);
     buffer_add_string(paquete->buffer,tam_string,pcb->pathOperaciones);
     enviar_paquete(paquete,sockets.socket_memoria);
+    op_code cod;
+    //recv(sockets.socket_memoria,&cod,sizeof(op_code), MSG_WAITALL);
+    //if(cod == PROCESO_CREADO){
+     //   log_info(logger_kernel,"Se crea el proceso %u en NEW",pcb->pid); 
+        sem_post(&hay_procesos_nuevos);
+    //}
+    //else{
+      //  log_info(logger_error,"No se recibio correctamente la confirmacion para la creacion del proceso en memoria correctamente");
+   // }
+   // podria no hacer falta ya que memoria en ese segundo deberia poder procesar la informacion para el dato
+   // cuando usamos el RR normalmente todo se realizaba en como mucho 10 micro segundos.... con 1000 para agregar el proceso bastaria?... esperemos xd
 }
 
 void planificar_a_largo_plazo(){
@@ -172,7 +181,6 @@ void ejecutar_VRR(t_pcb *a_ejecutar){
 
 void ejecutar_con_quantum(t_pcb *a_ejecutar){
     crear_paquete_contexto_exec(a_ejecutar);
-    a_ejecutar->quantum=configuracion.QUANTUM;
     temp_quantum = temporal_create();
     pthread_create(&temporizador_quantum, NULL, (void*)esperar_interrupcion_quantum, a_ejecutar);
     pthread_detach(temporizador_quantum);
@@ -185,12 +193,11 @@ void esperar_interrupcion_quantum(t_pcb *a_ejecutar){
     int ticket_referencia = a_ejecutar->ticket;
     usleep(a_ejecutar->quantum * 1000);
     if(ticket_referencia == a_ejecutar->ticket && a_ejecutar->estado == EXEC){
-        void* a_enviar = malloc(sizeof(tipo_de_interrupcion));
-        tipo_de_interrupcion inter = DESALOJO_QUANTUM;
         a_ejecutar->quantum = configuracion.QUANTUM;
-        memcpy(a_enviar,&(inter),sizeof(tipo_de_interrupcion));
-        send(sockets.socket_CPU_I, a_enviar, sizeof(tipo_de_interrupcion), 0);
-        free (a_enviar);
+        t_paquete* paquete = crear_paquete (INTERRUPT_PROC,sizeof(tipo_de_interrupcion));
+        tipo_de_interrupcion inter = DESALOJO_QUANTUM;
+        buffer_add(paquete->buffer,&inter,sizeof(tipo_de_interrupcion));
+        enviar_paquete(paquete,sockets.socket_CPU_I);
     }
 
 }

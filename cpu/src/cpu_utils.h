@@ -9,8 +9,8 @@
 #include <commons/string.h>
 #include <commons/config.h>
 #include <semaphore.h>
-#include <ciclo_de_instruccion.h>
-#include <utils/estructuras.h>
+#include "ciclo_de_instruccion.h"
+#include "utils/estructuras.h"
 #include "tlb.h"
 
 typedef struct{

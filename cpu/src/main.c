@@ -23,5 +23,7 @@ int main(int argc, char* argv[]) {
 
     destruir_TLB();
 
+    log_info(logger_cpu, "Ooaa ooaa cierro C, P, U~");
+
     return 0;
 }

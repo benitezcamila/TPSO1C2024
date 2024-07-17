@@ -99,7 +99,7 @@ void procesar_conexion(void* void_args) {
             sem_post(&sem_proceso_en_ready);
             mensaje_ingreso_ready = string_new();
             list_iterate(cola_prioritaria_VRR->elements,agregar_PID_ready);
-            log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Ready Prioridad: %s",interfaz->proceso_okupa->pid, mensaje_ingreso_ready);
+            log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Ready Prioridad con quantum %u: %s",interfaz->proceso_okupa->pid, interfaz->proceso_okupa->quantum,  mensaje_ingreso_ready);
             free(mensaje_ingreso_ready);
             }
             else{

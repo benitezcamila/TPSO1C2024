@@ -104,12 +104,8 @@ void execute(){
 
 //NO SÉ SI LE FALTA ALGO. CHECKEAR.
 void check_interrupt(){
-    char* motivo_interr[]= {
-        "DESALOJO_QUANTUM", "DESALOJO_POR_USUARIO"
-    };
-
-    if(llego_interrupcion == 1){
-        llego_interrupcion = 0;
+    while(llego_interrupcion > 0){
+        llego_interrupcion--;
 
         switch(motivo_interrupcion){
         case DESALOJO_QUANTUM:
@@ -121,7 +117,7 @@ void check_interrupt(){
             break;
 
         default:
-            log_info(logger_errores_cpu, "Ups! Pasó algo raro. El motivo de interrupción obtenido es: %s", motivo_interr[motivo_interrupcion]);
+            log_info(logger_errores_cpu, "Ups! Pasó algo raro. El motivo de interrupción obtenido es: %s", string_itoa(motivo_interrupcion));
             break;
         }
     }

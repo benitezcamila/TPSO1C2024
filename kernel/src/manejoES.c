@@ -74,7 +74,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
     }
-    sem_post(&interfaz->pidieron_interfaz);
+    
     switch (*tipo_instruccion)
     {
     case GEN_SLEEP:{
@@ -330,9 +330,8 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
     default:
         break;
     }
+    sem_post(&interfaz->pidieron_interfaz);
     list_add(bloqueado, dictionary_get(dicc_pcb, string_from_format("%u", pid)));
-    log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: BLOQUEADO", pid);
-    log_info(logger_recurso_ES, "PID: %u - Bloqueado por: %s", pid, io);
 
 }
 
@@ -340,6 +339,7 @@ void gestionar_interfaces(dispositivo_IO* interfaz){
     pthread_t hilo;
     if (pthread_create(&hilo, NULL, (void*)monitor_desconexion, (void*)interfaz) != 0) {
         perror("Failed to create thread");
+        printf("asdasfasf");
         return;
     }
     pthread_detach(hilo);
@@ -366,7 +366,6 @@ void monitor_desconexion(dispositivo_IO* interfaz){
         int ret = poll((interfaz->fds), 1, -1); // Espera indefinida
 
         if (ret == -1) {
-            perror("poll failed");
             break;
         }
 
