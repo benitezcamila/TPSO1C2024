@@ -86,8 +86,8 @@ void procesar_conexion(void* void_args) {
             t_buffer* buffer_de_kernel = recibir_todo_elbuffer(cliente_socket);
             iniciar_proceso(buffer_de_kernel);
             log_info(logger_memoria, "Inicio proceso");
-           // op_code cod = PROCESO_CREADO;
-          //  send(cliente_socket, &cod, sizeof(op_code), NULL);
+            op_code cod = PROCESO_CREADO;
+            send(cliente_socket, &cod, sizeof(op_code), NULL);
             break;
         case AJUSTAR_TAMANIO:
             buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);

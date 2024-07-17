@@ -67,16 +67,15 @@ void crear_proceso(char* path){
     buffer_add_string(paquete->buffer,tam_string,pcb->pathOperaciones);
     enviar_paquete(paquete,sockets.socket_memoria);
     op_code cod;
-    //recv(sockets.socket_memoria,&cod,sizeof(op_code), MSG_WAITALL);
-    //if(cod == PROCESO_CREADO){
-     //   log_info(logger_kernel,"Se crea el proceso %u en NEW",pcb->pid); 
+    recv(sockets.socket_memoria,&cod,sizeof(op_code), MSG_WAITALL);
+    if(cod == PROCESO_CREADO){
+        log_info(logger_kernel,"Se crea el proceso %u en NEW",pcb->pid); 
         sem_post(&hay_procesos_nuevos);
-    //}
-    //else{
-      //  log_info(logger_error,"No se recibio correctamente la confirmacion para la creacion del proceso en memoria correctamente");
-   // }
-   // podria no hacer falta ya que memoria en ese segundo deberia poder procesar la informacion para el dato
-   // cuando usamos el RR normalmente todo se realizaba en como mucho 10 micro segundos.... con 1000 para agregar el proceso bastaria?... esperemos xd
+    }
+    else{
+       log_info(logger_error,"No se recibio correctamente la confirmacion para la creacion del proceso en memoria correctamente");
+    }
+    
 }
 
 void planificar_a_largo_plazo(){
