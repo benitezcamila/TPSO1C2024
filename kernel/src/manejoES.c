@@ -333,7 +333,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
     list_add(bloqueado, dictionary_get(dicc_pcb, string_from_format("%u", pid)));
     log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: BLOQUEADO", pid);
     log_info(logger_recurso_ES, "PID: %u - Bloqueado por: %s", pid, io);
-    buffer_destroy(buffer);
+
 }
 
 void gestionar_interfaces(dispositivo_IO* interfaz){

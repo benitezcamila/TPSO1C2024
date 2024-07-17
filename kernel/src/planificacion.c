@@ -81,10 +81,10 @@ void planificar_a_largo_plazo(){
         t_pcb* proceso_para_ready = queue_pop(cola_new);
         proceso_para_ready->estado = READY;
         queue_push(cola_ready, proceso_para_ready);
-        sem_post(&sem_proceso_en_ready);
         mensaje_ingreso_ready = string_new();
         list_iterate(cola_ready->elements,agregar_PID_ready);
         log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Cola Ready: %s",proceso_para_ready->pid, mensaje_ingreso_ready);
+        sem_post(&sem_proceso_en_ready);
         free(mensaje_ingreso_ready);
     }
 
@@ -93,31 +93,32 @@ void planificar_a_largo_plazo(){
 void planificar_a_corto_plazo_segun_algoritmo(){
     char *algoritmo_planificador = configuracion.ALGORITMO_PLANIFICACION;
     while(1){
-    sem_wait(&sem_proceso_en_ready);
-    if(pausar_plani){
-            sem_wait(&sem_pausa_planificacion_corto_plazo);
-            reanudar_planificacion();
-        }
+        sem_wait(&sem_proceso_en_ready);
+        if(pausar_plani){
+                sem_wait(&sem_pausa_planificacion_corto_plazo);
+                reanudar_planificacion();
+            }
 
-    if(strcmp(algoritmo_planificador,"FIFO") == 0){ 
-        
-        t_pcb *a_ejecutar = proximo_ejecutar_FIFO();
-        ejecutar_FIFO(a_ejecutar);
-        }
+        if(strcmp(algoritmo_planificador,"FIFO") == 0){ 
 
-    else if (strcmp(algoritmo_planificador, "RR") == 0){
+            t_pcb *a_ejecutar = proximo_ejecutar_FIFO();
+            ejecutar_FIFO(a_ejecutar);
+            }
 
-        t_pcb* a_ejecutar = proximo_ejecutar_RR();
-        ejecutar_RR(a_ejecutar);
-        }
+        else if (strcmp(algoritmo_planificador, "RR") == 0){
 
-    else if (strcmp(algoritmo_planificador, "VRR") == 0){
-        t_pcb* a_ejecutar = proximo_ejecutar_VRR();
-        ejecutar_VRR(a_ejecutar);
-        }
+            t_pcb* a_ejecutar = proximo_ejecutar_RR();
+            ejecutar_RR(a_ejecutar);
+            }
+
+        else if (strcmp(algoritmo_planificador, "VRR") == 0){
+            t_pcb* a_ejecutar = proximo_ejecutar_VRR();
+            ejecutar_VRR(a_ejecutar);
+            }
+
         op_code cop = recibir_operacion(sockets.socket_CPU_D);
         if(cop == CONTEXTO_EXEC){
-        recibir_contexto_exec(pcb_en_ejecucion);
+            recibir_contexto_exec(pcb_en_ejecucion);
         }
     }
     free(algoritmo_planificador);

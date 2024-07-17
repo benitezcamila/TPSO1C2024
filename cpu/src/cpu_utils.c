@@ -68,10 +68,10 @@ void procesar_conexion(void* void_args) {
     free(args);
 
     op_code codigo_op;
-    if(strcmp(nombre_cliente,"KERNEL_I")){
+    if(strcmp(nombre_cliente,"KERNEL_I") == 0){
         sockets.socket_kernel_I = cliente_socket;
     }
-    if(strcmp(nombre_cliente,"KERNEL_D")){
+    if(strcmp(nombre_cliente,"KERNEL_D") == 0){
     sockets.socket_kernel_D = cliente_socket;
     }
     while (cliente_socket != -1) {

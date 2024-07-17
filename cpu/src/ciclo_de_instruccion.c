@@ -390,33 +390,33 @@ void wait(char* nombre_recurso){
     ind_contexto_kernel = 0;
 
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
-                                        + string_length(nombre_recurso)+1);
+                                        + string_length(nombre_recurso)+1+sizeof(uint32_t));
     motivo_desalojo mot = PETICION_RECURSO;
     buffer_add(paquete->buffer, &mot, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_recurso)+1, nombre_recurso);
 
-    enviar_paquete(paquete, sockets.socket_server_D);
+    enviar_paquete(paquete, sockets.socket_kernel_D);
 }
 
 void signal(char* nombre_recurso){
     ind_contexto_kernel = 0;
 
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(registros_CPU)
-                                        + string_length(nombre_recurso)+1);
+                                        + string_length(nombre_recurso)+1+sizeof(uint32_t));
     motivo_desalojo mot = SIGNAL_RECURSO;
     buffer_add(paquete->buffer, &mot, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add_string(paquete->buffer, string_length(nombre_recurso)+1, nombre_recurso);
 
-    enviar_paquete(paquete, sockets.socket_server_D);
+    enviar_paquete(paquete, sockets.socket_kernel_D);
 }
 
 void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
     ind_contexto_kernel = 0;
     // si le saco 8 a motivo de desalojo se traduce la isntruccion (por el enum)
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(t_instruccion) +
-                                        sizeof(registros_CPU) + string_length(nombre_interfaz)+1 + sizeof(uint32_t));
+                                        sizeof(registros_CPU) + string_length(nombre_interfaz)+1 + sizeof(uint32_t)*2);
     motivo_desalojo mot_des = PETICION_IO;
     buffer_add(paquete->buffer, &mot_des, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
@@ -425,7 +425,7 @@ void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_uint32(paquete->buffer, unidades_de_trabajo);
 
-    enviar_paquete(paquete, sockets.socket_server_D);
+    enviar_paquete(paquete, sockets.socket_kernel_D);
 }
 
 void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* registro_tamanio){
