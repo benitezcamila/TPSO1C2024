@@ -17,6 +17,7 @@ extern char** linea_de_instruccion_tokenizada;
 extern tipo_de_interrupcion motivo_interrupcion;
 extern uint32_t dir_logica;
 extern uint32_t dir_fisica;
+extern uint32_t* longitud_linea_instruccion;
 
 //Funciones principales.
 void fetch_instruction();

@@ -11,7 +11,6 @@ void establecer_conexion_memoria()
     int fd_memoria = crear_conexion(configuracion.IP_MEMORIA, string_itoa(configuracion.PUERTO_MEMORIA),logger_conexiones,"KERNEL");
     log_info(logger_conexiones, "Conectado Kernel memoria");
     sockets.socket_memoria = fd_memoria;
- 
 }
 
 void atender_escuchas(){
@@ -28,7 +27,7 @@ void establecer_conexion_cpu_D()
     int fd_cpu_distpach = crear_conexion(configuracion.IP_CPU, string_itoa(configuracion.PUERTO_CPU_DISPATCH),logger_conexiones,"KERNEL_D");
     log_info(logger_conexiones, "Conectado Kernel Cpu_Dispatch");
     sockets.socket_CPU_D = fd_cpu_distpach;
- 
+    //procesar_conexion_CPU_D(fd_cpu_distpach);
 }
 
 void establecer_conexion_cpu_I()
@@ -65,7 +64,27 @@ int server_escuchar() {
     return 0;
 }
 
+void procesar_conexion_CPU_D(int cliente_socket){
+    op_code cop;
+    while (cliente_socket != -1) {
 
+        if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
+            log_info(logger_conexiones, "%s DISCONNECT!", "Cpu_Dispatch");
+            return;
+        }
+
+        switch (cop){
+        case CONTEXTO_EXEC:
+            recibir_contexto_exec(pcb_en_ejecucion);
+            break;
+        
+
+        default:
+            log_info(logger_conexiones,"no estas mandando nada");
+            break;
+        }
+    }
+}
 
 
 void procesar_conexion(void* void_args) {

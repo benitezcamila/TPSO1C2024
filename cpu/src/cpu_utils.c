@@ -68,6 +68,12 @@ void procesar_conexion(void* void_args) {
     free(args);
 
     op_code codigo_op;
+    if(strcmp(nombre_cliente,"KERNEL_I")){
+        sockets.socket_kernel_I = cliente_socket;
+    }
+    if(strcmp(nombre_cliente,"KERNEL_D")){
+    sockets.socket_kernel_D = cliente_socket;
+    }
     while (cliente_socket != -1) {
 
         if (recv(cliente_socket, &codigo_op, sizeof(op_code), 0) != sizeof(op_code)) {
@@ -119,14 +125,21 @@ void recibir_interrupcion_de_kernel(){
     ind_contexto_kernel = 0;
 }
 
+void inicializar_estructuras(){
+    contexto_registros = malloc(sizeof(registros_CPU));
+    longitud_linea_instruccion = malloc(sizeof(uint32_t));
+    tlb = malloc(sizeof(t_TLB));
+    inicializar_TLB(configuracion.CANTIDAD_ENTRADAS_TLB, configuracion.ALGORITMO_TLB);
+}
+
 void enviar_contexto_a_kernel(motivo_desalojo motivo){
     ind_contexto_kernel = 0;
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(registros_CPU) + sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
 
-    enviar_paquete(paquete, sockets.socket_server_D);
-}
+    enviar_paquete(paquete, sockets.socket_kernel_D);
+    }
 
 void envios_de_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
                            uint32_t tamanio_data, t_buffer* buffer){ // tamanio std
@@ -247,18 +260,18 @@ void solicitar_tamanio_pagina(){
 
     send(sockets.socket_memoria, codigo_operacion, sizeof(op_code),0);
 
-    free(codigo_operacion);
     
-    int cod_op = recibir_operacion(sockets.socket_memoria);
+    *codigo_operacion = recibir_operacion(sockets.socket_memoria);
     
-    if(cod_op == TAMANIO_PAGINA){
+    if(*codigo_operacion == TAMANIO_PAGINA){
         t_buffer* buffer_memoria = recibir_todo_elbuffer(sockets.socket_memoria);
 
         tamanio_pagina =  buffer_read_uint32(buffer_memoria);
     }
     else{
-        log_info(logger_errores_cpu, "El código de operación recibido no fue el esperado de memoria. El mismo fue: %d", cod_op);
+        log_info(logger_errores_cpu, "El código de operación recibido no fue el esperado de memoria. El mismo fue: %d", codigo_operacion);
     }
+    free(codigo_operacion);
 }
 
 void solicitar_instruccion_a_memoria(){
@@ -269,23 +282,18 @@ void solicitar_instruccion_a_memoria(){
     enviar_paquete(paquete, sockets.socket_memoria);
 }
 
-void recibir_instruccion_de_memoria(uint32_t* longitud_linea_instruccion){
-    op_code* codigo = malloc(sizeof(op_code));
-    recv(sockets.socket_memoria, codigo, sizeof(op_code), MSG_WAITALL);
-    if(*codigo == INSTRUCCION){
-        uint32_t size =0;
-        recv(sockets.socket_memoria, &size, sizeof(uint32_t), MSG_WAITALL);
-        t_paquete* paquete = crear_paquete(*codigo,size);
-        paquete->buffer->stream = malloc(paquete->buffer->size);
-
-        recv(sockets.socket_memoria, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
-        linea_de_instruccion = buffer_read_string(paquete->buffer, longitud_linea_instruccion);
-        eliminar_paquete(paquete);
+void recibir_instruccion_de_memoria(){
+    op_code codigo = recibir_operacion(sockets.socket_memoria);
+    if(codigo == INSTRUCCION){
+        t_buffer* buffer = recibir_todo_elbuffer(sockets.socket_memoria);
+        linea_de_instruccion = buffer_read_string(buffer, longitud_linea_instruccion);
+        buffer_destroy(buffer);
     }
     else{
-        log_info(logger_errores_cpu, "El código de operación recibido de Memoria no fue una instrucción. El código de operación recibido fue: %d", *codigo);
+        log_info(logger_errores_cpu, "El código de operación recibido de Memoria no fue una instrucción. El código de operación recibido fue: %d", codigo);
     }
-    free(codigo);
+    
+    
 }
 
 void recibir_respuesta_resize_memoria(uint32_t PID){

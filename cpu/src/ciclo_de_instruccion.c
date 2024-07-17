@@ -28,10 +28,12 @@ void fetch_instruction(){
 }
 
 void decode(){
-    recibir_instruccion_de_memoria(longitud_linea_instruccion);
+    
+    recibir_instruccion_de_memoria();
 
     if (linea_de_instruccion != NULL) {
         linea_de_instruccion_tokenizada = string_n_split(linea_de_instruccion, *longitud_linea_instruccion, " ");
+        log_info(logger_errores_cpu, "La línea de instrucción recibida es %s",linea_de_instruccion);
     } else {
         log_info(logger_errores_cpu, "La línea de instrucción recibida está vacía (NULL).");
     }
@@ -95,7 +97,7 @@ void execute(){
 		io_fs_read(linea_de_instruccion_tokenizada[1], linea_de_instruccion_tokenizada[2], linea_de_instruccion_tokenizada[3],
                      linea_de_instruccion_tokenizada[4], linea_de_instruccion_tokenizada[5]);
 	}
-    else if(strcmp(linea_de_instruccion_tokenizada[0], "EXIT") == 0){
+    else if(strncmp(linea_de_instruccion_tokenizada[0], "EXIT",4) == 0){// utilizo el strn para manejos de errores en caso de EXIT en lugar que no deberia
 		exit_process();
 	}
 }
@@ -716,11 +718,10 @@ void* obtener_contenido_registro(const char* registro) {
 }
 
 void loggear_instruccion(uint32_t longitud_linea_instruccion){
-    char* instruccion_completa;
-    instruccion_completa = string_duplicate(linea_de_instruccion);
+    char* instruccion_completa = string_duplicate(linea_de_instruccion);
 
     //Obtengo la instrucción.
-    char* instruccion = strtok(instruccion_completa, " ");
+    strtok(instruccion_completa, " ");
     //Obtengo, del string que quedó, los parámetros.
     char* parametros = strtok(NULL, "");
 
@@ -729,8 +730,6 @@ void loggear_instruccion(uint32_t longitud_linea_instruccion){
         parametros = "";
     }
 
-    log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", PID, instruccion, parametros);
+    log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", PID, instruccion_completa, parametros);
     free(instruccion_completa);
-    free(instruccion);
-    free(parametros);
 }

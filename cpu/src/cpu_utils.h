@@ -17,6 +17,8 @@ typedef struct{
     int socket_server_I;
     int socket_server_D;
     int socket_memoria;
+    int socket_kernel_I;
+    int socket_kernel_D;
 }str_sockets;
 
 extern int ind_contexto_kernel;
@@ -31,6 +33,7 @@ void establecer_conexion_memoria();
 void atender_conexiones();
 void procesar_conexion(void*);
 int server_escuchar(int);
+void inicializar_estructuras();
 void recibir_contexto_ejecucion(int);
 void recibir_interrupcion_de_kernel();
 void enviar_contexto_a_kernel(motivo_desalojo);
@@ -43,7 +46,7 @@ void solicitar_write_read_fs_a_kernel(t_instruccion, char*, char*, void*, uint32
 void solicitar_tamanio_pagina();
 void solicitar_instruccion_a_memoria();
 int solicitar_marco_a_memoria(uint32_t);
-void recibir_instruccion_de_memoria(uint32_t*);
+void recibir_instruccion_de_memoria();
 void recibir_respuesta_resize_memoria(uint32_t);
 uint32_t cantidad_paginas_que_ocupa(uint32_t, uint32_t);
 void* leer_en_memoria_mas_de_una_pagina(t_buffer*, uint32_t, uint32_t);

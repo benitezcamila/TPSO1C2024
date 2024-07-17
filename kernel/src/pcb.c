@@ -121,10 +121,7 @@ void recibir_contexto_exec(t_pcb* pcb){
         sem_wait(&sem_detener_desalojo);
     }
     motivo_desalojo mot_desalojo;
-    uint32_t buffer_size;
-    recv(sockets.socket_CPU_D, &buffer_size, sizeof(uint32_t), MSG_WAITALL);
-    t_buffer* buffer = buffer_create(buffer_size);
-    recv(sockets.socket_CPU_D, buffer->stream, buffer->size, MSG_WAITALL);
+    t_buffer* buffer = recibir_todo_elbuffer(sockets.socket_CPU_D);
     buffer_read(buffer,&mot_desalojo, sizeof(motivo_desalojo));
 
     if(mot_desalojo != SIGNAL_RECURSO){

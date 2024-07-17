@@ -35,7 +35,7 @@ int enviar_log(int, int);
 void finalizar_proceso(t_buffer*);
 t_list* leer_instrucciones_del_path();
 typedef struct {
-    int pid;
+    uint32_t pid;
     t_list* instruccionesParaCpu;
 }procesoListaInst;
 
@@ -47,13 +47,12 @@ extern char* path_kernel;
 extern struct paquetePcb kernelPcb;
 extern t_list* listaDeProcesos;
 
-void enviar_instrucciones_cpu(t_buffer*);
+void enviar_instrucciones_cpu(t_buffer*, int);
 void tam_pagina(t_buffer*);
-char* instruccionActual (procesoListaInst*, int );
-bool pidIguales(procesoListaInst*);
-void enviar_instruccion(char*);
+char* instruccionActual (procesoListaInst*, uint32_t );
+void enviar_instruccion(char*, int);
 void ajustar_tam_proceso( t_buffer*);
 void agregarProcesoALaCola(procesoListaInst*);
-procesoListaInst* buscar_procesoPorId(int);
+procesoListaInst* buscar_procesoPorId(uint32_t);
 
 #endif

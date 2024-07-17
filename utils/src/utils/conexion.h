@@ -23,12 +23,12 @@ typedef enum {
 
 int iniciar_servidor(char*);
 int esperar_cliente(int,t_log*,char*);
-int recibir_operacion(int);
 int crear_conexion(char *, char* ,t_log*,char*);
 void liberar_conexion(int);
 int enviar_hanshake(int,char*);
 void crear_buffer(t_paquete* paquete);
 t_buffer* recibir_todo_elbuffer(int);
+op_code recibir_operacion(int);
 
 
 

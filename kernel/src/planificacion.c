@@ -61,13 +61,13 @@ void liberar_proceso(uint32_t pid){
 void crear_proceso(char* path){
     t_pcb* pcb = crear_pcb(path);
     queue_push(cola_new,pcb);
+    log_info(logger_kernel,"Se crea el proceso %u en NEW",pcb->pid);
     sem_post(&hay_procesos_nuevos);
     uint32_t tam_string = string_length(pcb->pathOperaciones)+1;
     t_paquete* paquete = crear_paquete(INICIAR_PROCESO,sizeof(uint32_t)*2+tam_string);
     buffer_add_uint32(paquete->buffer,pcb->pid);
     buffer_add_string(paquete->buffer,tam_string,pcb->pathOperaciones);
     enviar_paquete(paquete,sockets.socket_memoria);
-    log_info(logger_kernel,"Se crea el proceso %u en NEW",pcb->pid);
 }
 
 void planificar_a_largo_plazo(){
@@ -114,6 +114,10 @@ void planificar_a_corto_plazo_segun_algoritmo(){
     else if (strcmp(algoritmo_planificador, "VRR") == 0){
         t_pcb* a_ejecutar = proximo_ejecutar_VRR();
         ejecutar_VRR(a_ejecutar);
+        }
+        op_code cop = recibir_operacion(sockets.socket_CPU_D);
+        if(cop == CONTEXTO_EXEC){
+        recibir_contexto_exec(pcb_en_ejecucion);
         }
     }
     free(algoritmo_planificador);
