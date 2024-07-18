@@ -8,6 +8,7 @@ uint32_t* longitud_linea_instruccion;
 tipo_de_interrupcion motivo_interrupcion;
 uint32_t dir_logica = 0;
 uint32_t dir_fisica = 0;
+int proceso_enviado = 0;
 
 void ciclo_de_instruccion(){
     fetch_instruction();
@@ -24,16 +25,15 @@ void fetch_instruction(){
 
     log_info(logger_cpu, "PID: %d - FETCH - Program Counter: %d", PID, contexto_registros->PC);
     solicitar_instruccion_a_memoria();
-    contexto_registros->PC += 1;
+    contexto_registros->PC++;
 }
 
 void decode(){
-    
     recibir_instruccion_de_memoria();
 
     if (linea_de_instruccion != NULL) {
         linea_de_instruccion_tokenizada = string_n_split(linea_de_instruccion, *longitud_linea_instruccion, " ");
-        log_info(logger_errores_cpu, "La línea de instrucción recibida es %s",linea_de_instruccion);
+        log_info(logger_cpu, "La línea de instrucción recibida es %s", linea_de_instruccion);
     } else {
         log_info(logger_errores_cpu, "La línea de instrucción recibida está vacía (NULL).");
     }
@@ -104,23 +104,29 @@ void execute(){
 
 //NO SÉ SI LE FALTA ALGO. CHECKEAR.
 void check_interrupt(){
+    sem_wait(&sem_inter);
     while(llego_interrupcion > 0){
         llego_interrupcion--;
+        if(proceso_enviado == 0){
+            switch(motivo_interrupcion){
+            case DESALOJO_QUANTUM:
+                enviar_contexto_a_kernel(FIN_QUANTUM);
+                break;
 
-        switch(motivo_interrupcion){
-        case DESALOJO_QUANTUM:
-            enviar_contexto_a_kernel(FIN_QUANTUM);
-            break;
+            case DESALOJO_POR_USUARIO:
+                enviar_contexto_a_kernel(INTERRUPCION_USUARIO);
+                break;
 
-        case DESALOJO_POR_USUARIO:
-            enviar_contexto_a_kernel(INTERRUPCION_USUARIO);
-            break;
-
-        default:
-            log_info(logger_errores_cpu, "Ups! Pasó algo raro. El motivo de interrupción obtenido es: %s", string_itoa(motivo_interrupcion));
-            break;
+            default:
+                log_info(logger_errores_cpu, "Ups! Pasó algo raro. El motivo de interrupción obtenido es: %s", string_itoa(motivo_interrupcion));
+                break;
+        }
+        }
+        else{
+            log_info(logger_errores_cpu, "El proceso no pudo ser desalojado por %s ya que fue desalojado antes por otra razon", string_itoa(motivo_interrupcion));
         }
     }
+    sem_post(&sem_inter);
 }
 
 // Función para traducir direcciones lógicas a físicas.
@@ -393,6 +399,7 @@ void wait(char* nombre_recurso){
     buffer_add_string(paquete->buffer, string_length(nombre_recurso)+1, nombre_recurso);
 
     enviar_paquete(paquete, sockets.socket_kernel_D);
+    proceso_enviado = 1;
 }
 
 void signal(char* nombre_recurso){
@@ -406,6 +413,7 @@ void signal(char* nombre_recurso){
     buffer_add_string(paquete->buffer, string_length(nombre_recurso)+1, nombre_recurso);
 
     enviar_paquete(paquete, sockets.socket_kernel_D);
+    proceso_enviado = 1;
 }
 
 void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
@@ -422,6 +430,7 @@ void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
     buffer_add_uint32(paquete->buffer, unidades_de_trabajo);
 
     enviar_paquete(paquete, sockets.socket_kernel_D);
+    proceso_enviado = 1;
 }
 
 void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* registro_tamanio){

@@ -17,7 +17,8 @@
 			"cstddef": "c",
 			"memory": "c",
 			"new": "c",
-			"functional": "c"
+			"functional": "c",
+			"atomic": "c"
 		},
 		"C_Cpp.errorSquiggles": "disabled",
 	},

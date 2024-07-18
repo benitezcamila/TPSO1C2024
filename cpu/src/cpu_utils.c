@@ -7,6 +7,8 @@ sem_t sem_contexto_kernel;
 str_sockets sockets;
 int llego_interrupcion = 0;
 uint32_t tamanio_pagina;
+sem_t sem_inter;
+sem_t sem_contexto;
 
 void iniciar_server_kernel(){
     pthread_t dispatch, interrupt;
@@ -85,8 +87,13 @@ void procesar_conexion(void* void_args) {
 
         switch (codigo_op) {
         case CONTEXTO_EXEC:
+            sem_wait(&sem_contexto);
             ind_contexto_kernel = 1;
+            proceso_enviado = 0;
             recibir_contexto_ejecucion(cliente_socket);
+            op_code cod = CONTEXTO_RECIBIDO;
+            send(cliente_socket, &cod, sizeof(op_code), NULL);
+            sem_post(&sem_contexto);
             while(ind_contexto_kernel == 1){
                 ciclo_de_instruccion();
             }
@@ -95,7 +102,9 @@ void procesar_conexion(void* void_args) {
         case INTERRUPT_PROC:
             log_info(logger_cpu, "Se recibió una interrupción de proceso de parte del Kernel.");
             recibir_interrupcion_de_kernel();
+            sem_wait(&sem_inter);
             llego_interrupcion++;
+            sem_post(&sem_inter);
             break;
         
         default:
@@ -109,14 +118,11 @@ void procesar_conexion(void* void_args) {
 }
 
 void recibir_contexto_ejecucion(int cliente_socket){
+    t_buffer* buffer = recibir_todo_elbuffer(cliente_socket);
+    PID =  buffer_read_uint32(buffer);
+    buffer_read(buffer,contexto_registros, sizeof(registros_CPU));
 
-        
-        t_buffer* buffer = recibir_todo_elbuffer(cliente_socket);
-        PID =  buffer_read_uint32(buffer);
-        buffer_read(buffer,contexto_registros, sizeof(registros_CPU));
-        
-        buffer_destroy(buffer);
-    
+    buffer_destroy(buffer);
 }
 
 //NO SÉ SI ESTÁ BIEN. CHECKEAR.
@@ -125,21 +131,26 @@ void recibir_interrupcion_de_kernel(){
     buffer_read(buffer, &motivo_interrupcion, sizeof(tipo_de_interrupcion));
     buffer_destroy(buffer);    
 }
+
 void inicializar_estructuras(){
     contexto_registros = malloc(sizeof(registros_CPU));
     longitud_linea_instruccion = malloc(sizeof(uint32_t));
     tlb = malloc(sizeof(t_TLB));
     inicializar_TLB(configuracion.CANTIDAD_ENTRADAS_TLB, configuracion.ALGORITMO_TLB);
+    sem_init(&sem_inter,0,1);
+    sem_init(&sem_contexto,0,1);
 }
 
 void enviar_contexto_a_kernel(motivo_desalojo motivo){
+    sem_wait(&sem_contexto);
     ind_contexto_kernel = 0;
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(registros_CPU) + sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, &motivo, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
-
     enviar_paquete(paquete, sockets.socket_kernel_D);
-    }
+    sem_post(&sem_contexto);
+    proceso_enviado = 1;
+}
 
 void envios_de_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
                            uint32_t tamanio_data, t_buffer* buffer){ // tamanio std
@@ -161,6 +172,7 @@ void envios_de_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
     else{
         return;
     }
+
     
 }
 
@@ -178,6 +190,7 @@ void enviar_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
     buffer_add_uint32(paquete->buffer, direc_fisica);
 
     enviar_paquete(paquete, sockets.socket_server_D);
+    proceso_enviado = 1;
 }
 
 void solicitar_create_delete_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo){
@@ -191,6 +204,7 @@ void solicitar_create_delete_fs_a_kernel(t_instruccion motivo_io, char* nombre_i
     buffer_add_string(paquete->buffer, string_length(nombre_archivo)+1, nombre_archivo);
 
     enviar_paquete(paquete, sockets.socket_server_D);
+    proceso_enviado = 1;
 }
 
 void solicitar_truncate_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo,
@@ -208,6 +222,7 @@ void solicitar_truncate_fs_a_kernel(t_instruccion motivo_io, char* nombre_interf
     buffer_add(paquete->buffer, tamanio_fs, tamanio_data);
 
     enviar_paquete(paquete, sockets.socket_server_D);
+    proceso_enviado = 1;
 }
 
 void solicitudes_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo,
@@ -248,10 +263,10 @@ void solicitar_write_read_fs_a_kernel(t_instruccion motivo_io, char* nombre_inte
     buffer_add_uint32(paquete->buffer, tamanio_data1);
     buffer_add(paquete->buffer, tamanio_fs, tamanio_data1);
     buffer_add_uint32(paquete->buffer, dir_fisica);
-    buffer_add_uint32(paquete->buffer, tamanio_data2);
     buffer_add(paquete->buffer, puntero_archivo, tamanio_data2);
 
     enviar_paquete(paquete, sockets.socket_server_D);
+    proceso_enviado = 1;//deberia estar en todos los entrada y salida
 }
 
 void solicitar_tamanio_pagina(){

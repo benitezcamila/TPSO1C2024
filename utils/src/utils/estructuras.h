@@ -43,7 +43,8 @@ typedef enum {
     RESIZE_SUCCESS,
     ENTRADASALIDA_LIBERADO,
     FALLO_OP, //para cpu
-    PROCESO_CREADO
+    PROCESO_CREADO,
+    CONTEXTO_RECIBIDO
 } op_code;
 
 typedef enum {

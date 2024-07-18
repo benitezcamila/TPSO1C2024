@@ -331,7 +331,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         break;
     }
     sem_post(&interfaz->pidieron_interfaz);
-    list_add(bloqueado, dictionary_get(dicc_pcb, string_from_format("%u", pid)));
+    
 
 }
 
@@ -339,7 +339,6 @@ void gestionar_interfaces(dispositivo_IO* interfaz){
     pthread_t hilo;
     if (pthread_create(&hilo, NULL, (void*)monitor_desconexion, (void*)interfaz) != 0) {
         perror("Failed to create thread");
-        printf("asdasfasf");
         return;
     }
     pthread_detach(hilo);

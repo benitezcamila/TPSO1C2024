@@ -25,6 +25,8 @@ extern int ind_contexto_kernel;
 extern int llego_interrupcion;
 extern uint32_t tamanio_pagina;
 extern str_sockets sockets;
+extern sem_t sem_inter;
+extern sem_t sem_contexto;
 
 void iniciar_server_kernel();
 void inicializar_cpu_dispatch();

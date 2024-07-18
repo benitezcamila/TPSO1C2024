@@ -4,6 +4,7 @@ t_dictionary* dicc_pcb;
 int current_pid;
 t_pcb* pcb_en_ejecucion;
 sem_t sem_detener_desalojo;
+sem_t sem_ejecucion;
 
 
 registros_CPU* crear_registros(){
@@ -63,7 +64,7 @@ void liberar_recursos(t_pcb* pcb){
         while(list_remove_element(interfaz->cola->elements,pcb)){
 
         }
-        if(interfaz->proceso_okupa == pcb){
+        /*if(interfaz->proceso_okupa == pcb){
             op_code cod = LIBERAR_PROCESO;
             void* a_enviar = malloc(sizeof(op_code));
 	        int offset = 0;
@@ -72,6 +73,7 @@ void liberar_recursos(t_pcb* pcb){
             send(interfaz->socket, a_enviar, sizeof(op_code),0);
             sem_post(&(interfaz->esta_libre));
         }
+        */
     }
     list_destroy(lista_keys_IO);
     list_destroy(lista_keys);
@@ -101,21 +103,23 @@ void desempaquetar_pcb(t_buffer* buffer,t_pcb* pcb){
 }
 
 void crear_paquete_contexto_exec(t_pcb* pcb){
-
+    sem_wait(&sem_ejecucion);
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC,sizeof(registros_CPU)+sizeof(uint32_t));
     buffer_add_uint32(paquete->buffer,pcb->pid);
     buffer_add(paquete->buffer,pcb->registros,sizeof(registros_CPU));
     enviar_paquete(paquete,sockets.socket_CPU_D);
     pcb_en_ejecucion = pcb;
-
+    sem_post(&sem_ejecucion);
 }
 
 void recibir_contexto_exec(t_pcb* pcb){
-    uint64_t quantum_a_asignar = configuracion.QUANTUM;
-
-    if(strcmp(configuracion.ALGORITMO_PLANIFICACION, "VRR") == 0){
-        quantum_a_asignar = pcb->quantum - temporal_gettime(temp_quantum);
+    int quantum_a_asignar = configuracion.QUANTUM;
+    if(strcmp(configuracion.ALGORITMO_PLANIFICACION, "VRR") == 0 || strcmp(configuracion.ALGORITMO_PLANIFICACION, "RR") == 0){
+        quantum_a_asignar = (int)pcb->quantum - temporal_gettime(temp_quantum);
         temporal_destroy(temp_quantum);
+        if(quantum_a_asignar < 10){
+            quantum_a_asignar = configuracion.QUANTUM;
+        }
     }
     if(pausar_plani){
         sem_wait(&sem_detener_desalojo);
@@ -127,6 +131,7 @@ void recibir_contexto_exec(t_pcb* pcb){
     if(mot_desalojo != SIGNAL_RECURSO){
         sem_post(&proceso_ejecutando);
     }
+    
     buffer_read(buffer,pcb->registros, sizeof(registros_CPU));
     
     switch (mot_desalojo){
@@ -207,8 +212,8 @@ void recibir_contexto_exec(t_pcb* pcb){
         uint32_t len = 0;
         char* io = buffer_read_string(buffer,&len);
         pcb->estado = BLOCKED;
-        list_add(bloqueado, pcb);
         procesar_peticion_IO(io,tipo_instruccion,pcb->pid, buffer);
+        list_add(bloqueado, pcb);
         log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: BLOQUEADO", pcb->pid);
         log_info(logger_recurso_ES, "PID: %u - Bloqueado por: %s", pcb->pid, io);
         free(io);

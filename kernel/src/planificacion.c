@@ -125,8 +125,14 @@ void planificar_a_corto_plazo_segun_algoritmo(){
             }
 
         op_code cop = recibir_operacion(sockets.socket_CPU_D);
+        if(cop != CONTEXTO_RECIBIDO){
+            log_info(logger_error,"CPU no recibio correctamente el contexto o cruzo mensanjes");
+        }
+        cop = recibir_operacion(sockets.socket_CPU_D);
         if(cop == CONTEXTO_EXEC){
+            sem_wait(&sem_ejecucion);
             recibir_contexto_exec(pcb_en_ejecucion);
+            sem_post(&sem_ejecucion);
         }
     }
     free(algoritmo_planificador);
@@ -161,6 +167,7 @@ void ejecutar_RR(t_pcb *a_ejecutar){
 
     sem_wait(&proceso_ejecutando);
     a_ejecutar->estado = EXEC;
+    a_ejecutar->quantum = configuracion.QUANTUM;
     //creo y envio el contexto de ejecucion
     ejecutar_con_quantum(a_ejecutar);
     log_info(logger_kernel, "PID: %u - Estado Anterior: READY - Estado Actual: EXEC", a_ejecutar->pid);

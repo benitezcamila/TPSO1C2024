@@ -37,6 +37,7 @@ int main(int argc, char* argv[]) {
 void iniciar_semaforos(){
     sem_init(&sem_escuchar, 0, 1); //inicializo escuchando
     sem_init(&sem_detener_desalojo,0,0);
+    sem_init(&sem_ejecucion, 0, 1);
     iniciar_semaforos_planificacion();
 }
 

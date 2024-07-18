@@ -49,6 +49,7 @@ void gestionar_recurso(str_recursos* recurso){
             log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Cola Ready: %s",pcb->pid, mensaje_ingreso_ready);
             free(mensaje_ingreso_ready);
         }
+        log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", pcb->pid);
     }
 }
 

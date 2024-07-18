@@ -20,6 +20,7 @@ extern int current_pid;
 extern registros_CPU* registros;
 extern t_pcb* pcb_en_ejecucion;
 extern sem_t sem_detener_desalojo;
+extern sem_t sem_ejecucion;
 
 t_pcb* crear_pcb(char*);
 void eliminar_pcb(char*);

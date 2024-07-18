@@ -18,6 +18,7 @@ extern tipo_de_interrupcion motivo_interrupcion;
 extern uint32_t dir_logica;
 extern uint32_t dir_fisica;
 extern uint32_t* longitud_linea_instruccion;
+extern int proceso_enviado;
 
 //Funciones principales.
 void fetch_instruction();
