@@ -51,7 +51,7 @@ void liberar_recursos(t_pcb* pcb){
     for(int i = 0, j = list_size(lista_keys); i < j;i++){
         str_recursos* recurso = dictionary_get(recursos,list_get(lista_keys,i));
         while(list_remove_element(recurso->cola->elements,pcb)){
-
+            
         }
         while(list_remove_element(recurso->procesos_okupas,&pcb->pid)){
             sem_post(&(recurso->cantidad_recursos));
@@ -93,13 +93,11 @@ void eliminar_pcb(char* pid){
 
 
 void desempaquetar_pcb(t_buffer* buffer,t_pcb* pcb){
-    
     uint32_t length_registros = 0;
     pcb->pid = buffer_read_uint32(buffer);
     pcb->quantum = buffer_read_uint32(buffer);
     length_registros = buffer_read_uint32(buffer);
     buffer_read(buffer,pcb->registros,length_registros);
-    
 }
 
 void crear_paquete_contexto_exec(t_pcb* pcb){
@@ -164,13 +162,16 @@ void recibir_contexto_exec(t_pcb* pcb){
         log_info(logger_recurso_ES,"El proceso %u solicito el recurso %s",pcb->pid, recurso);
         int cant_recurso;
         sem_getvalue(&(str_rec->cantidad_recursos),&cant_recurso);
-        if(cant_recurso > 0){
-        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: BLOQUEADO", pcb->pid);
-        log_info(logger_recurso_ES, "PID: %u - Bloqueado por: %s", pcb->pid, recurso);
-        pcb->estado = BLOCKED;
-        list_add(bloqueado, pcb);
+
+        if(cant_recurso < 1){
+            log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: BLOQUEADO", pcb->pid);
+            log_info(logger_recurso_ES, "PID: %u - Bloqueado por: %s", pcb->pid, recurso);
+            pcb->estado = BLOCKED;
+            list_add(bloqueado, pcb);
         }
+
         queue_push(str_rec->cola, pcb);
+        sem_post(&(str_rec->recurso_solicitado));
         free(recurso);
         break;
     }
@@ -189,6 +190,7 @@ void recibir_contexto_exec(t_pcb* pcb){
         log_info(logger_recurso_ES,"El proceso %u libero el recurso %s",pcb->pid, recurso);
         list_remove_element(str_rec->procesos_okupas,&pcb->pid);
         sem_post(&str_rec->cantidad_recursos);
+        esperar_confirmacion_contexto();
         break;
     }
 
@@ -218,14 +220,13 @@ void recibir_contexto_exec(t_pcb* pcb){
         log_info(logger_recurso_ES, "PID: %u - Bloqueado por: %s", pcb->pid, io);
         free(io);
         free(tipo_instruccion);
-        
         break;
     
     default:
         break;
     }
-    buffer_destroy(buffer);
 
+    buffer_destroy(buffer);
 }
 
 

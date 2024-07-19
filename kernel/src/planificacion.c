@@ -124,18 +124,20 @@ void planificar_a_corto_plazo_segun_algoritmo(){
             ejecutar_VRR(a_ejecutar);
             }
 
-        op_code cop = recibir_operacion(sockets.socket_CPU_D);
-        if(cop != CONTEXTO_RECIBIDO){
-            log_info(logger_error,"CPU no recibio correctamente el contexto o cruzo mensanjes");
-        }
-        cop = recibir_operacion(sockets.socket_CPU_D);
-        if(cop == CONTEXTO_EXEC){
-            sem_wait(&sem_ejecucion);
-            recibir_contexto_exec(pcb_en_ejecucion);
-            sem_post(&sem_ejecucion);
-        }
+        esperar_confirmacion_contexto();
     }
     free(algoritmo_planificador);
+}
+
+void esperar_confirmacion_contexto(){
+    op_code cop = recibir_operacion(sockets.socket_CPU_D);
+    if(cop != CONTEXTO_RECIBIDO){
+        log_info(logger_error,"CPU no recibio correctamente el contexto o cruzo mensanjes");
+    }
+        cop = recibir_operacion(sockets.socket_CPU_D);
+        if(cop == CONTEXTO_EXEC){
+        recibir_contexto_exec(pcb_en_ejecucion);
+    }
 }
 
 t_pcb* proximo_ejecutar_FIFO(){

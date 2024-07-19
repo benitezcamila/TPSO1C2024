@@ -70,6 +70,12 @@ void execute(){
 		uint32_t tamanio = atoi(linea_de_instruccion_tokenizada[1]);
 		copy_string(tamanio);
 	}
+    else if(strcmp(linea_de_instruccion_tokenizada[0], "WAIT") == 0){
+		wait(linea_de_instruccion_tokenizada[1]);
+	}
+    else if(strcmp(linea_de_instruccion_tokenizada[0], "SIGNAL") == 0){
+		signal(linea_de_instruccion_tokenizada[1]);
+	}
     else if(strcmp(linea_de_instruccion_tokenizada[0], "IO_GEN_SLEEP") == 0){
         uint32_t unidades_de_trabajo = atoi(linea_de_instruccion_tokenizada[2]);
         io_gen_sleep(linea_de_instruccion_tokenizada[1], unidades_de_trabajo);

@@ -127,7 +127,7 @@ void recibir_instrucciones (int socket_kernel, int socket_memoria){
     uint32_t pid ;
     t_instruccion instruccion_a_procesar;
     op_code cop;
-    char* nombre = malloc(string_lenght(nombre_interfaz));
+    char* nombre = malloc(string_length(nombre_interfaz));
     nombre = strcpy(nombre,nombre_interfaz);
     sem_post(&mutex_conexion);
     while(socket_kernel!=-1) {

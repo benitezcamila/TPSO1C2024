@@ -44,6 +44,7 @@ void ejecutar_VRR(t_pcb *);
 void esperar_interrupcion_quantum(t_pcb *);
 void pausar_planificacion();
 void reanudar_planificacion();
+void esperar_confirmacion_contexto();
 
 
 #endif
