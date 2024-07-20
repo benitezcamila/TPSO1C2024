@@ -6,7 +6,7 @@ t_list* listaDeProcesos;
 char* path_kernel;
 struct paquetePcb kernelPcb;
 uint32_t pid_buscar_proceso;
-
+sem_t sem_path_instrucciones;
 
 
 
@@ -19,13 +19,13 @@ void inicializar_memoria(){
     memset(bitMap, 0 , sizeof(int) * cantFrames);
     tabla_global = dictionary_create();
     listaDeProcesos = list_create();
+    sem_init(&sem_path_instrucciones, 0,1);
 } 
 
 void iniciar_proceso(t_buffer* bufferDeKernel){
     procesoListaInst* procesos = malloc(sizeof(procesoListaInst));
 // ------------ cargar buffer kernel -------//
     procesos->pid = buffer_read_uint32(bufferDeKernel);
-    procesos->instruccionesParaCpu = list_create();
     uint32_t sizeDelProceso = 0;
 // ------------ leo archivo instrucciones ---------//    
     procesos->instruccionesParaCpu = leer_instrucciones_del_path(buffer_read_string(bufferDeKernel,&sizeDelProceso));
@@ -36,6 +36,7 @@ void iniciar_proceso(t_buffer* bufferDeKernel){
 
 void atender_escuchas(){
     while(1){
+    sleep(1);
     sem_wait(&sem_escuchar);
     pthread_t escuchar;
     pthread_create(&escuchar,NULL,(void*)server_escuchar,NULL);
@@ -67,6 +68,12 @@ void procesar_conexion(void* void_args) {
     free(args);
     void* a_enviar;//espacio_usuario
     op_code cop;
+    if(strcmp(nombre_cliente,"CPU")==0){
+        sockets.socket_cliente_CPU = cliente_socket;
+    }
+    else if(strcmp(nombre_cliente,"KERNEL")==0){
+        sockets.socket_cliente_kernel = cliente_socket;
+    }
     while (cliente_socket != -1) {
 
         if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
@@ -91,7 +98,7 @@ void procesar_conexion(void* void_args) {
             break;
         case AJUSTAR_TAMANIO:
             buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
-            ajustar_tam_proceso( buffer_de_cpu);
+            ajustar_tam_proceso(buffer_de_cpu);
             log_info(logger_memoria, "Ajusto tamanio proceso");
             break;
 
@@ -103,15 +110,21 @@ void procesar_conexion(void* void_args) {
         case ACCESS_ESPACIO_USUARIO_ES:
             t_buffer* buffer_ENTRADA_SALIDA = recibir_todo_elbuffer(cliente_socket);
             a_enviar = access_espacio_usuario(buffer_ENTRADA_SALIDA);
-            if(a_enviar == NULL) enviar_hanshake(sockets.socket_cliente_E_S,"ok!");//lectura
-            enviar_paquete((t_paquete*)a_enviar, sockets.socket_cliente_E_S); //escritura podria ser cliente socket /././././././././././
+            op_code confirmacion_escritura = OK_ESCRITURA;
+            if(a_enviar == NULL)  send(cliente_socket, &confirmacion_escritura, sizeof(op_code), MSG_WAITALL);//lectura
+            else{enviar_paquete((t_paquete*)a_enviar, cliente_socket); //escritura podria ser cliente socket /././././././././././
+            }
             break;
+        
         case ACCESS_ESPACIO_USUARIO_CPU:
             buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
             a_enviar = access_espacio_usuario(buffer_de_cpu);
-            if(a_enviar == NULL) enviar_hanshake(cliente_socket,"ok!");//escritura
-            enviar_paquete((t_paquete*)a_enviar, cliente_socket);//lectura
-        break;
+            confirmacion_escritura = OK_ESCRITURA;
+            if(a_enviar == NULL) send(cliente_socket, &confirmacion_escritura, sizeof(op_code), MSG_WAITALL);//escritura
+            else{
+                enviar_paquete((t_paquete*)a_enviar, cliente_socket);//lectura
+            }
+            break;
 
         case ACCESO_TABLA_PAGINAS://cpu
             buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
@@ -138,6 +151,7 @@ void procesar_conexion(void* void_args) {
 // leer las instrucciones del path
 t_list* leer_instrucciones_del_path(char* rutaKernel) {
    
+    sem_wait(&sem_path_instrucciones);
 
     // Concatenar la ruta de configuracion.PATH_INSTRUCCIONES
     char *archivo = strdup(configuracion.PATH_INSTRUCCIONES);
@@ -147,30 +161,39 @@ t_list* leer_instrucciones_del_path(char* rutaKernel) {
     FILE* archivo_instrucciones = fopen(archivo, "rb");
    
     if (archivo_instrucciones == NULL) {
-        perror("Error opening file");
+        perror("No pude abrir el archivo");
         exit(EXIT_FAILURE);
     }
     char aux [256];
     t_list* instruccionesParaCPu = list_create();
-    while (fgets(aux, maxiumLineLength, archivo_instrucciones)) {
-    char* a_guardar;
-    if(aux[strlen(aux)-1] == '\n'){
-    a_guardar = malloc(strlen(aux));
-    strncpy(a_guardar,aux,strlen(aux)-1);
-    }
-    else {
-    a_guardar = malloc(strlen(aux)+1);
-    strcpy(a_guardar, aux);
-    }
-  
-    list_add(instruccionesParaCPu,a_guardar);
-    
+    while (fgets(aux, sizeof(aux), archivo_instrucciones)) {
+        // Eliminar el salto de línea si está presente
+        size_t len = strlen(aux);
+        if (len > 0 && aux[len - 1] == '\n') {
+            aux[len - 1] = '\0';  // Reemplaza el '\n' por '\0'
+        }
+
+        // Asignar memoria suficiente para la cadena más el carácter nulo
+        char* a_guardar = malloc(len + 1);
+        if (a_guardar == NULL) {
+            perror("No me aloque (malloc)");
+            fclose(archivo_instrucciones);
+            sem_post(&sem_path_instrucciones);
+            exit(EXIT_FAILURE);
+        }
+
+        // Copiar la cadena
+        strcpy(a_guardar, aux);
+
+        // Añadir a la lista
+        list_add(instruccionesParaCPu, a_guardar);
     }
     
     fclose(archivo_instrucciones);
-    
+    sem_post(&sem_path_instrucciones);    
     return instruccionesParaCPu;   
 }
+
 
 
 void agregarProcesoALaCola(procesoListaInst* proceso){

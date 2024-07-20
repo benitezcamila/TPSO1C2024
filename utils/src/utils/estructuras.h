@@ -44,7 +44,8 @@ typedef enum {
     ENTRADASALIDA_LIBERADO,
     FALLO_OP, //para cpu
     PROCESO_CREADO,
-    CONTEXTO_RECIBIDO
+    CONTEXTO_RECIBIDO,
+    OK_ESCRITURA
 } op_code;
 
 typedef enum {
@@ -59,6 +60,8 @@ typedef enum {
     FIN_QUANTUM,
     //
 }motivo_desalojo;
+
+extern const char *motivo_desalojo_strings[];
 
 
 typedef enum{

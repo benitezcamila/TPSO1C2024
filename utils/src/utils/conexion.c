@@ -84,6 +84,18 @@ op_code recibir_operacion(int socket_cliente){
 		}
 }
 
+motivo_desalojo recibir_desalojo(int socket_cliente){
+	motivo_desalojo cod_op;
+		if(recv(socket_cliente, &cod_op, sizeof(motivo_desalojo), MSG_WAITALL) > 0)
+			return cod_op;
+		else{
+			close(socket_cliente);
+
+			return FALLO_OP; 
+		}
+}
+
+
 
 int crear_conexion(char *ip, char* puerto,t_log* log_conexiones,char* nom_cliente){
 	struct addrinfo hints;
@@ -136,26 +148,18 @@ void liberar_conexion(int socket_cliente){
 }
 
 int enviar_hanshake(int socket,char* nom_cliente){
-    t_paquete* paquete = malloc(sizeof(t_paquete));
 	cod_handshake* codigo = malloc(sizeof(cod_handshake));
 	*codigo = CODIGO;
-	
-    paquete->codigo_operacion = HANDSHAKE;
 	uint32_t len_cliente = string_length(nom_cliente)+1;
+	t_paquete* paquete = crear_paquete(HANDSHAKE,sizeof(uint32_t)+len_cliente+sizeof(cod_handshake));
     paquete->buffer = buffer_create(sizeof(cod_handshake) + sizeof(uint32_t) + len_cliente);
 	buffer_add_string(paquete->buffer, len_cliente, nom_cliente);
 	buffer_add(paquete->buffer, codigo, sizeof(cod_handshake));
-	void* a_enviar = a_enviar_create(paquete);
-
-	int bytes = send(socket,a_enviar,paquete->buffer->size + sizeof(uint32_t) + sizeof(op_code),0);
-
+	enviar_paquete(paquete, socket);
 	free(codigo);
-	free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
-	free(a_enviar);
 	
-	return bytes;
+	
+	return 1;
 }
 
 t_buffer* recibir_todo_elbuffer(int socket_conexion){

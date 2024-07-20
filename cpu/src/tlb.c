@@ -28,7 +28,7 @@ uint32_t buscar_en_TLB(uint32_t PID, uint32_t pagina){
                 tlb->entradas[i].uso = temporal_gettime(tlb->tiempo_actual);
             }        
                 
-            log_info(logger_cpu, "PID: %d - TLB HIT - Pagina: %d", PID, pagina);
+            log_info(logger_tlb, "PID: %d - TLB HIT - Pagina: %d", PID, pagina);
 
             return tlb->entradas[i].marco; // TLB Hit
         }
@@ -59,6 +59,6 @@ void reemplazo_en_TLB(t_entrada_TLB nueva_entrada){
             idx = i;
         }
     }
-
+    log_info(logger_tlb, "PID: %d Reemplazo la pagina: %u por la pagina %u", PID,tlb->entradas[idx].pagina,nueva_entrada.pagina );
     tlb->entradas[idx] = nueva_entrada;
 }

@@ -5,6 +5,7 @@ t_config* config;
 t_log* logger_cpu;
 t_log* logger_errores_cpu;
 t_log* logger_conexiones;
+t_log* logger_tlb;
 
 void obtener_config(){
     config = config_create("cfg/cpu.config");    
@@ -21,4 +22,5 @@ void iniciar_logger(){
     logger_cpu = log_create(PATH_ABSOLUTO("cpu/logs/cpu.log"),"cpu",1,LOG_LEVEL_INFO);
     logger_errores_cpu = log_create(PATH_ABSOLUTO("cpu/logs/cpu_errores.log"),"errores_cpu",1,LOG_LEVEL_INFO);
     logger_conexiones = log_create(PATH_ABSOLUTO("cpu/logs/conexiones.log"),"Conexion",1,LOG_LEVEL_INFO);
+    logger_tlb = log_create(PATH_ABSOLUTO("cpu/logs/tlb.log"),"Conexion",1,LOG_LEVEL_INFO);
 }

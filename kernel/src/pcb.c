@@ -5,7 +5,18 @@ int current_pid;
 t_pcb* pcb_en_ejecucion;
 sem_t sem_detener_desalojo;
 sem_t sem_ejecucion;
-
+const char *motivo_desalojo_strings[] = {
+    "PROCESS_EXIT",
+    "PROCESS_ERROR",
+    "INTERRUPCION_USUARIO",
+    "LLAMADO_KERNEL",
+    "PETICION_IO",
+    "OUT_OF_MEMORY",
+    "PETICION_RECURSO", // wait
+    "SIGNAL_RECURSO", // signal
+    "FIN_QUANTUM",
+    // Asegúrate de mantener el orden igual que el enum
+};
 
 registros_CPU* crear_registros(){
     registros_CPU* registros = malloc(sizeof(registros_CPU));
@@ -140,12 +151,10 @@ void recibir_contexto_exec(t_pcb* pcb){
         break;
     
     case PROCESS_ERROR:
-        uint32_t len_motivo;
-        char* motivo_error = buffer_read_string(buffer, &len_motivo);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pcb->pid);
-        log_info(logger_kernel, "Finaliza el proceso %u - Motivo: %s", pcb->pid,motivo_error);
+    case OUT_OF_MEMORY:
+        log_error(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pcb->pid);
+        log_error(logger_kernel, "Finaliza el proceso %u - Motivo: %s", pcb->pid,motivo_desalojo_strings[mot_desalojo]);
         liberar_proceso(pcb->pid);
-        free(motivo_error);
         break;
 
     case INTERRUPCION_USUARIO:

@@ -1,7 +1,7 @@
 #include "cpu_utils.h"
 
 #define min(a,b) (a<b?a:b)
-
+#define max(a,b) (a>b? a:b)
 int ind_contexto_kernel = 0;
 sem_t sem_contexto_kernel;
 str_sockets sockets;
@@ -154,7 +154,7 @@ void enviar_contexto_a_kernel(motivo_desalojo motivo){
 
 void envios_de_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
                            uint32_t tamanio_data, t_buffer* buffer){ // tamanio std
-    uint32_t direc_fisica = mmu(dir_logica);                        
+    uint32_t direc_fisica = mmu(PID);                        
     uint32_t offset = direc_fisica % tamanio_pagina;
     uint32_t tamanio_disponible = min(tamanio_pagina - offset, tamanio_data);
     void* tamanio_std = malloc(tamanio_disponible);
@@ -228,7 +228,7 @@ void solicitar_truncate_fs_a_kernel(t_instruccion motivo_io, char* nombre_interf
 void solicitudes_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo,
                                 t_buffer* buffer, uint32_t tamanio_data1,
                                 void* puntero_archivo, uint32_t tamanio_data2){ 
-    uint32_t direc_fisica = mmu(dir_logica);                        
+    uint32_t direc_fisica = mmu(PID);                        
     uint32_t offset = direc_fisica % tamanio_pagina;
     uint32_t tamanio_disponible = min(direc_fisica - offset, tamanio_data1);
     void* tamanio_fs = malloc(tamanio_disponible);
@@ -312,19 +312,20 @@ void recibir_instruccion_de_memoria(){
 }
 
 void recibir_respuesta_resize_memoria(uint32_t PID){
-    int op_code = recibir_operacion(sockets.socket_memoria);
+    op_code code = recibir_operacion(sockets.socket_memoria);
 
-    switch (op_code){
+    switch (code){
     case NO_RESIZE:
         enviar_contexto_a_kernel(OUT_OF_MEMORY);
+        log_error(logger_errores_cpu, "El resize del proceso %u sufrio un OUT_OF_MEMORY.", PID);
         break;
     
     case RESIZE_SUCCESS:
-        log_info(logger_cpu, "El resize del proceso %d fue exitoso.", PID);
+        log_info(logger_cpu, "El resize del proceso %u fue exitoso.", PID);
         break;
 
     default:
-        log_info(logger_errores_cpu, "Ocurrió un error recibiendo la respuesta de Memoria tras Resize. El código de operación recibido fue: %d", op_code);
+        log_error(logger_errores_cpu, "Ocurrió un error recibiendo la respuesta de Memoria tras Resize. El código de operación recibido fue: %d", code);
         break;
     }
 }
@@ -334,23 +335,24 @@ uint32_t cantidad_paginas_que_ocupa(uint32_t tamanio, uint32_t desplazamiento){
 }
 
 void* leer_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t tamanio_auxiliar, uint32_t tamanio_total){
-    uint32_t direccion_fisica = mmu(dir_logica);
+    uint32_t direccion_fisica = mmu(PID);
     uint32_t offset = direccion_fisica % tamanio_pagina;
     uint32_t tamanio_a_leer = min(tamanio_auxiliar, tamanio_pagina-offset);
     void* leido =  solicitar_leer_en_memoria(direccion_fisica, tamanio_a_leer);
     
     buffer_add(buffer_auxiliar, leido, tamanio_a_leer);
-    tamanio_auxiliar =- tamanio_a_leer;
+
+    tamanio_auxiliar = max(0,(int)(tamanio_auxiliar - tamanio_a_leer));
     
-    log_info(logger_cpu, "PID: %d - Acción: LEER - Dirección Física: %d - Valor: %d", PID, direccion_fisica, leido);
     
-    if(tamanio_auxiliar >= 0){
-        dir_logica = floor(dir_logica)+ 1;
+    dir_logica = dir_logica + tamanio_a_leer;
+    if(tamanio_auxiliar > 0){
      
         leer_en_memoria_mas_de_una_pagina(buffer_auxiliar, tamanio_auxiliar, tamanio_total);    
     }
     else{
         void* retorno = malloc(tamanio_total);
+        buffer_auxiliar->offset = 0 ;
         buffer_read(buffer_auxiliar, retorno, tamanio_total);
         buffer_destroy(buffer_auxiliar); // No estoy seguro, pero por las dudas...
 
@@ -359,19 +361,23 @@ void* leer_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t tama
 }
 
 void escribir_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t tamanio_total){
-    uint32_t direccion_fisica = mmu(dir_logica);
+    uint32_t direccion_fisica = mmu(PID);
     uint32_t offset = direccion_fisica % tamanio_pagina;
     uint32_t tamanio_a_escribir = min(tamanio_total, tamanio_pagina-offset);
     void* data_a_escribir = malloc(tamanio_a_escribir);
     
     buffer_read(buffer_auxiliar, data_a_escribir, tamanio_a_escribir);
     tamanio_total -= tamanio_a_escribir;
+    
     solicitar_escribir_en_memoria(direccion_fisica, data_a_escribir, tamanio_a_escribir);
     
-    log_info(logger_cpu, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %d", PID, direccion_fisica, data_a_escribir);
+    if(recibir_operacion(sockets.socket_memoria) != OK_ESCRITURA){
+        log_error(logger_errores_cpu, "NO RECIBIO OK! )L:L)");
+    }
 
+    free(data_a_escribir);
+    dir_logica = dir_logica + tamanio_a_escribir;
     if(tamanio_total > 0){
-        dir_logica = floor(dir_logica) + 1;
         escribir_en_memoria_mas_de_una_pagina(buffer_auxiliar, tamanio_total);
     }
     else{
@@ -389,38 +395,26 @@ void* solicitar_leer_en_memoria(uint32_t direccion_fisica, uint32_t tamanio){
     buffer_add_uint32(paquete->buffer, tamanio);
 
     enviar_paquete(paquete, sockets.socket_memoria);
-    return leer_de_memoria(tamanio);
-
+    return leer_de_memoria();
 }
 
-void* leer_de_memoria(uint32_t tamanio){
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    recv(sockets.socket_memoria, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
+void* leer_de_memoria(){
+    
+    op_code codigo = recibir_operacion(sockets.socket_memoria);
+    if(codigo == RESPUESTA_LECTURA_MEMORIA){
 
-    if(paquete->codigo_operacion == RESPUESTA_LECTURA_MEMORIA){
-        recv(sockets.socket_memoria, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
-        paquete->buffer->stream = malloc(paquete->buffer->size);
-
+        t_buffer* buffer = recibir_todo_elbuffer(sockets.socket_memoria);
+        uint32_t tamanio = buffer_read_uint32(buffer);
         void* datos_de_memoria = malloc(tamanio);
-        
-        if(tamanio == sizeof(uint32_t)){
-            recv(sockets.socket_memoria, paquete->buffer->stream, tamanio, MSG_WAITALL);
-            *(uint32_t*)datos_de_memoria = buffer_read_uint32(paquete->buffer);
-        }
-        else if(tamanio == sizeof(uint8_t)){
-            recv(sockets.socket_memoria, paquete->buffer->stream, tamanio, MSG_WAITALL);
-            *(uint8_t*)datos_de_memoria = buffer_read_uint8(paquete->buffer);
-        }
+        buffer_read(buffer, datos_de_memoria, tamanio);
 
-        free(paquete->buffer->stream);
-        free(paquete->buffer);
-        free(paquete);
 
+        buffer_destroy(buffer);
         return datos_de_memoria;
     }
     else{
-        log_info(logger_errores_cpu, "Ocurrió un error tras realizar una lectura de Memoria. El código de operación recibido fue: %d", paquete->codigo_operacion);
-        free(paquete);
+        log_info(logger_errores_cpu, "Ocurrió un error tras realizar una lectura de Memoria. El código de operación recibido fue: %d", codigo);
+        
 
         return NULL;
     }
@@ -432,10 +426,9 @@ void solicitar_escribir_en_memoria(uint32_t direccion_fisica, void* datos_de_reg
     buffer_add_uint32(paquete->buffer, PID);
     buffer_add_uint32(paquete->buffer, (uint32_t) 1 ); // 1 escribir, 0 leer
     buffer_add_uint32(paquete->buffer, direccion_fisica);
-    
     buffer_add_uint32(paquete->buffer, tamanio);
     buffer_add(paquete->buffer, datos_de_registro, tamanio);
-
+    
     enviar_paquete(paquete, sockets.socket_memoria);
 }
 

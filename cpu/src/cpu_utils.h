@@ -54,7 +54,7 @@ uint32_t cantidad_paginas_que_ocupa(uint32_t, uint32_t);
 void* leer_en_memoria_mas_de_una_pagina(t_buffer*, uint32_t, uint32_t);
 void escribir_en_memoria_mas_de_una_pagina(t_buffer*, uint32_t);
 void* solicitar_leer_en_memoria(uint32_t, uint32_t);
-void* leer_de_memoria(uint32_t);
+void* leer_de_memoria();
 void solicitar_escribir_en_memoria(uint32_t, void*, uint32_t);
 
 #endif

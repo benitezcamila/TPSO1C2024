@@ -29,6 +29,7 @@ int enviar_hanshake(int,char*);
 void crear_buffer(t_paquete* paquete);
 t_buffer* recibir_todo_elbuffer(int);
 op_code recibir_operacion(int);
+motivo_desalojo recibir_desalojo(int);
 
 
 

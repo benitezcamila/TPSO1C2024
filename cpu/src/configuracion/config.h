@@ -28,6 +28,7 @@ void obtener_config();
 extern t_log* logger_cpu;
 extern t_log* logger_errores_cpu;
 extern t_log* logger_conexiones;
+extern t_log* logger_tlb;
 
 void iniciar_logger();
 

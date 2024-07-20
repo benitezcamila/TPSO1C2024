@@ -69,9 +69,9 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
     if( interfaz == NULL){
         
         liberar_proceso(pid);
-        log_info(logger_error,"Interfaz %s no existe o no esta conectada", io);
-        log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
+        log_error(logger_error,"Interfaz %s no existe o no esta conectada", io);
+        log_error(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE", pid);
+        log_error(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
     }
     
@@ -82,9 +82,9 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         if(interfaz->tipo_interfaz != GENERICA){
         
         liberar_proceso(pid);
-        log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
-        log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
+        log_error(logger_error,"Interfaz %s no acepta esta operacion", io);
+        log_error(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
+        log_error(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
         //preparo y envio el paquete a la interfaz
@@ -108,9 +108,9 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         if(interfaz->tipo_interfaz != STDIN){
         
         liberar_proceso(pid);
-        log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
-        log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
+        log_error(logger_error,"Interfaz %s no acepta esta operacion", io);
+        log_error(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
+        log_error(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
         
@@ -139,9 +139,9 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         if(interfaz->tipo_interfaz != STDOUT){
         
         liberar_proceso(pid);
-        log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
-        log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
+        log_error(logger_error,"Interfaz %s no acepta esta operacion", io);
+        log_error(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
+        log_error(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
 
@@ -171,9 +171,9 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         if(interfaz->tipo_interfaz != DIALFS){
 
         liberar_proceso(pid);
-        log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
-        log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
+        log_error(logger_error,"Interfaz %s no acepta esta operacion", io);
+        log_error(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
+        log_error(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
         uint32_t len = 0;
@@ -195,9 +195,9 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         if(interfaz->tipo_interfaz != DIALFS){
         
         liberar_proceso(pid);
-        log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
-        log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
+        log_error(logger_error,"Interfaz %s no acepta esta operacion", io);
+        log_error(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
+        log_error(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
         uint32_t len = 0;
@@ -219,9 +219,9 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         if(interfaz->tipo_interfaz != DIALFS){
         
         liberar_proceso(pid);
-        log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
-        log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
+        log_error(logger_error,"Interfaz %s no acepta esta operacion", io);
+        log_error(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
+        log_error(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
         uint32_t len = 0;
@@ -250,9 +250,9 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         if(interfaz->tipo_interfaz != DIALFS){
         
         liberar_proceso(pid);
-        log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
-        log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
+        log_error(logger_error,"Interfaz %s no acepta esta operacion", io);
+        log_error(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
+        log_error(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
         uint32_t len = 0;
@@ -291,9 +291,9 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         if(interfaz->tipo_interfaz != DIALFS){
         
         liberar_proceso(pid);
-        log_info(logger_error,"Interfaz %s no acepta esta operacion", io);
-        log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
-        log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
+        log_error(logger_error,"Interfaz %s no acepta esta operacion", io);
+        log_error(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
+        log_error(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
         uint32_t len = 0;
