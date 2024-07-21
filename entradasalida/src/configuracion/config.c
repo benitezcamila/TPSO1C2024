@@ -81,7 +81,7 @@ void obtener_config(char* path_config){
 void iniciar_logger(){
     logger_entrada_salida = log_create(PATH_ABSOLUTO("entradasalida/logs/entrada salida.log"),"Entrada Salida",1,LOG_LEVEL_INFO);
     logger_conexiones = log_create(PATH_ABSOLUTO("entradasalida/logs/conexiones.log"),"Conexion",1,LOG_LEVEL_INFO);
-    logger_salida = log_create(PATH_ABSOLUTO("entradasalida/logs/salidas.log"),"SALIDA",1,LOG_LEVEL_INFO);
+    logger_salida = log_create(PATH_ABSOLUTO("entradasalida/logs/salidas.log"),"SALIDA",0,LOG_LEVEL_INFO);
 }
 
 

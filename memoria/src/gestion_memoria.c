@@ -144,7 +144,6 @@ t_paquete* leer_espacio_usuario(uint32_t pid,uint32_t direc_fisica, uint32_t tam
     valor = leer_memoria (direc_fisica, tamanio);
     buffer_add_uint32(info_a_enviar->buffer, tamanio);
     buffer_add(info_a_enviar->buffer, valor, tamanio);
-    char* asfdasf = valor;
     return info_a_enviar;
 }
 

@@ -173,12 +173,12 @@ void envios_de_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
         direccion_fisica[contador] = direc_fisica;
         tam_a_escribir[contador] = tamanio_disponible;
         tamanio_std = max(0 ,(int)tamanio_std - (int)tamanio_disponible);
-        contador++;
         if(tamanio_std > 0){
         dir_logica += tamanio_disponible;
         tamanio_disponible = min(tamanio_pagina , tamanio_std);
         direc_fisica = mmu(PID);
         }
+        contador++;
     }
 
     enviar_std_a_kernel(motivo_io, nombre_interfaz,cantidad_paginas, direccion_fisica,tam_a_escribir);
@@ -238,44 +238,60 @@ void solicitar_truncate_fs_a_kernel(t_instruccion motivo_io, char* nombre_interf
 }
 
 void solicitudes_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo,
-                                t_buffer* buffer, uint32_t tamanio_data1,
-                                void* puntero_archivo, uint32_t tamanio_data2){ 
+                                t_buffer* buffer, uint32_t tamanio_data1, //tamaño buffer
+                                uint32_t puntero_archivo){ 
     uint32_t direc_fisica = mmu(PID);                        
     uint32_t offset = direc_fisica % tamanio_pagina;
-    uint32_t tamanio_disponible = min(direc_fisica - offset, tamanio_data1);
-    void* tamanio_fs = malloc(tamanio_disponible);
+    uint32_t tamanio_fs; //cant bytes a leer/escribir
+    if(tamanio_data1 == sizeof(uint32_t)){
+        tamanio_fs = buffer_read_uint32(buffer);
+    }else{
+        tamanio_fs = buffer_read_uint8(buffer);
+    }
+    uint32_t tamanio_disponible = min(tamanio_pagina - offset, tamanio_fs);
     
-    buffer_read(buffer, tamanio_fs, tamanio_data1);
-    solicitar_write_read_fs_a_kernel(motivo_io, nombre_interfaz, nombre_archivo, tamanio_fs, tamanio_disponible, direc_fisica, puntero_archivo,tamanio_data2);
-    free(tamanio_fs);
-    
-    tamanio_data1 =- tamanio_disponible;
+    uint32_t cantidad_paginas = cantidad_paginas_que_ocupa(tamanio_fs, offset);
+    int direccion_fisica[cantidad_paginas]; 
+    int tam_a_escribir[cantidad_paginas];
+    int contador =0;
+    while(cantidad_paginas > contador){
 
-    if(tamanio_data1 > 0){
-        dir_logica = floor(dir_logica) + 1;
-        solicitudes_fs_a_kernel(motivo_io, nombre_interfaz, nombre_archivo, buffer, tamanio_data1, puntero_archivo, tamanio_data2);
+        direccion_fisica[contador] = direc_fisica;
+        tam_a_escribir[contador] = tamanio_disponible;
+        tamanio_fs = max(0 ,(int)tamanio_fs- (int)tamanio_disponible);
+        if(tamanio_fs > 0){
+        dir_logica += tamanio_disponible;
+        tamanio_disponible = min(tamanio_pagina , tamanio_fs);
+        direc_fisica = mmu(PID);
+        }
+        contador++;
     }
-    else{
-        return;
-    }
+    
+    solicitar_write_read_fs_a_kernel(motivo_io, nombre_interfaz, nombre_archivo, cantidad_paginas, direccion_fisica, tam_a_escribir, puntero_archivo);
+    
+    
 }
 
+
+
 void solicitar_write_read_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo,
-                                        void* tamanio_fs, uint32_t tamanio_data1, uint32_t dir_fisica,
-                                        void* puntero_archivo, uint32_t tamanio_data2){
+                                        uint32_t cantidad_paginas, int direccion_fisica[], int tam_a_escribir[],
+                                        uint32_t puntero_archivo){
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(t_instruccion) + sizeof(registros_CPU)
                                         + string_length(nombre_interfaz)+1 + string_length(nombre_archivo)+1
-                                        + sizeof(uint32_t) + tamanio_data1 + tamanio_data2);
+                                        + sizeof(uint32_t)*6 + sizeof(int) * cantidad_paginas * 2);
     motivo_desalojo mot_des = PETICION_IO;
     buffer_add(paquete->buffer, &mot_des, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add(paquete->buffer, &motivo_io, sizeof(t_instruccion));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_string(paquete->buffer, string_length(nombre_archivo)+1, nombre_archivo);
-    buffer_add_uint32(paquete->buffer, tamanio_data1);
-    buffer_add(paquete->buffer, tamanio_fs, tamanio_data1);
-    buffer_add_uint32(paquete->buffer, dir_fisica);
-    buffer_add(paquete->buffer, puntero_archivo, tamanio_data2);
+    buffer_add_uint32(paquete->buffer, cantidad_paginas);
+    buffer_add_uint32(paquete->buffer,sizeof(int) * cantidad_paginas);
+    buffer_add(paquete->buffer, direccion_fisica,sizeof(int) * cantidad_paginas);
+    buffer_add_uint32(paquete->buffer,sizeof(int)* cantidad_paginas);
+    buffer_add(paquete->buffer, tam_a_escribir,sizeof(int) * cantidad_paginas);
+    buffer_add_uint32(paquete->buffer, puntero_archivo);
 
     enviar_paquete(paquete, sockets.socket_kernel_D);
     proceso_enviado = 1;//deberia estar en todos los entrada y salida

@@ -77,12 +77,13 @@ void procesar_io_stdin_read(t_buffer* buffer_kernel, uint32_t pid, int socket_ke
     int offset = 0;
     for(int i=0;i<cantidad_paginas;i++)
     {
-        char* a_escribir = malloc(tamanio_direcciones_read[i]);    
-        memcpy(a_escribir, input_consola+offset,tamanio_direcciones_read[i]);
+        char* a_escribir = string_substring(input_consola,offset,offset+tamanio_direcciones_read[i]);
         offset+=tamanio_direcciones_read[i];
         escribir_en_memoria(a_escribir, pid, direcciones_fisicas_memoria_read[i],socket_memoria );
+        free(a_escribir);
     }
     enviar_fin_de_instruccion(socket_kernel,nombre);
+    
 }
 
 char* leer_consola(){
@@ -96,15 +97,14 @@ char* leer_consola(){
 void escribir_en_memoria(char* input_consola,uint32_t pid,uint32_t direccion_fisica_memoria_write, int socket_memoria) {
     uint32_t tamanio = strlen(input_consola) ;
     uint32_t accion =1 ;//escribir
-    t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_ES, tamanio * sizeof(char) + sizeof(uint32_t) * 4);
+    t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_ES, tamanio + sizeof(uint32_t) * 4);
 
 
 
     buffer_add_uint32(paquete->buffer, pid);
     buffer_add_uint32(paquete->buffer, accion); 
     buffer_add_uint32(paquete->buffer, direccion_fisica_memoria_write);
-    buffer_add_uint32(paquete->buffer, tamanio * sizeof(char) );
-    buffer_add(paquete->buffer, input_consola, tamanio * sizeof(char)); 
+    buffer_add_string(paquete->buffer,tamanio,input_consola);
 
     enviar_paquete(paquete, socket_memoria);//peticion escritura memoria.. si pone ok! escribio correctamente
 
@@ -139,13 +139,19 @@ void procesar_io_stdout_write(t_buffer* buffer_kernel, uint32_t pid, int socket_
         op_code codigo_leido = recibir_operacion(socket_memoria);
         t_buffer* memoria = recibir_todo_elbuffer (socket_memoria);
         uint32_t* length = malloc(sizeof(uint32_t));
+        if(i == cantidad_paginas_a_leer-1){
         char* aux = buffer_read_string(memoria, length);
+        aux[(int)length] = '\0';
         string_append(&mostrar_de_memoria,aux);
-        
+        }
+        else{
+        char* aux = buffer_read_string(memoria, length);    
+        string_append(&mostrar_de_memoria,aux);
+        }
         free(length);
         buffer_destroy(memoria);
     }
-    
+
     printf("%s",mostrar_de_memoria);
     log_info(logger_salida,"%s",mostrar_de_memoria);
     free(mostrar_de_memoria);

@@ -113,13 +113,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         log_error(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
-        /*
-    buffer_add(paquete->buffer, cant_paginas,sizeof(int));
-    buffer_add_uint32(paquete->buffer,sizeof(direc_fisica));
-    buffer_add(paquete->buffer, direccion_fisica,sizeof(direccion_fisica));
-    buffer_add_uint32(paquete->buffer,sizeof(tam_a_escribir));
-    buffer_add(paquete->buffer, tam_a_escribir,sizeof(tam_a_escribir));
-    */
+   
         //preparo y envio el paquete a la interfaz
         int cant_paginas;
         buffer_read(buffer,&cant_paginas,sizeof(int));
@@ -273,32 +267,39 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         log_error(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
+        //preparo y envio el paquete a la interfaz
+     
         uint32_t len = 0;
         char* nombre_archivo = buffer_read_string(buffer,&len);
-        uint32_t tamanio_data = buffer_read_uint32(buffer);
-        void* tamanio_fs = malloc(tamanio_data);
-        buffer_read(buffer,tamanio_fs, tamanio_data);
-        uint32_t dir_fisica = buffer_read_uint32(buffer);
-        uint32_t tamanio_data2 = buffer_read_uint32(buffer);
-        void* puntero_archivo = malloc(tamanio_data2);
-        buffer_read(buffer,tamanio_fs, tamanio_data);
+        uint32_t cant_paginas = buffer_read_uint32(buffer,cant_paginas);
+        uint32_t tam_direccion_fisica = buffer_read_uint32(buffer);
+        int direccion_fisica[cant_paginas];
+        buffer_read(buffer,direccion_fisica,tam_direccion_fisica);
+        uint32_t size_escribir = buffer_read_uint32(buffer);
+        int tam_a_escribir[cant_paginas];
+        buffer_read(buffer,tam_a_escribir,size_escribir);
+        uint32_t puntero_archivo = buffer_read_uint32(buffer);
         
-        t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_instruccion) + sizeof(uint32_t)*5 + len + tamanio_data + tamanio_data2);
-        buffer_add(paquete->buffer,tipo_instruccion,sizeof(t_instruccion));
-        buffer_add_uint32(paquete->buffer,pid);
+        
+        t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_instruccion) + sizeof(uint32_t)*6 + tam_direccion_fisica 
+                                            + size_escribir + string_length(nombre_archivo)+1);
+        buffer_add(paquete->buffer, tipo_instruccion, sizeof(t_instruccion));
+        buffer_add_uint32(paquete->buffer, pid);
         buffer_add_string(paquete->buffer, len, nombre_archivo);
-        buffer_add_uint32(paquete->buffer, tamanio_data);
-        buffer_add(paquete->buffer,tamanio_fs, tamanio_data);
-        buffer_add_uint32(paquete->buffer, dir_fisica);
-        buffer_add_uint32(paquete->buffer, tamanio_data2);
-        buffer_add(paquete->buffer, puntero_archivo, tamanio_data2);
+        buffer_add_uint32(paquete->buffer, cant_paginas);
+        buffer_add_uint32(paquete->buffer, tam_direccion_fisica);
+        buffer_add(paquete->buffer, direccion_fisica, tam_direccion_fisica);
+        buffer_add_uint32(paquete->buffer, size_escribir);
+        buffer_add(paquete->buffer, tam_a_escribir, size_escribir);
+        buffer_add_uint32(paquete->buffer, puntero_archivo);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
         procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
-        queue_push(interfaz->cola,procs);
+        queue_push(interfaz->cola, procs);
+
         free(nombre_archivo);
-        free(tamanio_fs);
-        free(puntero_archivo);
+        
+        
 
 
         break;
@@ -316,30 +317,33 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         }
         uint32_t len = 0;
         char* nombre_archivo = buffer_read_string(buffer,&len);
-        uint32_t tamanio_data = buffer_read_uint32(buffer);
-        void* tamanio_fs = malloc(tamanio_data);
-        buffer_read(buffer,tamanio_fs, tamanio_data);
-        uint32_t dir_fisica = buffer_read_uint32(buffer);
-        uint32_t tamanio_data2 = buffer_read_uint32(buffer);
-        void* puntero_archivo = malloc(tamanio_data2);
-        buffer_read(buffer,tamanio_fs, tamanio_data);
-
-        t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_instruccion) + sizeof(uint32_t)*5 + len + tamanio_data + tamanio_data2);
+        uint32_t cant_paginas = buffer_read_uint32(buffer,cant_paginas);
+        uint32_t tam_direccion_fisica = buffer_read_uint32(buffer);
+        int direccion_fisica[cant_paginas];
+        buffer_read(buffer,direccion_fisica,tam_direccion_fisica);
+        uint32_t size_leer = buffer_read_uint32(buffer);
+        int tam_a_escribir[cant_paginas];
+        buffer_read(buffer,tam_a_escribir,size_leer);
+        uint32_t puntero_archivo = buffer_read_uint32(buffer);
+        
+        
+        t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_instruccion) + sizeof(uint32_t)*6 + tam_direccion_fisica 
+                                                            + size_leer + string_length(nombre_archivo)+1);
         buffer_add(paquete->buffer,tipo_instruccion,sizeof(t_instruccion));
         buffer_add_uint32(paquete->buffer,pid);
         buffer_add_string(paquete->buffer, len, nombre_archivo);
-        buffer_add_uint32(paquete->buffer, tamanio_data);
-        buffer_add(paquete->buffer,tamanio_fs, tamanio_data);
-        buffer_add_uint32(paquete->buffer, dir_fisica);
-        buffer_add_uint32(paquete->buffer, tamanio_data2);
-        buffer_add(paquete->buffer, puntero_archivo, tamanio_data2);
+        buffer_add_uint32(paquete->buffer, cant_paginas);
+        buffer_add_uint32(paquete->buffer,tam_direccion_fisica);
+        buffer_add(paquete->buffer, direccion_fisica,tam_direccion_fisica);
+        buffer_add_uint32(paquete->buffer,size_leer);
+        buffer_add(paquete->buffer, tam_a_escribir,size_leer);
+        buffer_add_uint32(paquete->buffer,puntero_archivo);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
         procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
-        queue_push(interfaz->cola,procs);
+        queue_push(interfaz->cola, procs);
+        
         free(nombre_archivo);
-        free(tamanio_fs);
-        free(puntero_archivo);
 
 
         break;
