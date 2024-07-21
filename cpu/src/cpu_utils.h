@@ -40,7 +40,7 @@ void recibir_contexto_ejecucion(int);
 void recibir_interrupcion_de_kernel();
 void enviar_contexto_a_kernel(motivo_desalojo);
 void envios_de_std_a_kernel(t_instruccion, char*, uint32_t, t_buffer*);
-void enviar_std_a_kernel(t_instruccion, char*, void*, uint32_t, uint32_t);
+void enviar_std_a_kernel(t_instruccion, char* ,int ,int[] , int[]);
 void solicitar_create_delete_fs_a_kernel(t_instruccion, char*, char*);
 void solicitar_truncate_fs_a_kernel(t_instruccion, char*, char*, void*, uint32_t);
 void solicitudes_fs_a_kernel(t_instruccion, char*, char*, t_buffer*, uint32_t, void*, uint32_t);

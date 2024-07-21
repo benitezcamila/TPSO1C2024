@@ -24,6 +24,7 @@ typedef struct {
 extern sem_t mutex_lista_procesos;
 extern str_sockets sockets;
 extern sem_t sem_escuchar;
+extern sem_t mutex_memoria;
 extern char rutaKernel[256];
 extern int socket_server;
 void inicializar_memoria();

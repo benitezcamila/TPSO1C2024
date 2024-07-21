@@ -43,6 +43,7 @@ void actualizar_TLB(uint32_t pid, uint32_t pagina, uint32_t marco){
     
     if(tlb->count < tlb->capacidad){
         tlb->entradas[tlb->count++] = nueva_entrada;
+        tlb->entradas[tlb->count].pagina = tlb->count;
     } else{
         reemplazo_en_TLB(nueva_entrada);
     }
@@ -59,6 +60,6 @@ void reemplazo_en_TLB(t_entrada_TLB nueva_entrada){
             idx = i;
         }
     }
-    log_info(logger_tlb, "PID: %d Reemplazo la pagina: %u por la pagina %u", PID,tlb->entradas[idx].pagina,nueva_entrada.pagina );
+    log_info(logger_tlb, "PID: %u Reemplazo la pagina: %u por la pagina %u", PID,tlb->entradas[idx].pagina,nueva_entrada.pagina );
     tlb->entradas[idx] = nueva_entrada;
 }

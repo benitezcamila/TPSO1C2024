@@ -54,23 +54,47 @@ void enviar_info_io_a_kernel(int socket_kernel){
 
 
 void procesar_io_stdin_read(t_buffer* buffer_kernel, uint32_t pid, int socket_kernel, int socket_memoria, char* nombre) {
-    uint32_t direccion_fisica_memoria_read;
-    buffer_read(buffer_kernel, &direccion_fisica_memoria_read, sizeof(uint32_t));
+  
+    int cantidad_paginas;
+    buffer_read(buffer_kernel, &cantidad_paginas, sizeof(int));
+    int direcciones_fisicas_memoria_read[cantidad_paginas];  
+    int tamanio_direcciones_read[cantidad_paginas]; 
+    uint32_t tamanio_array_direcciones = buffer_read_uint32(buffer_kernel);
+    buffer_read(buffer_kernel, direcciones_fisicas_memoria_read, tamanio_array_direcciones);
+    uint32_t tamanio_arrays_tam_a_escribir = buffer_read_uint32(buffer_kernel);
+    buffer_read(buffer_kernel, tamanio_direcciones_read, tamanio_arrays_tam_a_escribir);
+    /*
+    buffer_add(paquete->buffer, cant_paginas,sizeof(int));
+    buffer_add_uint32(paquete->buffer,sizeof(direc_fisica));
+    buffer_add(paquete->buffer, direccion_fisica,sizeof(direccion_fisica));
+    buffer_add_uint32(paquete->buffer,sizeof(tam_a_escribir));
+    buffer_add(paquete->buffer, tam_a_escribir,sizeof(tam_a_escribir));
+    */
+    
+
+
     char* input_consola = leer_consola();
-    escribir_en_memoria(input_consola, direccion_fisica_memoria_read, pid,socket_memoria );
+    int offset = 0;
+    for(int i=0;i<cantidad_paginas;i++)
+    {
+        char* a_escribir = malloc(tamanio_direcciones_read[i]);    
+        memcpy(a_escribir, input_consola+offset,tamanio_direcciones_read[i]);
+        offset+=tamanio_direcciones_read[i];
+        escribir_en_memoria(a_escribir, pid, direcciones_fisicas_memoria_read[i],socket_memoria );
+    }
     enviar_fin_de_instruccion(socket_kernel,nombre);
 }
 
 char* leer_consola(){
 	char* leido;
 	leido = readline("> ");
-    log_info(logger_entrada_salida,leido);
+    log_info(logger_entrada_salida,"%s",leido);
     return leido;	
 }
 
 
 void escribir_en_memoria(char* input_consola,uint32_t pid,uint32_t direccion_fisica_memoria_write, int socket_memoria) {
-    uint32_t tamanio = strlen(input_consola)+1 ;
+    uint32_t tamanio = strlen(input_consola) ;
     uint32_t accion =1 ;//escribir
     t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_ES, tamanio * sizeof(char) + sizeof(uint32_t) * 4);
 
@@ -84,7 +108,6 @@ void escribir_en_memoria(char* input_consola,uint32_t pid,uint32_t direccion_fis
 
     enviar_paquete(paquete, socket_memoria);//peticion escritura memoria.. si pone ok! escribio correctamente
 
-    eliminar_paquete(paquete);
     }
 
 void procesar_io_stdout_write(t_buffer* buffer_kernel, uint32_t pid, int socket_kernel, int socket_memoria, char* nombre) {
@@ -95,30 +118,37 @@ void procesar_io_stdout_write(t_buffer* buffer_kernel, uint32_t pid, int socket_
      la Dirección Lógica almacenada en el Registro Dirección, un tamaño indicado por el Registro Tamaño y se imprima por pantalla.
     */
 
-    uint32_t direccion_fisica_memoria_write;
-    uint32_t tamanio_a_leer;
-
-    uint32_t accion =0;    
-    tamanio_a_leer = buffer_read_uint32(buffer_kernel);
-    direccion_fisica_memoria_write = buffer_read_uint32(buffer_kernel);
-    t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_ES, sizeof(uint32_t) * 4);
-    buffer_add_uint32(paquete->buffer, pid);
-    buffer_add_uint32(paquete->buffer, accion);
-    buffer_add_uint32(paquete->buffer, direccion_fisica_memoria_write);
-    buffer_add_uint32(paquete->buffer, tamanio_a_leer);
-    enviar_paquete(paquete, sockets.socket_memoria);
+    int cantidad_paginas_a_leer;
+    uint32_t accion =0;
+    buffer_read(buffer_kernel, &cantidad_paginas_a_leer, sizeof(int));
+    int direcciones_fisicas_memoria_a_leer[cantidad_paginas_a_leer];  
+    int tamanio_direcciones_a_leer[cantidad_paginas_a_leer]; 
+    uint32_t tamanio_array_direcciones = buffer_read_uint32(buffer_kernel);
+    buffer_read(buffer_kernel, direcciones_fisicas_memoria_a_leer, tamanio_array_direcciones);
+    uint32_t tamanio_arrays_tam_a_leer = buffer_read_uint32(buffer_kernel);
+    buffer_read(buffer_kernel, tamanio_direcciones_a_leer, tamanio_arrays_tam_a_leer);
+    char* mostrar_de_memoria =string_new();
     
-    eliminar_paquete(paquete);
+    for(int i=0;i<cantidad_paginas_a_leer;i++){
+        t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_ES, sizeof(uint32_t) * 4);
+        buffer_add_uint32(paquete->buffer, pid);
+        buffer_add_uint32(paquete->buffer, accion);
+        buffer_add_uint32(paquete->buffer, (uint32_t)direcciones_fisicas_memoria_a_leer[i]);
+        buffer_add_uint32(paquete->buffer, (uint32_t)tamanio_direcciones_a_leer[i]);
+        enviar_paquete(paquete, socket_memoria);
+        op_code codigo_leido = recibir_operacion(socket_memoria);
+        t_buffer* memoria = recibir_todo_elbuffer (socket_memoria);
+        uint32_t* length = malloc(sizeof(uint32_t));
+        char* aux = buffer_read_string(memoria, length);
+        string_append(&mostrar_de_memoria,aux);
+        
+        free(length);
+        buffer_destroy(memoria);
+    }
     
-    op_code codigo_leido;
-    
-    recv(socket_memoria,&codigo_leido , sizeof(op_code), 0);
-    t_buffer* memoria = recibir_todo_elbuffer (sockets.socket_memoria);
-    uint32_t* length = malloc(sizeof(uint32_t));
-    char* mostrar_de_memoria = buffer_read_string(memoria, length); 
-    printf(mostrar_de_memoria);
-    
-    free(length);
+    printf("%s",mostrar_de_memoria);
+    log_info(logger_salida,"%s",mostrar_de_memoria);
+    free(mostrar_de_memoria);
     enviar_fin_de_instruccion(socket_kernel, nombre);
 }
 
@@ -681,7 +711,7 @@ void procesar_io_fs_write(t_buffer* buffer_kernel, uint32_t pid, int socket_kern
     buffer_add_uint32(paquete->buffer, dir_fisica);
     buffer_add_uint32(paquete->buffer, bytes_a_escribir);
     enviar_paquete(paquete, socket_memoria);
-    eliminar_paquete(paquete);
+    
     op_code codigo_leido;
     recv(socket_memoria,&codigo_leido , sizeof(op_code), 0);
     t_buffer* memoria = recibir_todo_elbuffer (socket_memoria);

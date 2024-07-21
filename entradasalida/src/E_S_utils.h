@@ -12,6 +12,8 @@
 #include "utils/conexion.h"
 #include "utils/serializacion.h"
 #include <semaphore.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 typedef struct {
     int socket_memoria;
     int socket_kernel;

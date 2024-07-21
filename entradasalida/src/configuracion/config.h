@@ -37,6 +37,7 @@ extern t_cfg configuracion;
 extern t_config* config;
 extern t_log* logger_entrada_salida;
 extern t_log* logger_conexiones;
+extern t_log* logger_salida;
 extern t_bitarray* bitmap;
 extern int tamanio_bitmap_bytes;
 extern int tamanio_memoria_bloques;

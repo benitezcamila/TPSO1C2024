@@ -144,12 +144,15 @@ t_paquete* leer_espacio_usuario(uint32_t pid,uint32_t direc_fisica, uint32_t tam
     valor = leer_memoria (direc_fisica, tamanio);
     buffer_add_uint32(info_a_enviar->buffer, tamanio);
     buffer_add(info_a_enviar->buffer, valor, tamanio);
+    char* asfdasf = valor;
     return info_a_enviar;
 }
 
 void* leer_memoria(uint32_t dir_fisica, uint32_t tamanio){
 	void* valor_leido = malloc(tamanio);
+    sem_wait(&mutex_memoria);
     memcpy(valor_leido, espacio_usuario + dir_fisica, tamanio);
+    sem_post(&mutex_memoria);
     return valor_leido;
 
 }
@@ -157,6 +160,7 @@ void* leer_memoria(uint32_t dir_fisica, uint32_t tamanio){
 void* escribir_espacio_usuario(uint32_t pid,uint32_t direc_fisica,uint32_t tamanio,t_buffer* buffer){
     void* data_a_escribir = malloc(tamanio);
     buffer_read(buffer, data_a_escribir, tamanio); 
+    char* asfas = data_a_escribir;
     tabla_pagina* tabla = dictionary_get(tabla_global, string_itoa(pid));
     escribir_memoria(direc_fisica,tamanio, data_a_escribir);
     return NULL;
@@ -164,7 +168,9 @@ void* escribir_espacio_usuario(uint32_t pid,uint32_t direc_fisica,uint32_t taman
 
 
   void escribir_memoria(uint32_t direc_fisica, uint32_t tamanio, void* data_a_escribir){
+     sem_wait(&mutex_memoria);
      memcpy(espacio_usuario + direc_fisica, data_a_escribir, tamanio);
+     sem_post(&mutex_memoria);
      return; 
 }  
   

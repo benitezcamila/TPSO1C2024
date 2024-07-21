@@ -142,7 +142,7 @@ uint32_t mmu(uint32_t pid){
     uint32_t marco = buscar_en_TLB(pid, numero_pagina);
 
     if(marco == -1){ //TLB Miss
-        log_info(logger_tlb, "PID: %d - TLB MISS - Pagina: %d", PID, numero_pagina);
+        log_info(logger_tlb, "PID: %u - TLB MISS - Pagina: %u", PID, numero_pagina);
         marco = solicitar_marco_a_memoria(numero_pagina);
         actualizar_TLB(pid, numero_pagina, marco);
         
@@ -153,7 +153,7 @@ uint32_t mmu(uint32_t pid){
     }
 
     //No sé si este log está bien puesto acá
-    log_info(logger_cpu, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d", PID, numero_pagina, marco);
+    log_info(logger_cpu, "PID: %u - OBTENER MARCO - Página: %u - Marco: %u", PID, numero_pagina, marco);
   
     return (marco * tamanio_pagina) + desplazamiento;
 }
@@ -196,14 +196,22 @@ void set(char* registro, uint32_t valor){
 }
 
 void mov_in(char* registro_datos, char* registro_direccion){
-    uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
+    if(!(registro_direccion[1] == 'X')){    
+        uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
+        dir_logica = *contenido_auxiliar;
+        if(contenido_auxiliar == NULL){
+            log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
+            return;
+        }
 
-    if(contenido_auxiliar == NULL){
-        log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
-        return;
+    }else{
+        uint8_t* contenido_auxiliar = (uint8_t*) obtener_contenido_registro(registro_direccion);
+        dir_logica = *contenido_auxiliar;
+        if(contenido_auxiliar == NULL){
+            log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
+            return;
+        }
     }
-
-    dir_logica = *contenido_auxiliar;
     dir_fisica = mmu(PID);
     uint32_t offset = dir_fisica % tamanio_pagina;
     uint32_t direccion_fisica_inicial = dir_fisica;
@@ -231,16 +239,26 @@ void mov_in(char* registro_datos, char* registro_direccion){
 }
 
 void mov_out(char* registro_direccion, char* registro_datos){
-        uint32_t* contenido_auxiliar = obtener_contenido_registro(registro_direccion);
+    if(!(registro_direccion[1] == 'X')){    
+        uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
+        dir_logica = *contenido_auxiliar;
+        if(contenido_auxiliar == NULL){
+            log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
+            return;
+        }
 
-    if(contenido_auxiliar == NULL){
-        log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
-        return;
+    }else{
+        uint8_t* contenido_auxiliar = (uint8_t*) obtener_contenido_registro(registro_direccion);
+        dir_logica = *contenido_auxiliar;
+        if(contenido_auxiliar == NULL){
+            log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
+            return;
+        }
     }
+    
+        dir_fisica = mmu(PID);
+        uint32_t direccion_fisica_inicial = dir_fisica;
 
-    dir_logica = *contenido_auxiliar;
-    dir_fisica = mmu(PID);
-    uint32_t direccion_fisica_inicial = dir_fisica;
 
     if(!(registro_datos[1] == 'X')){
         uint32_t* datos_de_registro = obtener_contenido_registro(registro_datos);
@@ -273,7 +291,7 @@ void mov_out(char* registro_direccion, char* registro_datos){
 }
 
 void sum(char* reg_destino, char* reg_origen){
-    uint32_t valor_a_sumar = atoi(reg_origen);
+    uint32_t valor_a_sumar = *(uint32_t*)obtener_contenido_registro(reg_origen);
 
     if(strcmp(reg_destino, "PC") == 0){
         contexto_registros->PC += valor_a_sumar;
@@ -301,7 +319,7 @@ void sum(char* reg_destino, char* reg_origen){
 }
 
 void sub(char* reg_destino, char* reg_origen){
-    uint32_t valor_a_restar = atoi(reg_origen);
+    uint32_t valor_a_restar = *(uint32_t*)obtener_contenido_registro(reg_origen);
 
     if(strcmp(reg_destino, "PC") == 0){
         contexto_registros->PC -= valor_a_restar;
@@ -446,20 +464,29 @@ void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo){
 
 void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* registro_tamanio){
     ind_contexto_kernel = 0;
-    uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
+    if(!(registro_direccion[1] == 'X')){    
+        uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
+        dir_logica = *contenido_auxiliar;
+        if(contenido_auxiliar == NULL){
+            log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
+            return;
+        }
 
-    if(contenido_auxiliar == NULL){
-        log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
-        return;
+    }else{
+        uint8_t* contenido_auxiliar = (uint8_t*) obtener_contenido_registro(registro_direccion);
+        dir_logica = *contenido_auxiliar;
+        if(contenido_auxiliar == NULL){
+            log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
+            return;
+        }
     }
-
-    dir_logica = *contenido_auxiliar;
 
     if(!(registro_tamanio[1] == 'X')){
         void* tamanio = obtener_contenido_registro(registro_tamanio);
         t_buffer* buffer = buffer_create(sizeof(uint32_t));
         
-        buffer_read(buffer, tamanio, sizeof(uint32_t));
+        buffer_add_uint32(buffer, *(uint32_t*)tamanio);        
+        buffer->offset=0;
         envios_de_std_a_kernel(STDIN_READ, nombre_interfaz, sizeof(uint32_t), buffer);
         
         buffer_destroy(buffer);
@@ -469,7 +496,8 @@ void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* regist
         void* tamanio = obtener_contenido_registro(registro_tamanio);
         t_buffer* buffer = buffer_create(sizeof(uint8_t));
 
-        buffer_read(buffer, tamanio, sizeof(uint8_t));
+        buffer_add_uint8(buffer, *(uint8_t*)tamanio);        
+        buffer->offset=0;
         envios_de_std_a_kernel(STDIN_READ, nombre_interfaz, sizeof(uint8_t), buffer);
         
         buffer_destroy(buffer);
@@ -481,21 +509,30 @@ void io_stdin_read(char* nombre_interfaz, char* registro_direccion, char* regist
 
 void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* registro_tamanio){
     ind_contexto_kernel = 0;
-    uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
+      if(!(registro_direccion[1] == 'X')){    
+        uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
+        dir_logica = *contenido_auxiliar;
+        if(contenido_auxiliar == NULL){
+            log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
+            return;
+        }
 
-    if(contenido_auxiliar == NULL){
-        log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
-        return;
+    }else{
+        uint8_t* contenido_auxiliar = (uint8_t*) obtener_contenido_registro(registro_direccion);
+        dir_logica = *contenido_auxiliar;
+        if(contenido_auxiliar == NULL){
+            log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
+            return;
+        }
     }
-
-    dir_logica = *contenido_auxiliar;
-
+    
     if(!(registro_tamanio[1] == 'X')){
         void* tamanio = obtener_contenido_registro(registro_tamanio);
         t_buffer* buffer = buffer_create(sizeof(uint32_t));
         
-        buffer_read(buffer, tamanio, sizeof(uint32_t));
-        envios_de_std_a_kernel(STDIN_READ, nombre_interfaz, sizeof(uint32_t), buffer);
+        buffer_add_uint32(buffer, *(uint32_t*)tamanio);        
+        buffer->offset=0;
+        envios_de_std_a_kernel(STDOUT_WRITE, nombre_interfaz, sizeof(uint32_t), buffer);
         
         buffer_destroy(buffer);
        
@@ -504,7 +541,8 @@ void io_stdout_write(char* nombre_interfaz, char* registro_direccion, char* regi
         void* tamanio = obtener_contenido_registro(registro_tamanio);
         t_buffer* buffer = buffer_create(sizeof(uint8_t));
 
-        buffer_read(buffer, tamanio, sizeof(uint8_t));
+        buffer_add_uint8(buffer, *(uint8_t*)tamanio);        
+        buffer->offset=0;
         envios_de_std_a_kernel(STDOUT_WRITE, nombre_interfaz, sizeof(uint8_t), buffer);
         
         buffer_destroy(buffer);
@@ -550,7 +588,7 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
                 char* registro_tamanio, char* registro_puntero_archivo){
     ind_contexto_kernel = 0;
     uint32_t* contenido_auxiliar = (uint32_t*)obtener_contenido_registro(registro_direccion);
-
+    
     if(contenido_auxiliar == NULL){
         log_info(logger_errores_cpu, "El registro ingresado no fue correcto. Se obtuvo NULL.");
         return;
@@ -564,7 +602,7 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
         t_buffer* buffer = buffer_create(sizeof(uint32_t));
         
         buffer_add_uint32(buffer, *(uint32_t*)tamanio);
-
+        buffer->offset=0;
         if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
@@ -590,7 +628,7 @@ void io_fs_write(char* nombre_interfaz, char* nombre_archivo, char* registro_dir
         t_buffer* buffer = buffer_create(sizeof(uint8_t));
 
         buffer_add_uint8(buffer, *(uint8_t*)tamanio);
-
+        buffer->offset=0;
         if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
 
@@ -632,8 +670,8 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
     if(!(registro_tamanio[1] == 'X')){
         void* tamanio = obtener_contenido_registro(registro_tamanio);
         t_buffer* buffer = buffer_create(sizeof(uint32_t));
-
         buffer_add_uint32(buffer, *(uint32_t*)tamanio);
+        buffer->offset=0;
 
         if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
@@ -660,7 +698,7 @@ void io_fs_read(char* nombre_interfaz, char* nombre_archivo, char* registro_dire
         t_buffer* buffer = buffer_create(sizeof(uint8_t));
 
         buffer_add_uint8(buffer, *(uint8_t*)tamanio);
-
+        buffer->offset=0;
         if(!(registro_puntero_archivo[1] == 'X')){
             void* puntero_registro = obtener_contenido_registro(registro_puntero_archivo);
             t_buffer* buffer = buffer_create(sizeof(uint32_t));

@@ -6,7 +6,7 @@ t_list* listaDeProcesos;
 char* path_kernel;
 struct paquetePcb kernelPcb;
 uint32_t pid_buscar_proceso;
-sem_t sem_path_instrucciones;
+sem_t mutex_memoria;
 
 
 
@@ -19,7 +19,7 @@ void inicializar_memoria(){
     memset(bitMap, 0 , sizeof(int) * cantFrames);
     tabla_global = dictionary_create();
     listaDeProcesos = list_create();
-    sem_init(&sem_path_instrucciones, 0,1);
+    sem_init(&mutex_memoria, 0,1);
 } 
 
 void iniciar_proceso(t_buffer* bufferDeKernel){
@@ -151,8 +151,7 @@ void procesar_conexion(void* void_args) {
 // leer las instrucciones del path
 t_list* leer_instrucciones_del_path(char* rutaKernel) {
    
-    sem_wait(&sem_path_instrucciones);
-
+   
     // Concatenar la ruta de configuracion.PATH_INSTRUCCIONES
     char *archivo = strdup(configuracion.PATH_INSTRUCCIONES);
     string_append(&archivo, rutaKernel);
@@ -178,7 +177,6 @@ t_list* leer_instrucciones_del_path(char* rutaKernel) {
         if (a_guardar == NULL) {
             perror("No me aloque (malloc)");
             fclose(archivo_instrucciones);
-            sem_post(&sem_path_instrucciones);
             exit(EXIT_FAILURE);
         }
 
@@ -190,7 +188,7 @@ t_list* leer_instrucciones_del_path(char* rutaKernel) {
     }
     
     fclose(archivo_instrucciones);
-    sem_post(&sem_path_instrucciones);    
+   
     return instruccionesParaCPu;   
 }
 

@@ -7,6 +7,7 @@ t_cfg configuracion;
 t_config* config;
 t_log* logger_entrada_salida;
 t_log* logger_conexiones;
+t_log* logger_salida;
 char * tipo_interfaz_string;
 t_bitarray* bitmap = NULL;
 int tamanio_bitmap_bytes = 0;
@@ -80,7 +81,9 @@ void obtener_config(char* path_config){
 void iniciar_logger(){
     logger_entrada_salida = log_create(PATH_ABSOLUTO("entradasalida/logs/entrada salida.log"),"Entrada Salida",1,LOG_LEVEL_INFO);
     logger_conexiones = log_create(PATH_ABSOLUTO("entradasalida/logs/conexiones.log"),"Conexion",1,LOG_LEVEL_INFO);
+    logger_salida = log_create(PATH_ABSOLUTO("entradasalida/logs/salidas.log"),"SALIDA",1,LOG_LEVEL_INFO);
 }
+
 
 void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint32_t cantidad_bloques) {
     //leer archivos de bloques y bitmap, si no existen, crearlos

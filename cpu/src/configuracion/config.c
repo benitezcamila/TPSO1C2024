@@ -22,5 +22,5 @@ void iniciar_logger(){
     logger_cpu = log_create(PATH_ABSOLUTO("cpu/logs/cpu.log"),"cpu",1,LOG_LEVEL_INFO);
     logger_errores_cpu = log_create(PATH_ABSOLUTO("cpu/logs/cpu_errores.log"),"errores_cpu",1,LOG_LEVEL_INFO);
     logger_conexiones = log_create(PATH_ABSOLUTO("cpu/logs/conexiones.log"),"Conexion",1,LOG_LEVEL_INFO);
-    logger_tlb = log_create(PATH_ABSOLUTO("cpu/logs/tlb.log"),"Conexion",1,LOG_LEVEL_INFO);
+    logger_tlb = log_create(PATH_ABSOLUTO("cpu/logs/tlb.log"),"TLB",1,LOG_LEVEL_INFO);
 }

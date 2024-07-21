@@ -113,24 +113,36 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         log_error(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
         return;
         }
-        
+        /*
+    buffer_add(paquete->buffer, cant_paginas,sizeof(int));
+    buffer_add_uint32(paquete->buffer,sizeof(direc_fisica));
+    buffer_add(paquete->buffer, direccion_fisica,sizeof(direccion_fisica));
+    buffer_add_uint32(paquete->buffer,sizeof(tam_a_escribir));
+    buffer_add(paquete->buffer, tam_a_escribir,sizeof(tam_a_escribir));
+    */
         //preparo y envio el paquete a la interfaz
-        uint32_t tamanio_data = buffer_read_uint32(buffer);
-        void * tamanio_std = malloc(tamanio_data);
-        buffer_read(buffer,tamanio_std,tamanio_data);
-        uint32_t dir_fisica = buffer_read_uint32(buffer);
+        int cant_paginas;
+        buffer_read(buffer,&cant_paginas,sizeof(int));
+        uint32_t tam_direccion_fisica = buffer_read_uint32(buffer);
+        int direccion_fisica[cant_paginas];
+        buffer_read(buffer,direccion_fisica,tam_direccion_fisica);
+        uint32_t size_escribir = buffer_read_uint32(buffer);
+        int tam_a_escribir[cant_paginas];
+        buffer_read(buffer,tam_a_escribir,size_escribir);
 
-        t_paquete* paquete = crear_paquete(ENTRADASALIDA,sizeof(t_instruccion)+ sizeof(uint32_t)*3 + tamanio_data);
+        t_paquete* paquete = crear_paquete(ENTRADASALIDA,sizeof(t_instruccion)+ sizeof(uint32_t)*3 + sizeof(int)+size_escribir+tam_direccion_fisica);
         buffer_add(paquete->buffer,tipo_instruccion,sizeof(t_instruccion));
         buffer_add_uint32(paquete->buffer,pid);
-        buffer_add_uint32(paquete->buffer,dir_fisica);
-        buffer_add_uint32(paquete->buffer,tamanio_data);
-        buffer_add(paquete->buffer,tamanio_std,tamanio_data);
+        buffer_add(paquete->buffer, &cant_paginas,sizeof(int));
+        buffer_add_uint32(paquete->buffer,tam_direccion_fisica);
+        buffer_add(paquete->buffer, direccion_fisica,tam_direccion_fisica);
+        buffer_add_uint32(paquete->buffer,size_escribir);
+        buffer_add(paquete->buffer, tam_a_escribir,size_escribir);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
         procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
         queue_push(interfaz->cola,procs);
-        free(tamanio_std);
+        
 
         break;
     }
@@ -147,22 +159,28 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
 
         
         //preparo y envio el paquete a la interfaz
-        uint32_t tamanio_data = buffer_read_uint32(buffer);
-        void * tamanio_std = malloc(tamanio_data);
-        buffer_read(buffer,tamanio_std,tamanio_data);
-        uint32_t dir_fisica = buffer_read_uint32(buffer);
+        int cant_paginas;
+        buffer_read(buffer,&cant_paginas,sizeof(int));
+        uint32_t tam_direccion_fisica = buffer_read_uint32(buffer);
+        int direccion_fisica[cant_paginas];
+        buffer_read(buffer,direccion_fisica,tam_direccion_fisica);
+        uint32_t size_escribir = buffer_read_uint32(buffer);
+        int tam_a_escribir[cant_paginas];
+        buffer_read(buffer,tam_a_escribir,size_escribir);
         
-        t_paquete* paquete = crear_paquete(ENTRADASALIDA, sizeof(t_instruccion)+sizeof(uint32_t)*3 + tamanio_data);
+        t_paquete* paquete = crear_paquete(ENTRADASALIDA,sizeof(t_instruccion)+ sizeof(uint32_t)*3 + sizeof(int)+size_escribir+tam_direccion_fisica);
         buffer_add(paquete->buffer,tipo_instruccion,sizeof(t_instruccion));
         buffer_add_uint32(paquete->buffer,pid);
-        buffer_add_uint32(paquete->buffer,dir_fisica);
-        buffer_add_uint32(paquete->buffer,tamanio_data);
-        buffer_add(paquete->buffer,tamanio_std,tamanio_data);
+        buffer_add(paquete->buffer, &cant_paginas,sizeof(int));
+        buffer_add_uint32(paquete->buffer,tam_direccion_fisica);
+        buffer_add(paquete->buffer, direccion_fisica,tam_direccion_fisica);
+        buffer_add_uint32(paquete->buffer,size_escribir);
+        buffer_add(paquete->buffer, tam_a_escribir,size_escribir);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
         procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
         queue_push(interfaz->cola,procs);
-        free(tamanio_std);
+        
     }        
     break;
 

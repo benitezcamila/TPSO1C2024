@@ -155,41 +155,53 @@ void enviar_contexto_a_kernel(motivo_desalojo motivo){
 void envios_de_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
                            uint32_t tamanio_data, t_buffer* buffer){ // tamanio std
     uint32_t direc_fisica = mmu(PID);                        
-    uint32_t offset = direc_fisica % tamanio_pagina;
-    uint32_t tamanio_disponible = min(tamanio_pagina - offset, tamanio_data);
-    void* tamanio_std = malloc(tamanio_disponible);
+    uint32_t offset = direc_fisica % tamanio_pagina;                                             
+    uint32_t tamanio_std;  
+    if(tamanio_data == sizeof(uint32_t)){
+        tamanio_std = buffer_read_uint32(buffer);
+    }else{
+        tamanio_std = buffer_read_uint8(buffer);
+    }
+    uint32_t tamanio_disponible = min(tamanio_pagina - offset, tamanio_std);
     
-    buffer_read(buffer, tamanio_std, tamanio_data);
-    enviar_std_a_kernel(motivo_io, nombre_interfaz, tamanio_std, tamanio_disponible,direc_fisica);
-    free(tamanio_std);
-    
-    tamanio_data =- tamanio_disponible;
+    uint32_t cantidad_paginas = cantidad_paginas_que_ocupa(tamanio_std, offset);
+    int direccion_fisica[cantidad_paginas]; 
+    int tam_a_escribir[cantidad_paginas];
+    int contador =0;
+    while(cantidad_paginas > contador){
 
-    if(tamanio_data > 0){
-        dir_logica = floor(dir_logica) + 1;
-        envios_de_std_a_kernel(motivo_io, nombre_interfaz, tamanio_data, buffer);
+        direccion_fisica[contador] = direc_fisica;
+        tam_a_escribir[contador] = tamanio_disponible;
+        tamanio_std = max(0 ,(int)tamanio_std - (int)tamanio_disponible);
+        contador++;
+        if(tamanio_std > 0){
+        dir_logica += tamanio_disponible;
+        tamanio_disponible = min(tamanio_pagina , tamanio_std);
+        direc_fisica = mmu(PID);
+        }
     }
-    else{
-        return;
-    }
+
+    enviar_std_a_kernel(motivo_io, nombre_interfaz,cantidad_paginas, direccion_fisica,tam_a_escribir);
 
     
 }
 
-void enviar_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,
-                                void* tamanio_std, uint32_t tamanio_data, uint32_t direc_fisica){
+void enviar_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,int cant_paginas,int direccion_fisica[] , int tam_a_escribir[]){
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(t_instruccion) + sizeof(registros_CPU)
-                                        + string_length(nombre_interfaz)+1 + tamanio_data + sizeof(uint32_t));
+                                        + string_length(nombre_interfaz)+1+sizeof(uint32_t)*3
+                                        + sizeof(int)+sizeof(int)* cant_paginas * 2);
     motivo_desalojo mot_des = PETICION_IO;
     buffer_add(paquete->buffer, &mot_des, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add(paquete->buffer, &motivo_io, sizeof(t_instruccion));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
-    buffer_add_uint32(paquete->buffer, tamanio_data);
-    buffer_add(paquete->buffer, tamanio_std, tamanio_data);
-    buffer_add_uint32(paquete->buffer, direc_fisica);
+    buffer_add(paquete->buffer, &cant_paginas,sizeof(int));
+    buffer_add_uint32(paquete->buffer,sizeof(int) * cant_paginas);
+    buffer_add(paquete->buffer, direccion_fisica,sizeof(int) * cant_paginas);
+    buffer_add_uint32(paquete->buffer,sizeof(int)* cant_paginas);
+    buffer_add(paquete->buffer, tam_a_escribir,sizeof(int) * cant_paginas);
 
-    enviar_paquete(paquete, sockets.socket_server_D);
+    enviar_paquete(paquete, sockets.socket_kernel_D);
     proceso_enviado = 1;
 }
 
@@ -203,7 +215,7 @@ void solicitar_create_delete_fs_a_kernel(t_instruccion motivo_io, char* nombre_i
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_string(paquete->buffer, string_length(nombre_archivo)+1, nombre_archivo);
 
-    enviar_paquete(paquete, sockets.socket_server_D);
+    enviar_paquete(paquete, sockets.socket_kernel_I);
     proceso_enviado = 1;
 }
 
@@ -221,7 +233,7 @@ void solicitar_truncate_fs_a_kernel(t_instruccion motivo_io, char* nombre_interf
     buffer_add_uint32(paquete->buffer, tamanio_data);
     buffer_add(paquete->buffer, tamanio_fs, tamanio_data);
 
-    enviar_paquete(paquete, sockets.socket_server_D);
+    enviar_paquete(paquete, sockets.socket_kernel_D);
     proceso_enviado = 1;
 }
 
@@ -265,7 +277,7 @@ void solicitar_write_read_fs_a_kernel(t_instruccion motivo_io, char* nombre_inte
     buffer_add_uint32(paquete->buffer, dir_fisica);
     buffer_add(paquete->buffer, puntero_archivo, tamanio_data2);
 
-    enviar_paquete(paquete, sockets.socket_server_D);
+    enviar_paquete(paquete, sockets.socket_kernel_D);
     proceso_enviado = 1;//deberia estar en todos los entrada y salida
 }
 
@@ -331,7 +343,7 @@ void recibir_respuesta_resize_memoria(uint32_t PID){
 }
 
 uint32_t cantidad_paginas_que_ocupa(uint32_t tamanio, uint32_t desplazamiento){
-    return ((tamanio - tamanio_pagina + desplazamiento) / tamanio_pagina) + 1;
+    return ceil(((double)(tamanio + desplazamiento) / (double)tamanio_pagina));
 }
 
 void* leer_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t tamanio_auxiliar, uint32_t tamanio_total){
@@ -354,8 +366,6 @@ void* leer_en_memoria_mas_de_una_pagina(t_buffer* buffer_auxiliar, uint32_t tama
         void* retorno = malloc(tamanio_total);
         buffer_auxiliar->offset = 0 ;
         buffer_read(buffer_auxiliar, retorno, tamanio_total);
-        buffer_destroy(buffer_auxiliar); // No estoy seguro, pero por las dudas...
-
         return retorno;
     }
 }
