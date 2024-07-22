@@ -92,7 +92,7 @@ void procesar_conexion(void* void_args) {
             proceso_enviado = 0;
             recibir_contexto_ejecucion(cliente_socket);
             op_code cod = CONTEXTO_RECIBIDO;
-            send(cliente_socket, &cod, sizeof(op_code), NULL);
+            send(cliente_socket, &cod, sizeof(op_code), 0);
             sem_post(&sem_contexto);
             while(ind_contexto_kernel == 1){
                 ciclo_de_instruccion();
@@ -312,7 +312,7 @@ void solicitar_tamanio_pagina(){
         tamanio_pagina =  buffer_read_uint32(buffer_memoria);
     }
     else{
-        log_info(logger_errores_cpu, "El código de operación recibido no fue el esperado de memoria. El mismo fue: %d", codigo_operacion);
+        log_info(logger_errores_cpu, "El código de operación recibido no fue el esperado de memoria. El mismo fue: %d", *codigo_operacion);
     }
     free(codigo_operacion);
 }

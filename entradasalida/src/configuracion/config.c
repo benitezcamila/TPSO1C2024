@@ -8,6 +8,8 @@ t_config* config;
 t_log* logger_entrada_salida;
 t_log* logger_conexiones;
 t_log* logger_salida;
+t_log* logger_fs;
+t_log* logger_errores;
 char * tipo_interfaz_string;
 t_bitarray* bitmap = NULL;
 int tamanio_bitmap_bytes = 0;
@@ -34,6 +36,9 @@ t_interfaz config_string_a_enum(char* str){
     }
     else if (strcmp(str,"DIALFS")== 0 ){
         return DIALFS;
+    }
+    else{
+        return -1;
     }
 
 }
@@ -82,10 +87,12 @@ void iniciar_logger(){
     logger_entrada_salida = log_create(PATH_ABSOLUTO("entradasalida/logs/entrada salida.log"),"Entrada Salida",1,LOG_LEVEL_INFO);
     logger_conexiones = log_create(PATH_ABSOLUTO("entradasalida/logs/conexiones.log"),"Conexion",1,LOG_LEVEL_INFO);
     logger_salida = log_create(PATH_ABSOLUTO("entradasalida/logs/salidas.log"),"SALIDA",0,LOG_LEVEL_INFO);
+    logger_fs = log_create(PATH_ABSOLUTO("entradasalida/logs/fs.log"),"FS",1,LOG_LEVEL_INFO);
+    logger_errores = log_create(PATH_ABSOLUTO("entradasalida/logs/errores.log"),"ERROR",1,LOG_LEVEL_INFO);
 }
 
 
-void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint32_t cantidad_bloques) {
+void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint16_t cantidad_bloques) {
     //leer archivos de bloques y bitmap, si no existen, crearlos
     //agregar /bloques.dat y /bitmap.dat al path a la hora de hacer el fopen
     //lock para que mas de 1 interfaz no utilice mismos archivos en simultaneo
@@ -124,7 +131,7 @@ void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint32_t cantidad_bloqu
 
 }
 
-void inicializar_fs(char * path_bloques, char* path_bitmap, char* path_indice, uint32_t tamanio_bloques, uint32_t cantidad_bloques ){
+void inicializar_fs(char * path_bloques, char* path_bitmap, char* path_indice, uint8_t tamanio_bloques, uint16_t cantidad_bloques ){
     bloques = crear_bloques(path_bloques,tamanio_bloques,cantidad_bloques);
     bitmap = crear_bitmap(path_bitmap,cantidad_bloques);
     fd_indice = crear_indice(path_indice,cantidad_bloques);
@@ -197,7 +204,7 @@ t_bitarray* mapear_archivo_bitmap (int fd_bitmap, int tamanio_bitmap_bytes) {
         log_info(logger_entrada_salida, "Error al cerrar el archivo bitmap.dat");
         return NULL;
     }
-    log_info(logger_entrada_salida, "Bitmap de %i bits", bitarray_get_max_bit(bitmap));
+    log_info(logger_entrada_salida, "Bitmap de %li bits", bitarray_get_max_bit(bitmap));
     log_info(logger_entrada_salida, "Bits libres: %i", contar_bloques_libres(bitmap));
     return bitmap;
 }
@@ -206,7 +213,7 @@ int crear_indice(char* path_indice, uint32_t cantidad_bloques) {
     int fd_indice = open(path_indice, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd_indice == -1) {
         log_info(logger_entrada_salida, "Fallo la creacion del archivo indice");
-        return;
+        return -1;
     }
     //no mapeo el archivo a memoria ya que tendria que reservar un filepath por bloque o tener que remapear a memoria cada vez que se amplia el tamaño
     log_info(logger_entrada_salida, "Archivo indice.dat creado");

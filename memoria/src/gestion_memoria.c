@@ -159,7 +159,6 @@ void* leer_memoria(uint32_t dir_fisica, uint32_t tamanio){
 void* escribir_espacio_usuario(uint32_t pid,uint32_t direc_fisica,uint32_t tamanio,t_buffer* buffer){
     void* data_a_escribir = malloc(tamanio);
     buffer_read(buffer, data_a_escribir, tamanio); 
-    char* asfas = data_a_escribir;
     tabla_pagina* tabla = dictionary_get(tabla_global, string_itoa(pid));
     escribir_memoria(direc_fisica,tamanio, data_a_escribir);
     return NULL;

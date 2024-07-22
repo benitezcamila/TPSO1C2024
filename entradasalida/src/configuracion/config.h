@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include "E_S_utils.h"
 
 
 typedef struct {
@@ -38,6 +39,8 @@ extern t_config* config;
 extern t_log* logger_entrada_salida;
 extern t_log* logger_conexiones;
 extern t_log* logger_salida;
+extern t_log* logger_fs;
+extern t_log* logger_errores;
 extern t_bitarray* bitmap;
 extern int tamanio_bitmap_bytes;
 extern int tamanio_memoria_bloques;
@@ -51,12 +54,14 @@ extern char** indice;
 
 
 void iniciar_logger();
-void obtener_config(char* path_config);
-t_bitarray* crear_bitmap(char* path_bitmap, uint32_t cantidad_bloques );
-void* crear_bloques(char* path_bloques, uint32_t tamanio_bloques, uint32_t cantidad_bloques );
-t_bitarray* mapear_archivo_bitmap (int fd_bitmap, int tamanio_bitmap_bytes);
-void* mapear_archivo_bloques(int fd_bloques, uint32_t tamanio_bloques, uint32_t cantidad_bloques);
-int crear_indice(char* path_indice, uint32_t cantidad_bloques);
+void obtener_config(char*);
+t_bitarray* crear_bitmap(char*, uint32_t);
+void* crear_bloques(char*, uint32_t , uint32_t);
+t_bitarray* mapear_archivo_bitmap (int, int );
+void* mapear_archivo_bloques(int , uint32_t , uint32_t);
+int crear_indice(char*, uint32_t);
+void levantar_fs(char*, uint8_t, uint16_t);
+void inicializar_fs(char *, char*, char*, uint8_t, uint16_t );
 
 
 #endif

@@ -271,7 +271,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
      
         uint32_t len = 0;
         char* nombre_archivo = buffer_read_string(buffer,&len);
-        uint32_t cant_paginas = buffer_read_uint32(buffer,cant_paginas);
+        uint32_t cant_paginas = buffer_read_uint32(buffer);
         uint32_t tam_direccion_fisica = buffer_read_uint32(buffer);
         int direccion_fisica[cant_paginas];
         buffer_read(buffer,direccion_fisica,tam_direccion_fisica);
@@ -308,8 +308,8 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
     case FS_READ:{
         //verifico que se acepte ese tipo de instruccion para el tipo de interfaz
         if(interfaz->tipo_interfaz != DIALFS){
-        
         liberar_proceso(pid);
+        
         log_error(logger_error,"Interfaz %s no acepta esta operacion", io);
         log_error(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE_INSTRUCTION", pid);
         log_error(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pid);
@@ -317,7 +317,7 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         }
         uint32_t len = 0;
         char* nombre_archivo = buffer_read_string(buffer,&len);
-        uint32_t cant_paginas = buffer_read_uint32(buffer,cant_paginas);
+        uint32_t cant_paginas = buffer_read_uint32(buffer);
         uint32_t tam_direccion_fisica = buffer_read_uint32(buffer);
         int direccion_fisica[cant_paginas];
         buffer_read(buffer,direccion_fisica,tam_direccion_fisica);
