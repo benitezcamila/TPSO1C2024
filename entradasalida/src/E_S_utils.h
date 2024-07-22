@@ -52,7 +52,7 @@ void enviar_fin_de_instruccion(int, char*);
 void agregar_archivo_a_indice(int , char*, int);
 int obtener_nuevo_bloque_final (char *, uint32_t);
 void eliminar_archivo_de_indice(int, char*);
-//void compactar_y_acomodar_al_final(void **, t_bitarray *, int, int, uint32_t);
+void compactar_y_acomodar_al_final(void **, t_bitarray *, int, int, uint32_t);
 void modificar_bloque_inicial_indice (int, int);
 int obtener_ultimo_bloque_de_archivo (char *);
 void escribir_en_fs (int , uint32_t , uint32_t , void* );
