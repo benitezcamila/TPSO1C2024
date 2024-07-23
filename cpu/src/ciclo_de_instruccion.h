@@ -19,7 +19,7 @@ extern uint32_t dir_logica;
 extern uint32_t dir_fisica;
 extern uint32_t* longitud_linea_instruccion;
 extern int proceso_enviado;
-
+extern sem_t mutex_log;
 //Funciones principales.
 void fetch_instruction();
 void decode();

@@ -139,6 +139,7 @@ void inicializar_estructuras(){
     inicializar_TLB(configuracion.CANTIDAD_ENTRADAS_TLB, configuracion.ALGORITMO_TLB);
     sem_init(&sem_inter,0,1);
     sem_init(&sem_contexto,0,1);
+    sem_init(&mutex_log, 0, 1);
 }
 
 void enviar_contexto_a_kernel(motivo_desalojo motivo){
@@ -207,7 +208,7 @@ void enviar_std_a_kernel(t_instruccion motivo_io, char* nombre_interfaz,int cant
 
 void solicitar_create_delete_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo){
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(t_instruccion) + sizeof(registros_CPU)
-                                        + string_length(nombre_interfaz)+1 + string_length(nombre_archivo)+1);
+                                        + string_length(nombre_interfaz)+1 + string_length(nombre_archivo)+1 + sizeof(uint32_t)*2);
     motivo_desalojo mot_des = PETICION_IO;
     buffer_add(paquete->buffer, &mot_des, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
@@ -223,7 +224,7 @@ void solicitar_truncate_fs_a_kernel(t_instruccion motivo_io, char* nombre_interf
                                     void* tamanio_fs, uint32_t tamanio_data){
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(t_instruccion) + sizeof(registros_CPU)
                                         + string_length(nombre_interfaz)+1 + string_length(nombre_archivo)+1
-                                        + tamanio_data);
+                                        + tamanio_data + sizeof(uint32_t)*3);
     motivo_desalojo mot_des = PETICION_IO;
     buffer_add(paquete->buffer, &mot_des, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));

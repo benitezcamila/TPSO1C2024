@@ -9,6 +9,7 @@ tipo_de_interrupcion motivo_interrupcion;
 uint32_t dir_logica = 0;
 uint32_t dir_fisica = 0;
 int proceso_enviado = 0;
+sem_t mutex_log;
 
 void ciclo_de_instruccion(){
     fetch_instruction();
@@ -801,7 +802,10 @@ void loggear_instruccion(uint32_t longitud_linea_instruccion){
     if(parametros == NULL){
         parametros = "";
     }
-
-    log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", PID, instruccion_completa, parametros);
+    char* instruccion = string_duplicate(instruccion_completa);
+    char* param = string_duplicate(parametros);
+    log_info(logger_cpu, "PID: %d - Ejecutando: %s - %s", PID, instruccion, param);
+    free(instruccion);
+    free(param);
     free(instruccion_completa);
 }
