@@ -2,7 +2,7 @@
 #define KERNEL_UTILS_H
 
 #include <pthread.h>
-#include <configuracion/config.h>
+#include "configuracion/config.h"
 #include <commons/log.h>
 #include <commons/string.h>
 #include <commons/config.h>

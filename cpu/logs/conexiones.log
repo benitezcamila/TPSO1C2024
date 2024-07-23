@@ -1,0 +1,10 @@
+[INFO] 04:17:32:722 Conexion/(12980:13002): CPU DISPATCH esta escuchando
+[INFO] 04:17:32:724 Conexion/(12980:13004): CPU INTERRUPT esta escuchando
+[INFO] 04:17:33:740 Conexion/(12980:13021): Se conecto cliente KERNEL_D
+[INFO] 04:17:33:743 Conexion/(12980:13020): Se conecto cliente KERNEL_I
+[INFO] 04:17:33:744 Conexion/(12980:13020): El codigo del Handshake es correcto
+[INFO] 04:17:33:749 Conexion/(12980:13021): El codigo del Handshake es correcto
+[INFO] 04:17:42:985 Conexion/(12980:13001): El handshake fue exitoso
+[INFO] 04:17:42:985 Conexion/(12980:13001): Conectado-CPU-memoria
+[INFO] 04:18:10:261 Conexion/(12980:13024): KERNEL_D DISCONNECT!
+[INFO] 04:18:10:261 Conexion/(12980:13023): KERNEL_I DISCONNECT!
