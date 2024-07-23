@@ -359,7 +359,7 @@ int obtener_tamanio_de_archivo (char * nombre_archivo){
 
 int obtener_nuevo_bloque_final (char * nombre_archivo, uint32_t tamanio_nuevo){
     int bloque_inicial = obtener_primer_bloque_de_archivo(nombre_archivo);
-    int bloque_final = obtener_ultimo_bloque_de_archivo(nombre_archivo);
+    //int bloque_final = obtener_ultimo_bloque_de_archivo(nombre_archivo); 
     int nuevo_bloque_final = tamanio_nuevo / configuracion.BLOCK_SIZE;
     if (tamanio_nuevo%configuracion.BLOCK_SIZE!=0) {
         nuevo_bloque_final+=1;
@@ -528,7 +528,7 @@ bool hay_bits_ocupados(t_bitarray* bitmap, int inicio, int fin){
 
 
 
-void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque_inicial, int bloque_final, uint32_t pid) {
+int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque_inicial, int bloque_final, uint32_t pid) {
     /*
     DialFS - Inicio Compactación: “PID: <PID> - Inicio Compactación.” 
     DialFS - Fin Compactación: “PID: <PID> - Fin Compactación.”
@@ -566,7 +566,7 @@ void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloqu
     }
     msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
     msync(bloques,tamanio_memoria_bloques,MS_SYNC);
-
+    int nueva_posicion_inicial = indice_auxiliar;
     // Muevo los bloques almacenados temporalmente a las últimas posiciones libres
     for (size_t j = 0; j < cantidad_a_mover; ++j) {
         if (indice_auxiliar < configuracion.BLOCK_COUNT) {
@@ -588,7 +588,7 @@ void compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloqu
     msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
     usleep(configuracion.RETRASO_COMPACTACION);
     log_info(logger_entrada_salida,"PID: %u - Fin Compactación",pid);
-    
+    return nueva_posicion_inicial;
 }
 
  void agregar_archivo_a_indice(int fd_indice, char* nombre_archivo, int bloque) {
