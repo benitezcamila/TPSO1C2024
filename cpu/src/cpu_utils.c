@@ -215,7 +215,7 @@ void solicitar_create_delete_fs_a_kernel(t_instruccion motivo_io, char* nombre_i
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_string(paquete->buffer, string_length(nombre_archivo)+1, nombre_archivo);
 
-    enviar_paquete(paquete, sockets.socket_kernel_I);
+    enviar_paquete(paquete, sockets.socket_kernel_D);
     proceso_enviado = 1;
 }
 

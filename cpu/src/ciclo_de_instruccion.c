@@ -411,7 +411,7 @@ void copy_string(uint32_t tamanio){
     direccion_fisica_inicial = dir_fisica;
 
     escribir_en_memoria_mas_de_una_pagina(buffer, tamanio);
-    log_info(logger_cpu, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %u", PID, direccion_fisica_inicial, (char*) datos_de_memoria);
+    log_info(logger_cpu, "PID: %d - Acción: ESCRIBIR - Dirección Física: %d - Valor: %s", PID, direccion_fisica_inicial, (char*) datos_de_memoria);
     buffer_destroy(buffer_auxiliar);
 
     free(datos_de_memoria);
