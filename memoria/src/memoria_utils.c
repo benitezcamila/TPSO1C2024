@@ -11,11 +11,12 @@ sem_t mutex_memoria;
 
 
 void inicializar_memoria(){
-    sockets.socket_server = iniciar_servidor( string_itoa(configuracion.PUERTO_ESCUCHA));
+    int puerto = configuracion.PUERTO_ESCUCHA;
+    sockets.socket_server = iniciar_servidor(string_itoa(puerto));
     log_info(logger_conexiones, "Memoria esta escuchando");
-    espacio_usuario = malloc(sizeof(configuracion.TAM_MEMORIA));
+    espacio_usuario = malloc(configuracion.TAM_MEMORIA);
     cantFrames = configuracion.TAM_MEMORIA/ configuracion.TAM_PAGINA;
-    bitMap = (int *)malloc(cantFrames * sizeof(int));
+    bitMap = malloc(cantFrames * sizeof(int));
     memset(bitMap, 0 , sizeof(int) * cantFrames);
     tabla_global = dictionary_create();
     listaDeProcesos = list_create();
@@ -76,7 +77,10 @@ void procesar_conexion(void* void_args) {
     }
     while (cliente_socket != -1) {
 
-        if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
+    t_buffer* buffer_de_cpu;
+    t_buffer* buffer_de_kernel;
+    t_buffer* buffer_ENTRADA_SALIDA;
+            if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
             log_info(logger_conexiones, "%s DISCONNECT!", nombre_cliente);
             free(nombre_cliente);
             return;
@@ -84,52 +88,60 @@ void procesar_conexion(void* void_args) {
         usleep(configuracion.RETARDO_RESPUESTA *1000);
         switch (cop)
         {
-        case SOLICITUD_INSTRUCCION:
-            t_buffer* buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
+        case SOLICITUD_INSTRUCCION:           buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
             enviar_instrucciones_cpu(buffer_de_cpu,cliente_socket);
             log_info(logger_memoria, "Inicio envio de instrucciones");
+            buffer_destroy(buffer_de_cpu);
             break;
         case INICIAR_PROCESO:
-            t_buffer* buffer_de_kernel = recibir_todo_elbuffer(cliente_socket);
+            buffer_de_kernel = recibir_todo_elbuffer(cliente_socket);
             iniciar_proceso(buffer_de_kernel);
             log_info(logger_memoria, "Inicio proceso");
             op_code cod = PROCESO_CREADO;
-            send(cliente_socket, &cod, sizeof(op_code), NULL);
+            send(cliente_socket, &cod, sizeof(op_code), 0);
+            buffer_destroy( buffer_de_kernel);
             break;
         case AJUSTAR_TAMANIO:
             buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
             ajustar_tam_proceso(buffer_de_cpu);
             log_info(logger_memoria, "Ajusto tamanio proceso");
+            buffer_destroy(buffer_de_cpu);
             break;
 
         case FINALIZAR_PROCESO:
              buffer_de_kernel = recibir_todo_elbuffer(cliente_socket);
              finalizar_proceso(buffer_de_kernel);
              log_info(logger_memoria, "Finalizo el proceso");
+            buffer_destroy( buffer_de_kernel);
             break;
         case ACCESS_ESPACIO_USUARIO_ES:
-            t_buffer* buffer_ENTRADA_SALIDA = recibir_todo_elbuffer(cliente_socket);
-            a_enviar = access_espacio_usuario(buffer_ENTRADA_SALIDA);
-            op_code confirmacion_escritura = OK_ESCRITURA;
-            if(a_enviar == NULL)  send(cliente_socket, &confirmacion_escritura, sizeof(op_code), MSG_WAITALL);//lectura
-            else{enviar_paquete((t_paquete*)a_enviar, cliente_socket); //escritura podria ser cliente socket /././././././././././
-            }
+            buffer_ENTRADA_SALIDA = recibir_todo_elbuffer(cliente_socket);
+            access_espacio_usuario(buffer_ENTRADA_SALIDA,cliente_socket);
+            
+     //       if(a_enviar == NULL)  send(cliente_socket, &confirmacion_escritura, sizeof(op_code), MSG_WAITALL);//lectura
+       //     else{enviar_paquete((t_paquete*)a_enviar, cliente_socket); //escritura podria ser cliente socket /././././././././././
+         //   }
+            buffer_destroy( buffer_ENTRADA_SALIDA);
+            
             break;
         
         case ACCESS_ESPACIO_USUARIO_CPU:
             buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
-            a_enviar = access_espacio_usuario(buffer_de_cpu);
-            confirmacion_escritura = OK_ESCRITURA;
-            if(a_enviar == NULL) send(cliente_socket, &confirmacion_escritura, sizeof(op_code), MSG_WAITALL);//escritura
-            else{
-                enviar_paquete((t_paquete*)a_enviar, cliente_socket);//lectura
-            }
+            access_espacio_usuario(buffer_de_cpu,cliente_socket);
+            //confirmacion_escritura = OK_ESCRITURA;
+            //if(a_enviar == NULL) send(cliente_socket, &confirmacion_escritura, sizeof(op_code), MSG_WAITALL);//escritura
+            //else{
+            //    
+            //}
+            buffer_destroy( buffer_de_cpu);
+            
             break;
 
         case ACCESO_TABLA_PAGINAS://cpu
             buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
             a_enviar = buscar_marco_pagina (buffer_de_cpu);
             enviar_paquete((t_paquete*) a_enviar, cliente_socket);
+            buffer_destroy( buffer_de_cpu);
             break;
         case SOLICITUD_TAMANIO_PAGINA: //a cpu
             enviar_paquete(enviar_tam_memoria(), cliente_socket);
@@ -223,13 +235,14 @@ void finalizar_proceso(t_buffer* buffer_kernel){
     
     uint32_t pid = buffer_read_uint32(buffer_kernel);
     uint32_t pid_buscar_proceso = pid;
-    tabla_pagina* paginas_del_proceso = dictionary_get(tabla_global, string_itoa(pid));
+    int pid_int = pid;
+    tabla_pagina* paginas_del_proceso = dictionary_get(tabla_global, string_itoa(pid_int));
     uint32_t tam_tab_pagina = list_size(paginas_del_proceso->paginas);
 
     reduccion_del_proceso(paginas_del_proceso, 0); // marco bits en 0 y saco paginas de la lista
 
-    dictionary_remove(tabla_global, string_itoa(pid));// saco del proceso.
-
+    tabla_pagina* tab_pagina = dictionary_remove(tabla_global, string_itoa(pid_int));// saco del proceso.
+    free(tab_pagina);
 
     log_info(logger_memoria, "PID %d -  tamanio %d", pid, tam_tab_pagina);
 
@@ -238,7 +251,8 @@ bool pidIguales(procesoListaInst* proceso){
    return proceso->pid == pid_buscar_proceso;
 }
 	procesoListaInst* procesos =  list_remove_by_condition(listaDeProcesos, (void*) pidIguales);
-    free(procesos->instruccionesParaCpu);
+
+    list_destroy_and_destroy_elements(procesos->instruccionesParaCpu, free);
     free(procesos);
 }
 

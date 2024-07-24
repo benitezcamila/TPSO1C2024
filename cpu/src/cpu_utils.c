@@ -221,18 +221,18 @@ void solicitar_create_delete_fs_a_kernel(t_instruccion motivo_io, char* nombre_i
 }
 
 void solicitar_truncate_fs_a_kernel(t_instruccion motivo_io, char* nombre_interfaz, char* nombre_archivo,
-                                    void* tamanio_fs, uint32_t tamanio_data){
+                                    uint32_t tamanio_fs){
     t_paquete* paquete = crear_paquete(CONTEXTO_EXEC, sizeof(motivo_desalojo) + sizeof(t_instruccion) + sizeof(registros_CPU)
                                         + string_length(nombre_interfaz)+1 + string_length(nombre_archivo)+1
-                                        + tamanio_data + sizeof(uint32_t)*3);
+                                         + sizeof(uint32_t)*3);
     motivo_desalojo mot_des = PETICION_IO;
     buffer_add(paquete->buffer, &mot_des, sizeof(motivo_desalojo));
     buffer_add(paquete->buffer, contexto_registros, sizeof(registros_CPU));
     buffer_add(paquete->buffer, &motivo_io, sizeof(t_instruccion));
     buffer_add_string(paquete->buffer, string_length(nombre_interfaz)+1, nombre_interfaz);
     buffer_add_string(paquete->buffer, string_length(nombre_archivo)+1, nombre_archivo);
-    buffer_add_uint32(paquete->buffer, tamanio_data);
-    buffer_add(paquete->buffer, tamanio_fs, tamanio_data);
+    buffer_add_uint32(paquete->buffer, tamanio_fs);
+    
 
     enviar_paquete(paquete, sockets.socket_kernel_D);
     proceso_enviado = 1;

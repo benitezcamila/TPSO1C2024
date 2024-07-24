@@ -33,9 +33,9 @@ void obtener_config(){
 }
 
 void iniciar_logger(){
-    logger_kernel = log_create(PATH_ABSOLUTO("kernel/logs/kernel.log"),"Kernel",1,LOG_LEVEL_INFO);
-    logger_conexiones = log_create(PATH_ABSOLUTO("kernel/logs/conexiones.log"),"Conexion",1,LOG_LEVEL_INFO);
-    logger_recurso_ES = log_create(PATH_ABSOLUTO("kernel/logs/recursos_y_es.log"),"Recurso o E/S",1,LOG_LEVEL_INFO);
-    logger_ingresos_ready = log_create(PATH_ABSOLUTO("kernel/logs/ingreso_ready.log"),"Ingreso a ready",1,LOG_LEVEL_INFO);
-    logger_error = log_create(PATH_ABSOLUTO("kernel/logs/errores.log"),"Error",1,LOG_LEVEL_INFO);
+    logger_kernel = log_create(PATH_ABSOLUTO("kernel/logs/kernel.log"),"Kernel",0,LOG_LEVEL_INFO);
+    logger_conexiones = log_create(PATH_ABSOLUTO("kernel/logs/conexiones.log"),"Conexion",0,LOG_LEVEL_INFO);
+    logger_recurso_ES = log_create(PATH_ABSOLUTO("kernel/logs/recursos_y_es.log"),"Recurso o E/S",0,LOG_LEVEL_INFO);
+    logger_ingresos_ready = log_create(PATH_ABSOLUTO("kernel/logs/ingreso_ready.log"),"Ingreso a ready",0,LOG_LEVEL_INFO);
+    logger_error = log_create(PATH_ABSOLUTO("kernel/logs/errores.log"),"Error",0,LOG_LEVEL_INFO);
 }

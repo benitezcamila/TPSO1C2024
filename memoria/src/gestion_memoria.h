@@ -15,10 +15,7 @@
 
  typedef struct{
     int numero_marco;
-    int pid_pagina;
-    int tam_disponible;
-    bool escrita;
-    int offSet;
+    int pid_pagina; 
 }t_pagina;
 
 
@@ -41,11 +38,11 @@ int marco_disponible();
 void asignar_id_pagina(tabla_pagina*);
 void reduccion_del_proceso(tabla_pagina*, int);
 void ampliacion_del_proceso(tabla_pagina*, int); 
-void* access_espacio_usuario(t_buffer*);
-t_paquete* leer_espacio_usuario(uint32_t ,uint32_t , uint32_t );
+void access_espacio_usuario(t_buffer*,int);
+void leer_espacio_usuario(uint32_t ,uint32_t , uint32_t,int );
 bool existe_ese_marco(uint32_t, t_pagina* );
 void* leer_memoria(uint32_t , uint32_t );
-void* escribir_espacio_usuario(uint32_t ,uint32_t,uint32_t,t_buffer*);
+void escribir_espacio_usuario(uint32_t ,uint32_t,uint32_t,t_buffer*,int);
 bool hay_espacio(uint32_t , uint32_t );
 int cantFramesDisponibles();
 bool hay_lugar_contiguo();

@@ -1,5 +1,8 @@
 #include <E_S_utils.h>
 
+#define min(a,b) (a<b?a:b)
+#define max(a,b) (a>b? a:b)
+
 str_sockets sockets;
 char* nombre_interfaz;
 sem_t mutex_conexion;
@@ -77,7 +80,7 @@ void procesar_io_stdin_read(t_buffer* buffer_kernel, uint32_t pid, int socket_ke
     {
         char* a_escribir = string_substring(input_consola,offset,offset+tamanio_direcciones_read[i]);
         offset+=tamanio_direcciones_read[i];
-        escribir_en_memoria(a_escribir, pid, direcciones_fisicas_memoria_read[i],socket_memoria );
+        escribir_en_memoria(a_escribir, pid, direcciones_fisicas_memoria_read[i],tamanio_direcciones_read[i],socket_memoria );
         free(a_escribir);
         if(recibir_operacion(socket_memoria) != OK_ESCRITURA){
             log_error(logger_errores, "Hubo un error al recibir el codigo de escritura de memoria");
@@ -95,8 +98,7 @@ char* leer_consola(){
 }
 
 
-void escribir_en_memoria(char* input_consola,uint32_t pid,uint32_t direccion_fisica_memoria_write, int socket_memoria) {
-    uint32_t tamanio = strlen(input_consola) ;
+void escribir_en_memoria(void* input_consola,uint32_t pid,uint32_t direccion_fisica_memoria_write,uint32_t tamanio, int socket_memoria) {
     uint32_t accion =1 ;//escribir
     t_paquete* paquete = crear_paquete(ACCESS_ESPACIO_USUARIO_ES, tamanio + sizeof(uint32_t) * 4);
 
@@ -105,7 +107,8 @@ void escribir_en_memoria(char* input_consola,uint32_t pid,uint32_t direccion_fis
     buffer_add_uint32(paquete->buffer, pid);
     buffer_add_uint32(paquete->buffer, accion); 
     buffer_add_uint32(paquete->buffer, direccion_fisica_memoria_write);
-    buffer_add_string(paquete->buffer,tamanio,input_consola);
+    buffer_add_uint32(paquete->buffer, tamanio);
+    buffer_add(paquete->buffer,input_consola,tamanio);
 
     enviar_paquete(paquete, socket_memoria);//peticion escritura memoria.. si pone ok! escribio correctamente
 
@@ -143,15 +146,9 @@ void procesar_io_stdout_write(t_buffer* buffer_kernel, uint32_t pid, int socket_
         }
         t_buffer* memoria = recibir_todo_elbuffer (socket_memoria);
         uint32_t* length = malloc(sizeof(uint32_t));
-        if(i == cantidad_paginas_a_leer-1){
-        char* aux = buffer_read_string(memoria, length);
-        aux[(int)*length] = '\0';
-        string_append(&mostrar_de_memoria,aux);
-        }
-        else{
-        char* aux = buffer_read_string(memoria, length);    
-        string_append(&mostrar_de_memoria,aux);
-        }
+        char* aux = buffer_read_string(memoria, length); 
+        string_n_append(&mostrar_de_memoria,aux,*length);
+        free(aux);
         free(length);
         buffer_destroy(memoria);
     }
@@ -167,7 +164,7 @@ void recibir_instrucciones (int socket_kernel, int socket_memoria){
     uint32_t pid ;
     t_instruccion instruccion_a_procesar;
     op_code cop;
-    char* nombre = malloc(string_length(nombre_interfaz));
+    char* nombre = malloc(sizeof(char)*(strlen(nombre_interfaz) + 1));
     nombre = strcpy(nombre,nombre_interfaz);
     sem_post(&mutex_conexion);
     while(socket_kernel!=-1) {
@@ -216,6 +213,7 @@ void recibir_instrucciones (int socket_kernel, int socket_memoria){
 
         free(instruccion_string);
         buffer_destroy(buffer_kernel);
+        
     }
     return;
 }
@@ -254,7 +252,7 @@ char* string_de_instruccion (t_instruccion instruccion_a_procesar){
 
 
 void enviar_fin_de_instruccion (int socket_fd, char* nombre) {
-    t_paquete* paquete = crear_paquete(ENTRADASALIDA_LIBERADO, sizeof(t_interfaz) + sizeof(uint32_t) +string_length(nombre)+1);
+    t_paquete* paquete = crear_paquete(ENTRADASALIDA_LIBERADO, + sizeof(uint32_t) +string_length(nombre)+1);
     buffer_add_string(paquete->buffer, string_length(nombre)+1, nombre);
     enviar_paquete(paquete, socket_fd); // kernel
  }
@@ -267,7 +265,7 @@ void procesar_io_fs_create(t_buffer* buffer_kernel, uint32_t pid, int socket_ker
     string_append(&path_archivo, configuracion.PATH_BASE_DIALFS);
     string_append(&path_archivo, "/");
     string_append(&path_archivo, nombre_archivo);
-    log_info(logger_entrada_salida, "PID: %u - Crear Archivo: %s",pid,nombre_archivo);
+    log_info(logger_fs, "PID: %u - Crear Archivo: %s",pid,nombre_archivo);
     
     /*
     IO_FS_CREATE (Interfaz, Nombre Archivo): Esta instrucción solicita al 
@@ -275,24 +273,24 @@ void procesar_io_fs_create(t_buffer* buffer_kernel, uint32_t pid, int socket_ker
     */
     FILE *file = fopen(path_archivo, "r+");
     if (file != NULL) {
-        log_info(logger_entrada_salida, "El archivo ya existe");
+        log_error(logger_errores, "El archivo ya existe");
         fclose(file);
         return;
     }
     if(contar_bloques_libres(bitmap) == 0){
-        log_info(logger_entrada_salida, "No hay mas bloques disponibles");
+        log_error(logger_errores, "No hay mas bloques disponibles");
         fclose(file);
         return;
     }
     if (errno == ENOENT) {
         file = fopen(path_archivo, "w+");
         if (file == NULL) {
-            log_info(logger_entrada_salida, "Error al crear el archivo");
+            log_error(logger_errores, "Error al crear el archivo");
             return;
         }
         int fd = fileno(file);
         if (ftruncate(fd, 0) != 0) {
-            log_info(logger_entrada_salida, "Error al truncar el archivo");
+            log_error(logger_errores, "Error al truncar el archivo");
             fclose(file);
             return;
         }
@@ -308,7 +306,7 @@ void procesar_io_fs_create(t_buffer* buffer_kernel, uint32_t pid, int socket_ker
         config_save(config_archivo);
         bitarray_set_bit(bitmap,bloque_asignado);
         msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
-        agregar_archivo_a_indice(fd_indice, nombre_archivo ,bloque_asignado);
+        agregar_archivo_a_indice(nombre_archivo ,bloque_asignado);
         enviar_fin_de_instruccion(socket_kernel,nombre);
 }
 
@@ -366,7 +364,7 @@ int obtener_nuevo_bloque_final (char * nombre_archivo, uint32_t tamanio_nuevo){
     }
     nuevo_bloque_final+=bloque_inicial;
     if(nuevo_bloque_final>configuracion.BLOCK_COUNT){
-        log_info(logger_entrada_salida, "Error: el bloque final supera el limite del FS");
+        log_error(logger_errores, "Error: el bloque final supera el limite del FS");
         return -1;
     }
     return nuevo_bloque_final;
@@ -402,16 +400,16 @@ void procesar_io_fs_delete(t_buffer* buffer_kernel, uint32_t pid, int socket_ker
     string_append(&path_archivo, configuracion.PATH_BASE_DIALFS);
     string_append(&path_archivo, "/");
     string_append(&path_archivo,nombre_archivo);
-    log_info(logger_entrada_salida, "PID: %u - Eliminar Archivo: %s",pid,nombre_archivo);
+    log_info(logger_fs, "PID: %u - Eliminar Archivo: %s",pid,nombre_archivo);
     int primer_bit_archivo = obtener_primer_bloque_de_archivo(nombre_archivo);
     int ultimo_bit_archivo = obtener_ultimo_bloque_de_archivo(nombre_archivo);
     if (remove(path_archivo) == 0) {
-        log_info(logger_entrada_salida, "Archivo eliminado");
+        log_info(logger_fs, "Archivo eliminado");
         limpiar_bits(bitmap,primer_bit_archivo,ultimo_bit_archivo);
     } else {
-        log_info(logger_entrada_salida, "Error al eliminar el archivo");
+        log_error(logger_errores, "Error al eliminar el archivo");
     }
-    eliminar_archivo_de_indice(fd_indice,nombre_archivo);
+    eliminar_archivo_de_indice(nombre_archivo);
     free(nombre_archivo);
     free(path_archivo);
     enviar_fin_de_instruccion(socket_kernel, nombre);
@@ -429,7 +427,7 @@ int calcular_cantidad_de_bloques (int tamanio){
 void limpiar_bits(t_bitarray* bitmap, off_t bit_inicial, off_t bit_final) {
     for (off_t i=bit_inicial;i<bit_final;i++){
         bitarray_clean_bit(bitmap,i);
-        log_info(logger_entrada_salida, "Bit %li eliminado",i);
+        log_info(logger_fs, "Bit %li eliminado",i);
     }
     msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
 }
@@ -437,7 +435,7 @@ void limpiar_bits(t_bitarray* bitmap, off_t bit_inicial, off_t bit_final) {
 void setear_bits(t_bitarray* bitmap, off_t bit_inicial, off_t bit_final) {
     for (off_t i=bit_inicial;i<bit_final;i++){
         bitarray_set_bit(bitmap,i);
-        log_info(logger_entrada_salida, "Bit %li seteado",i);
+        log_info(logger_fs, "Bit %li seteado",i);
     }
     msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
 }
@@ -478,7 +476,7 @@ void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid, int socket_k
     string_append(&path_archivo,nombre_archivo);
 
     uint32_t tamanio_nuevo = buffer_read_uint32(buffer_kernel);
-    log_info(logger_entrada_salida, "PID: %u - Truncar Archivo: %s - Tamaño %i",pid,nombre_archivo,tamanio_nuevo);
+    log_info(logger_fs, "PID: %u - Truncar Archivo: %s - Tamaño %i",pid,nombre_archivo,tamanio_nuevo);
     
     int bloque_inicial_archivo = obtener_primer_bloque_de_archivo(nombre_archivo);
     int pre_bloque_final_archivo = obtener_ultimo_bloque_de_archivo(nombre_archivo);
@@ -497,7 +495,7 @@ void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid, int socket_k
                 post_bloque_final_archivo = obtener_nuevo_bloque_final (nombre_archivo,tamanio_nuevo);
                 setear_bits(bitmap,bloque_inicial_archivo,post_bloque_final_archivo);
             } else {
-                log_info(logger_entrada_salida, "Error al truncar: no hay suficiente espacio libre en FS");
+                log_error(logger_errores, "Error al truncar: no hay suficiente espacio libre en FS");
                 return;
             }
         }
@@ -513,6 +511,7 @@ void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid, int socket_k
     config_destroy(config_archivo);
     free(nombre_archivo);
     free(path_archivo);
+    enviar_fin_de_instruccion(socket_kernel,nombre);
 }
 
 bool hay_bits_ocupados(t_bitarray* bitmap, int inicio, int fin){
@@ -533,7 +532,7 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
     DialFS - Inicio Compactación: “PID: <PID> - Inicio Compactación.” 
     DialFS - Fin Compactación: “PID: <PID> - Fin Compactación.”
     */
-    log_info(logger_entrada_salida, "PID: %u - Inicio Compactación",pid);
+    log_info(logger_fs, "PID: %u - Inicio Compactación",pid);
     int indice_auxiliar = 0;
     int cantidad_a_mover = bloque_final - bloque_inicial +1;
     void **bloques_auxiliares = malloc(cantidad_a_mover * sizeof(void *));
@@ -587,14 +586,14 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
     }
     msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
     usleep(configuracion.RETRASO_COMPACTACION);
-    log_info(logger_entrada_salida,"PID: %u - Fin Compactación",pid);
+    log_info(logger_fs,"PID: %u - Fin Compactación",pid);
     return nueva_posicion_inicial;
 }
 
- void agregar_archivo_a_indice(int fd_indice, char* nombre_archivo, int bloque) {
-    FILE* archivo_indice = fdopen(fd_indice, "a");
+ void agregar_archivo_a_indice(char* nombre_archivo, int bloque) {
+    FILE* archivo_indice = fopen(path_indice, "a");
     if(archivo_indice == NULL) {
-        log_info(logger_entrada_salida,"Error al abrir archivo de indices");
+        log_error(logger_errores,"Error al abrir archivo de indices 1");
         return;
     }
     t_indice indice_del_archivo;
@@ -604,21 +603,21 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
     fclose(archivo_indice);
  }
 
- void eliminar_archivo_de_indice(int fd_indice, char* nombre_archivo) {
-    FILE* archivo_indice = fdopen(fd_indice, "rb");
+ void eliminar_archivo_de_indice(char* nombre_archivo) {
+    FILE* archivo_indice = fopen(path_indice, "a");
     if(archivo_indice==NULL) {
-        log_info(logger_entrada_salida,"Error al abrir archivo de indices");
+        log_error(logger_errores,"Error al abrir archivo de indices 2");
         return;
     }
     int fd_archivo_temporal = open("indice_temporal.dat", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd_archivo_temporal == -1) {
-        log_info(logger_entrada_salida,"Error al crear archivo de indices auxiliar");
-        close(fd_indice);
+        log_error(logger_errores,"Error al crear archivo de indices auxiliar");
+        fclose(archivo_indice);
         return;
     }
     FILE* archivo_temporal = fdopen(fd_archivo_temporal,"wb");
     if(archivo_temporal==NULL){
-        log_info(logger_entrada_salida,"Error al abrir archivo de indices auxiliar");
+        log_error(logger_errores,"Error al abrir archivo de indices auxiliar");
         fclose(archivo_indice);
         close(fd_archivo_temporal);
         return;
@@ -632,16 +631,16 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
     fclose(archivo_indice);
     fclose(archivo_temporal);
     if(remove("indice.dat") == 0) {
-        log_info(logger_entrada_salida,"Archivo de indices original borrado");
+        log_info(logger_fs,"Archivo de indices original borrado");
     }
     rename("indice_temporal.dat","indice.dat"); //quizas podria usar cosntances para evitar problemas debuggeando
     return;
  }
 
- int buscar_archivo_en_indice(int fd_indice, int bloque_inicial, char* nombre_archivo) { //devuelve -1 si hay error y -2 si no encuentra el archivo
-    FILE* archivo_indices = fdopen(fd_indice, "rb");
+ int buscar_archivo_en_indice(int bloque_inicial, char* nombre_archivo) { //devuelve -1 si hay error y -2 si no encuentra el archivo
+    FILE* archivo_indices = fopen(path_indice, "rb");
     if(archivo_indices == NULL){
-        log_info(logger_entrada_salida,"Error al abrir archivo de indices");
+        log_error(logger_errores,"Error al abrir archivo de indices");
         return -1;
     }
     t_indice indice_del_archivo;
@@ -658,7 +657,7 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
 
  void modificar_bloque_inicial_indice (int bloque_inicial, int bloque_modificado) {
     char* nombre_del_archivo = string_new();
-    if(buscar_archivo_en_indice(fd_indice,bloque_inicial,nombre_del_archivo)==-2) { //si el bit no corresponde a un bloque inicial de archivo, no hago nada
+    if(buscar_archivo_en_indice(bloque_inicial,nombre_del_archivo)==-2) { //si el bit no corresponde a un bloque inicial de archivo, no hago nada
         return;
     }
     char* path_archivo = string_new();
@@ -700,7 +699,7 @@ void procesar_io_fs_write(t_buffer* buffer_kernel, uint32_t pid, int socket_kern
 
     t_config* config_archivo = config_create(path_archivo);
     if (config_archivo == NULL) {
-        log_error(logger_entrada_salida, "Error creando la configuración del archivo\n");
+        log_error(logger_fs, "Error creando la configuración del archivo\n");
         free(nombre_archivo);
         free(path_archivo);
         return;
@@ -708,7 +707,7 @@ void procesar_io_fs_write(t_buffer* buffer_kernel, uint32_t pid, int socket_kern
 
     int bloque_inicial_archivo = config_get_int_value(config_archivo, "BLOQUE_INICIAL");
     if (bloque_inicial_archivo == -1) {
-        log_error(logger_entrada_salida, "Error obteniendo el valor de BLOQUE_INICIAL\n");
+        log_error(logger_errores, "Error obteniendo el valor de BLOQUE_INICIAL\n");
         free(nombre_archivo);
         free(path_archivo);
         config_destroy(config_archivo);
@@ -734,7 +733,7 @@ void procesar_io_fs_write(t_buffer* buffer_kernel, uint32_t pid, int socket_kern
         // Lógica para aumentar el tamaño del puntero en length
          void* temp = realloc(info_memoria, offset_memoria + length);
         if (temp == NULL) {
-            log_error(logger_entrada_salida, "Error reallocando memoria\n");
+            log_error(logger_fs, "Error reallocando memoria\n");
             free(info_memoria);
             free(nombre_archivo);
             free(path_archivo);
@@ -750,6 +749,7 @@ void procesar_io_fs_write(t_buffer* buffer_kernel, uint32_t pid, int socket_kern
     }
     log_info(logger_fs, "PID: %u - Escribir Archivo: %s - Tamaño a Escribir: %i - Puntero Archivo: %i", 
                 pid,nombre_archivo,cont_tamanio,puntero_archivo);
+                
     escribir_en_fs(bloque_inicial_archivo,puntero_archivo,cont_tamanio,info_memoria);
    
     config_destroy(config_archivo);
@@ -767,16 +767,17 @@ void escribir_en_fs (int indice_bloques, uint32_t offset, uint32_t tamanio, void
     uint32_t offset_dentro_de_bloque = offset % configuracion.BLOCK_SIZE;
     uint32_t nuevo_indice = indice_bloques + offset_de_bloques;
 
-
+    
     while(bytes_escritos<tamanio){
         //si lo que tengo que escribir supera lo que tengo remanente en el bloque
-        if(bytes_pendientes_escritura > configuracion.BLOCK_SIZE - offset_dentro_de_bloque) {
-            bytes_pendientes_escritura = configuracion.BLOCK_SIZE - offset_de_bloques;
-        }
-        memcpy(bloques[nuevo_indice] + offset_dentro_de_bloque, data + bytes_escritos, bytes_pendientes_escritura);
-        bytes_escritos +=bytes_pendientes_escritura;
+       
+        int bytes_a_escribir = min(bytes_pendientes_escritura,configuracion.BLOCK_SIZE-offset_dentro_de_bloque);
+        memcpy(bloques[nuevo_indice] + offset_dentro_de_bloque, data + (bytes_escritos * sizeof(char)), bytes_a_escribir);
+        bytes_escritos += bytes_a_escribir;
         nuevo_indice ++;
         offset_dentro_de_bloque = 0;
+        bytes_pendientes_escritura -= bytes_a_escribir;
+        
     }
 }
 
@@ -802,15 +803,14 @@ void procesar_io_fs_read(t_buffer* buffer_kernel, uint32_t pid, int socket_kerne
 
     t_config* config_archivo = config_create(path_archivo);
     if (config_archivo == NULL) {
-        log_error(logger_entrada_salida, "Error creando la configuración del archivo\n");
+        log_error(logger_errores, "Error creando la configuración del archivo\n");
         free(nombre_archivo);
         free(path_archivo);
         return;
     }
-
     int bloque_inicial_archivo = config_get_int_value(config_archivo, "BLOQUE_INICIAL");
     if (bloque_inicial_archivo == -1) {
-        log_error(logger_entrada_salida, "Error obteniendo el valor de BLOQUE_INICIAL\n");
+        log_error(logger_errores, "Error obteniendo el valor de BLOQUE_INICIAL\n");
         free(nombre_archivo);
         free(path_archivo);
         config_destroy(config_archivo);
@@ -818,13 +818,26 @@ void procesar_io_fs_read(t_buffer* buffer_kernel, uint32_t pid, int socket_kerne
     }
 
     int offset_archivo = 0;
-    for(int i = 0 ; i < cant_paginas ; i++){
-        void* data_a_escribir = malloc(tamanio_direcciones_a_escribir[i]);
-        memcpy(data_a_escribir,bloques+(bloque_inicial_archivo*configuracion.BLOCK_SIZE)+offset_archivo,tamanio_direcciones_a_escribir[i]);
-        offset_archivo += tamanio_direcciones_a_escribir[i];
-        escribir_en_memoria(data_a_escribir,pid,direcciones_fisicas_memoria_a_escribir[i],socket_memoria);
-        free(data_a_escribir);
+    for(int i = 0, j=0 ; i < cant_paginas ; i++){
+            while(tamanio_direcciones_a_escribir[i] > 0){
+                int tamanio_a_escribir = min(configuracion.BLOCK_SIZE-puntero_archivo, tamanio_direcciones_a_escribir[i]);
+                int offset_memoria = 0;
+                void* data_a_escribir = malloc(tamanio_a_escribir);
+                memcpy(data_a_escribir,bloques[bloque_inicial_archivo+j]+puntero_archivo*sizeof(char)+offset_archivo*sizeof(char),tamanio_a_escribir);
+                offset_archivo += tamanio_a_escribir;
+                if((configuracion.BLOCK_SIZE - puntero_archivo - offset_archivo) <= 0){
+                    offset_archivo = 0;
+                    j++;
+                }
+                puntero_archivo = 0;
+                escribir_en_memoria(data_a_escribir,pid,direcciones_fisicas_memoria_a_escribir[i]+offset_memoria,tamanio_a_escribir ,socket_memoria);
+                free(data_a_escribir);
+                offset_memoria += tamanio_a_escribir;
+                tamanio_direcciones_a_escribir[i] -= tamanio_a_escribir;
+            }
     }
+  
+  
     log_info(logger_fs, "PID: %u - Escribir Archivo: %s - Tamaño a Leer: %i - Puntero Archivo: %i",
                 pid,nombre_archivo,cont_tamanio,puntero_archivo);
     config_destroy(config_archivo);

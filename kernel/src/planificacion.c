@@ -190,7 +190,7 @@ void ejecutar_VRR(t_pcb *a_ejecutar){
 void ejecutar_con_quantum(t_pcb *a_ejecutar){
     crear_paquete_contexto_exec(a_ejecutar);
     temp_quantum = temporal_create();
-    pthread_create(&temporizador_quantum, NULL, (void*)esperar_interrupcion_quantum, a_ejecutar);
+    pthread_create(&temporizador_quantum, NULL, (void*)esperar_interrupcion_quantum, (void*)a_ejecutar);
     pthread_detach(temporizador_quantum);
     //falta terminar
     

@@ -68,6 +68,7 @@ int esperar_cliente(int socket_servidor,t_log* log_conexiones,char* nom_cliente)
 	free(paquete->buffer);
 	free(paquete);
 	free(len_cliente);
+	free(msg_recibido);
 
 	return socket_cliente;
 }

@@ -569,16 +569,16 @@ void io_fs_truncate(char* nombre_interfaz, char* nombre_archivo, char* registro_
     ind_contexto_kernel = 0;
 
     if(!(registro_tamanio[1] == 'X')){
-        void* tamanio = obtener_contenido_registro(registro_tamanio);
+        uint32_t tamanio = *(uint32_t*)obtener_contenido_registro(registro_tamanio);
 
-        solicitar_truncate_fs_a_kernel(FS_TRUNCATE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint32_t));
+        solicitar_truncate_fs_a_kernel(FS_TRUNCATE, nombre_interfaz, nombre_archivo, tamanio);
 
         
     }
     else{
-        void* tamanio = obtener_contenido_registro(registro_tamanio);
+        uint8_t tamanio = *(uint8_t*)obtener_contenido_registro(registro_tamanio);
 
-        solicitar_truncate_fs_a_kernel(FS_TRUNCATE, nombre_interfaz, nombre_archivo, tamanio, sizeof(uint8_t));
+        solicitar_truncate_fs_a_kernel(FS_TRUNCATE, nombre_interfaz, nombre_archivo, tamanio);
 
         
     }

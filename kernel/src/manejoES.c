@@ -24,6 +24,7 @@ void recibir_info_io(int cliente_socket, t_buffer* buffer){
     //free(nombre_interfaz);
     buffer_destroy(buffer);
     
+    
 }
 
 dispositivo_IO* crear_dispositivo_IO(int cliente_socket, t_interfaz tipo_interfaz, char* nombre){
@@ -238,22 +239,18 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
         }
         uint32_t len = 0;
         char* nombre_archivo = buffer_read_string(buffer,&len);
-        uint32_t tamanio_data = buffer_read_uint32(buffer);
-        void* tamanio_fs = malloc(tamanio_data);
-        buffer_read(buffer,tamanio_fs, tamanio_data);
+        uint32_t tamanio_fs= buffer_read_uint32(buffer);
 
-        t_paquete* paquete = crear_paquete(ENTRADASALIDA,sizeof(t_instruccion) + sizeof(uint32_t)*3 + len + tamanio_data);
+        t_paquete* paquete = crear_paquete(ENTRADASALIDA,sizeof(t_instruccion) + sizeof(uint32_t)*3 + len);
         buffer_add(paquete->buffer,tipo_instruccion,sizeof(t_instruccion));
         buffer_add_uint32(paquete->buffer,pid);
         buffer_add_string(paquete->buffer, len, nombre_archivo);
-        buffer_add_uint32(paquete->buffer, tamanio_data);
-        buffer_add(paquete->buffer,tamanio_fs, tamanio_data);
+        buffer_add_uint32(paquete->buffer, tamanio_fs);
         proceso_en_cola* procs = malloc(sizeof(proceso_en_cola));
         procs->paquete=paquete;
         procs->proceso = dictionary_get(dicc_pcb, string_from_format("%u", pid));
         queue_push(interfaz->cola,procs);
         free(nombre_archivo);
-        free(tamanio_fs);
         break;
     }
 

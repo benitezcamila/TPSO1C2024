@@ -6,7 +6,7 @@ int main(int argc, char* argv[]) {
 
     pthread_t levantar_kernel, escuchar_conexiones, 
               establecer_conexion, planificador_corto_plazo, 
-              planificador_largo_plazo, consola, gestion_interfaces, gestion_recursos;
+              planificador_largo_plazo, consola;
     iniciar_logger();
     obtener_config();
     iniciar_semaforos();
@@ -19,8 +19,7 @@ int main(int argc, char* argv[]) {
     pthread_create(&planificador_corto_plazo,NULL,(void*)planificar_a_corto_plazo_segun_algoritmo,NULL);
     pthread_create(&planificador_largo_plazo,NULL,(void*)planificar_a_largo_plazo,NULL);
     pthread_create(&consola,NULL,(void*)ejecutar_consola_kernel,NULL);
-    //pthread_create(&gestion_interfaces,NULL,(void*)gestionar_interfaces,NULL);
-    //pthread_create(&gestion_recursos,NULL,(void*)gestionar_recurso,NULL);
+    
 
     pthread_join(levantar_kernel,NULL);
     pthread_join(establecer_conexion,NULL);

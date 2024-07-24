@@ -1,13 +1,25 @@
 #include "serializacion.h"
 
 // Crea un buffer vacío de tamaño size y offset 0.
-t_buffer *buffer_create(uint32_t size){
-	t_buffer* buffer = malloc(sizeof(t_buffer));
-	buffer->size = size;
-	buffer->offset = 0;
-	buffer->stream = malloc(size);
+t_buffer *buffer_create(uint32_t size) {
+    t_buffer* buffer = malloc(sizeof(t_buffer));
+    if (buffer == NULL) {
+        perror("Error allocating memory for buffer");
+        exit(EXIT_FAILURE);
+    }
 
-	return buffer;
+    buffer->size = size;
+    buffer->offset = 0;
+    buffer->stream = malloc(size);
+    if (buffer->stream == NULL) {
+        perror("Error allocating memory for buffer stream");
+        free(buffer);
+        exit(EXIT_FAILURE);
+    }
+    
+    memset(buffer->stream, 0, size); // Inicializa la memoria asignada a stream
+
+    return buffer;
 }
 
 // Libera la memoria asociada al buffer.
@@ -18,16 +30,35 @@ void buffer_destroy(t_buffer *buffer){
 
 // Agrega un stream al buffer en la posición actual y avanza el offset.
 void buffer_add(t_buffer *buffer, void *data, uint32_t size){
-	memcpy(buffer->stream + buffer->offset, data, size);
-	buffer->offset += size;
+    // Verifica si hay suficiente espacio en el buffer
+    if (buffer->offset + size > buffer->size) {
+        // Maneja el error de forma adecuada (puedes hacer un assert, retornar un error, etc.)
+        fprintf(stderr, "Error: buffer overflow detected in buffer_add\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Copia los datos al buffer
+    memcpy(buffer->stream + buffer->offset, data, size);
+    
+    // Avanza el offset
+    buffer->offset += size;
 }
 
 // Guarda size bytes del principio del buffer en la dirección data y avanza el offset.
 void buffer_read(t_buffer *buffer, void *data, uint32_t size){
-	memcpy(data, buffer->stream + buffer->offset, size); //?
-	buffer->offset += size;
-}
+    // Verifica si hay suficiente espacio en el buffer
+    if (buffer->offset + size > buffer->size) {
+        // Maneja el error de forma adecuada (puedes hacer un assert, retornar un error, etc.)
+        fprintf(stderr, "Error: buffer overflow detected in buffer_read\n");
+        exit(EXIT_FAILURE);
+    }
 
+    // Copia los datos del buffer
+    memcpy(data, buffer->stream + buffer->offset, size);
+    
+    // Avanza el offset
+    buffer->offset += size;
+}
 // Agrega un uint32_t al buffer
 void buffer_add_uint32(t_buffer *buffer, uint32_t data){
 	buffer_add(buffer, &data, sizeof(uint32_t));
@@ -65,7 +96,7 @@ void buffer_add_string(t_buffer *buffer, uint32_t length, char *string){
 // Lee un string y su longitud del buffer y avanza el offset
 char *buffer_read_string(t_buffer *buffer, uint32_t *length){
 	*length = buffer_read_uint32(buffer);
-	char *data = malloc(*length);
+	char *data = malloc((*length)*sizeof(char));
 	buffer_read(buffer, data, *length);
 
 	return data;

@@ -10,17 +10,19 @@ int* bitMap;
 void crear_tabla_de_paginas(int pid){
     tabla_pagina* tabPagina = malloc(sizeof(tabla_pagina));
     tabPagina->pid = pid;
-    tabPagina->paginas = list_create(); 
-    dictionary_put(tabla_global,string_itoa(pid), tabPagina);
+    tabPagina->paginas = list_create();
+    int int_pid = pid; 
+    dictionary_put(tabla_global,string_itoa(int_pid), tabPagina);
     log_info(logger_memoria, "PID %d -  tamanio %d", tabPagina->pid, list_size(tabPagina->paginas));
 }
 
 void ajustar_tam_proceso(t_buffer* buffer_cpu){
     uint32_t pid = buffer_read_uint32(buffer_cpu);
+    int int_pid = pid;
     uint32_t tam_bytes = buffer_read_uint32(buffer_cpu);
     int cant_frames_requeridos = ceil((double)tam_bytes/configuracion.TAM_PAGINA); // funcion de <math.h>
     
-    tabla_pagina* paginas_del_proceso = dictionary_get(tabla_global, string_itoa(pid));
+    tabla_pagina* paginas_del_proceso = dictionary_get(tabla_global, string_itoa(int_pid));
 
     int tam_actual = list_size(paginas_del_proceso->paginas);
     
@@ -81,10 +83,9 @@ void asignar_id_pagina(tabla_pagina* tabla_proceso ){
     t_pagina* primer_pagina = malloc(sizeof(t_pagina)); 
     primer_pagina->pid_pagina = 0;
     primer_pagina->numero_marco = marco_disponible();
-    primer_pagina->tam_disponible = configuracion.TAM_PAGINA;
+   
     list_add(tabla_proceso->paginas, primer_pagina);
-uint8_t* fede = malloc(sizeof(uint8_t));
-free(fede);//fede liberado de so
+
 }
 
 void reduccion_del_proceso(tabla_pagina* tabla_proceso, int marcos_final){    
@@ -101,10 +102,6 @@ void ampliacion_del_proceso(tabla_pagina* tabla_proceso, int marcos_final){
     for(int i = list_size(tabla_proceso->paginas); i<marcos_final; i++){
         t_pagina* entrada = malloc(sizeof(t_pagina));
         entrada->numero_marco = marco_disponible();
-        entrada->offSet = 0;
-        entrada->escrita = false;
-        entrada->tam_disponible = configuracion.TAM_PAGINA;
-
         list_add(tabla_proceso->paginas, entrada);
     }
 }
@@ -121,7 +118,7 @@ int marco_disponible(){
     return -1; //out_of_memory
     }
 
-void* access_espacio_usuario(t_buffer* buffer) {
+void access_espacio_usuario(t_buffer* buffer, int cliente_socket) {
     uint32_t pid = buffer_read_uint32(buffer);
     uint32_t accion = buffer_read_uint32(buffer); // 1 escribir, 0 leer -> a lo clock 2.0
     uint32_t direc_fisica = buffer_read_uint32(buffer);
@@ -129,45 +126,50 @@ void* access_espacio_usuario(t_buffer* buffer) {
 
     if(accion == 0 ){ 
     log_info(logger_memoria, "PID %d - accion leer - direc_fisica %d - tamanio %d ",pid, direc_fisica, tamanio );
-    return leer_espacio_usuario(pid, direc_fisica, tamanio);
+    return leer_espacio_usuario(pid, direc_fisica, tamanio,cliente_socket);
     }
     if(accion == 1){
     log_info(logger_memoria, "PID %d - accion escribir - direc_fisica %d - tamanio %d ",pid, direc_fisica, tamanio );  
-    return  escribir_espacio_usuario(pid, direc_fisica, tamanio, buffer);
+    return  escribir_espacio_usuario(pid, direc_fisica, tamanio, buffer,cliente_socket);
     }
     exit(EXIT_FAILURE);
 }   
 
-t_paquete* leer_espacio_usuario(uint32_t pid,uint32_t direc_fisica, uint32_t tamanio){
+void leer_espacio_usuario(uint32_t pid,uint32_t direc_fisica, uint32_t tamanio, int cliente_socket){
     void* valor = malloc(tamanio);
     t_paquete* info_a_enviar = crear_paquete(RESPUESTA_LECTURA_MEMORIA, tamanio + sizeof(uint32_t));
     valor = leer_memoria (direc_fisica, tamanio);
+    char* asfads = (char*) valor;
     buffer_add_uint32(info_a_enviar->buffer, tamanio);
     buffer_add(info_a_enviar->buffer, valor, tamanio);
-    return info_a_enviar;
+    enviar_paquete(info_a_enviar, cliente_socket);//lectura
+    return;
 }
 
 void* leer_memoria(uint32_t dir_fisica, uint32_t tamanio){
 	void* valor_leido = malloc(tamanio);
     sem_wait(&mutex_memoria);
-    memcpy(valor_leido, espacio_usuario + dir_fisica, tamanio);
+    memcpy(valor_leido, espacio_usuario + (dir_fisica * sizeof(char)), tamanio);
     sem_post(&mutex_memoria);
     return valor_leido;
 
 }
 
-void* escribir_espacio_usuario(uint32_t pid,uint32_t direc_fisica,uint32_t tamanio,t_buffer* buffer){
+void escribir_espacio_usuario(uint32_t pid,uint32_t direc_fisica,uint32_t tamanio,t_buffer* buffer, int cliente_socket){
     void* data_a_escribir = malloc(tamanio);
-    buffer_read(buffer, data_a_escribir, tamanio); 
-    tabla_pagina* tabla = dictionary_get(tabla_global, string_itoa(pid));
+    buffer_read(buffer, data_a_escribir, tamanio);
+    //tabla_pagina* tabla = dictionary_get(tabla_global, string_itoa(pid));
     escribir_memoria(direc_fisica,tamanio, data_a_escribir);
-    return NULL;
+    op_code confirmacion_escritura = OK_ESCRITURA;
+    free(data_a_escribir);
+    send(cliente_socket, &confirmacion_escritura, sizeof(op_code), MSG_WAITALL);//escritura
+    return ;
     }
 
 
   void escribir_memoria(uint32_t direc_fisica, uint32_t tamanio, void* data_a_escribir){
      sem_wait(&mutex_memoria);
-     memcpy(espacio_usuario + direc_fisica, data_a_escribir, tamanio);
+     memcpy(espacio_usuario + (direc_fisica * sizeof(char)) , data_a_escribir , tamanio); 
      sem_post(&mutex_memoria);
      return; 
 }  
@@ -177,8 +179,9 @@ void* escribir_espacio_usuario(uint32_t pid,uint32_t direc_fisica,uint32_t taman
 t_paquete* buscar_marco_pagina (t_buffer* buffer_de_cpu){
     t_paquete* a_enviar = crear_paquete(MARCO_BUSCADO, sizeof(uint32_t));//op_code y numero marco
     uint32_t pid = buffer_read_uint32(buffer_de_cpu);
+    int int_pid = pid;
     uint32_t numero_pagina = buffer_read_uint32(buffer_de_cpu);
-    tabla_pagina* tabla = dictionary_get(tabla_global, string_itoa(pid));
+    tabla_pagina* tabla = dictionary_get(tabla_global, string_itoa(int_pid));
     if(list_size(tabla->paginas) > numero_pagina ){
     t_pagina* pagina = list_get(tabla->paginas, numero_pagina);
     buffer_add_uint32(a_enviar->buffer, pagina->numero_marco);

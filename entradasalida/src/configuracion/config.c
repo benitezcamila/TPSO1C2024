@@ -21,6 +21,7 @@ void* bitmap_memoria = NULL;
 void* bloques_memoria = NULL;
 void ** bloques;
 char** indice;
+char* path_indice;
 
 
 
@@ -84,11 +85,11 @@ void obtener_config(char* path_config){
 }
 
 void iniciar_logger(){
-    logger_entrada_salida = log_create(PATH_ABSOLUTO("entradasalida/logs/entrada salida.log"),"Entrada Salida",1,LOG_LEVEL_INFO);
-    logger_conexiones = log_create(PATH_ABSOLUTO("entradasalida/logs/conexiones.log"),"Conexion",1,LOG_LEVEL_INFO);
+    logger_entrada_salida = log_create(PATH_ABSOLUTO("entradasalida/logs/entrada salida.log"),"Entrada Salida",0,LOG_LEVEL_INFO);
+    logger_conexiones = log_create(PATH_ABSOLUTO("entradasalida/logs/conexiones.log"),"Conexion",0,LOG_LEVEL_INFO);
     logger_salida = log_create(PATH_ABSOLUTO("entradasalida/logs/salidas.log"),"SALIDA",0,LOG_LEVEL_INFO);
-    logger_fs = log_create(PATH_ABSOLUTO("entradasalida/logs/fs.log"),"FS",1,LOG_LEVEL_INFO);
-    logger_errores = log_create(PATH_ABSOLUTO("entradasalida/logs/errores.log"),"ERROR",1,LOG_LEVEL_INFO);
+    logger_fs = log_create(PATH_ABSOLUTO("entradasalida/logs/fs.log"),"FS",0,LOG_LEVEL_INFO);
+    logger_errores = log_create(PATH_ABSOLUTO("entradasalida/logs/errores.log"),"ERROR",0,LOG_LEVEL_INFO);
 }
 
 
@@ -102,7 +103,7 @@ void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint16_t cantidad_bloqu
     char* path_bitmap = string_new();
     string_append(&path_bitmap,path_fs);
     string_append(&path_bitmap,"/bitmap.dat");
-    char* path_indice = string_new();
+    path_indice = string_new();
     string_append(&path_indice,path_fs);
     string_append(&path_indice,"/indice.dat");
     if(cantidad_bloques%8 !=0) {
@@ -126,6 +127,8 @@ void levantar_fs(char* path_fs, uint8_t tamanio_bloques, uint16_t cantidad_bloqu
         log_info(logger_entrada_salida, "Archivo bloques.dat mapeado");
         bitmap = mapear_archivo_bitmap(fd_bitmap,tamanio_bitmap_bytes);
         log_info(logger_entrada_salida, "Archivo bitmap.dat mapeado");
+        
+        fclose(archivo_indice);
     }
 
 
@@ -212,10 +215,10 @@ t_bitarray* mapear_archivo_bitmap (int fd_bitmap, int tamanio_bitmap_bytes) {
 int crear_indice(char* path_indice, uint32_t cantidad_bloques) {
     int fd_indice = open(path_indice, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd_indice == -1) {
-        log_info(logger_entrada_salida, "Fallo la creacion del archivo indice");
+        log_error(logger_errores, "Fallo la creacion del archivo indice");
         return -1;
     }
     //no mapeo el archivo a memoria ya que tendria que reservar un filepath por bloque o tener que remapear a memoria cada vez que se amplia el tamaño
-    log_info(logger_entrada_salida, "Archivo indice.dat creado");
+    log_info(logger_fs, "Archivo indice.dat creado");
     return fd_indice;
 }

@@ -50,6 +50,7 @@ extern int fd_bloques;
 extern int fd_indice;
 extern void ** bloques;
 extern char** indice;
+extern char* path_indice;
 
 
 
