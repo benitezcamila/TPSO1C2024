@@ -149,7 +149,7 @@ void leer_espacio_usuario(uint32_t pid,uint32_t direc_fisica, uint32_t tamanio, 
 void* leer_memoria(uint32_t dir_fisica, uint32_t tamanio){
 	void* valor_leido = malloc(tamanio);
     sem_wait(&mutex_memoria);
-    memcpy(valor_leido, espacio_usuario + (dir_fisica * sizeof(char)), tamanio);
+    memcpy(valor_leido, espacio_usuario + dir_fisica, tamanio);
     sem_post(&mutex_memoria);
     return valor_leido;
 
@@ -159,6 +159,7 @@ void escribir_espacio_usuario(uint32_t pid,uint32_t direc_fisica,uint32_t tamani
     void* data_a_escribir = malloc(tamanio);
     buffer_read(buffer, data_a_escribir, tamanio);
     //tabla_pagina* tabla = dictionary_get(tabla_global, string_itoa(pid));
+    
     escribir_memoria(direc_fisica,tamanio, data_a_escribir);
     op_code confirmacion_escritura = OK_ESCRITURA;
     free(data_a_escribir);
@@ -169,7 +170,7 @@ void escribir_espacio_usuario(uint32_t pid,uint32_t direc_fisica,uint32_t tamani
 
   void escribir_memoria(uint32_t direc_fisica, uint32_t tamanio, void* data_a_escribir){
      sem_wait(&mutex_memoria);
-     memcpy(espacio_usuario + (direc_fisica * sizeof(char)) , data_a_escribir , tamanio); 
+     memcpy(espacio_usuario + direc_fisica , data_a_escribir , tamanio); 
      sem_post(&mutex_memoria);
      return; 
 }  

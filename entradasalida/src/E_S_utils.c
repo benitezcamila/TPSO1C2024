@@ -357,8 +357,7 @@ int obtener_tamanio_de_archivo (char * nombre_archivo){
 
 int obtener_nuevo_bloque_final (char * nombre_archivo, uint32_t tamanio_nuevo){
     int bloque_inicial = obtener_primer_bloque_de_archivo(nombre_archivo);
-    //int bloque_final = obtener_ultimo_bloque_de_archivo(nombre_archivo); 
-    int nuevo_bloque_final = tamanio_nuevo / configuracion.BLOCK_SIZE;
+    int nuevo_bloque_final = (tamanio_nuevo / configuracion.BLOCK_SIZE)-1;
     if (tamanio_nuevo%configuracion.BLOCK_SIZE!=0) {
         nuevo_bloque_final+=1;
     }
@@ -549,6 +548,7 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
 
     // Muevo todos los bloques ocupados a las primeras posiciones libres
     for (int i = 0; i < configuracion.BLOCK_COUNT; ++i) {
+        
         if (bitarray_test_bit(bitmap, i)) {
             if (i != indice_auxiliar) { //si el bit no se encuentra en la primer posicion libre (indice auxiliar comienza en 0)
                 
@@ -558,7 +558,7 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
                 bitarray_set_bit(bitmap, indice_auxiliar);
                 bitarray_clean_bit(bitmap, i);
                 //MODIFICO CONFIG DE ARCHIVO USANDO ARCHIVO DE INDICE
-                modificar_bloque_inicial_indice(*(int*)bloque_desplazado,indice_auxiliar);
+                modificar_bloque_inicial_indice(i,indice_auxiliar);
             }
             indice_auxiliar++;
         }
@@ -568,11 +568,12 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
     int nueva_posicion_inicial = indice_auxiliar;
     // Muevo los bloques almacenados temporalmente a las últimas posiciones libres
     for (size_t j = 0; j < cantidad_a_mover; ++j) {
+        
         if (indice_auxiliar < configuracion.BLOCK_COUNT) {
             void *posicion_libre = bloques[indice_auxiliar];
             memcpy(posicion_libre, bloques_auxiliares[j], configuracion.BLOCK_SIZE);
-            bitarray_set_bit(bitmap, indice_auxiliar);
             modificar_bloque_inicial_indice(bloque_inicial,indice_auxiliar);
+            bitarray_set_bit(bitmap, indice_auxiliar);
             indice_auxiliar++;
         }
         free(bloques_auxiliares[j]); 
@@ -658,6 +659,7 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
  void modificar_bloque_inicial_indice (int bloque_inicial, int bloque_modificado) {
     char* nombre_del_archivo = string_new();
     if(buscar_archivo_en_indice(bloque_inicial,nombre_del_archivo)==-2) { //si el bit no corresponde a un bloque inicial de archivo, no hago nada
+        free(nombre_del_archivo);
         return;
     }
     char* path_archivo = string_new();
@@ -731,7 +733,7 @@ void procesar_io_fs_write(t_buffer* buffer_kernel, uint32_t pid, int socket_kern
         t_buffer* memoria = recibir_todo_elbuffer (socket_memoria);
         uint32_t length = buffer_read_uint32(memoria);
         // Lógica para aumentar el tamaño del puntero en length
-         void* temp = realloc(info_memoria, offset_memoria + length);
+        void* temp = realloc(info_memoria, offset_memoria + length);
         if (temp == NULL) {
             log_error(logger_fs, "Error reallocando memoria\n");
             free(info_memoria);
@@ -743,13 +745,13 @@ void procesar_io_fs_write(t_buffer* buffer_kernel, uint32_t pid, int socket_kern
         }
 
         info_memoria = temp;
-        buffer_read(memoria, (char*)info_memoria + offset_memoria, length);
+        buffer_read(memoria, info_memoria + offset_memoria, length);
         offset_memoria += length;
         buffer_destroy(memoria);
     }
     log_info(logger_fs, "PID: %u - Escribir Archivo: %s - Tamaño a Escribir: %i - Puntero Archivo: %i", 
                 pid,nombre_archivo,cont_tamanio,puntero_archivo);
-                
+               
     escribir_en_fs(bloque_inicial_archivo,puntero_archivo,cont_tamanio,info_memoria);
    
     config_destroy(config_archivo);
@@ -772,7 +774,10 @@ void escribir_en_fs (int indice_bloques, uint32_t offset, uint32_t tamanio, void
         //si lo que tengo que escribir supera lo que tengo remanente en el bloque
        
         int bytes_a_escribir = min(bytes_pendientes_escritura,configuracion.BLOCK_SIZE-offset_dentro_de_bloque);
-        memcpy(bloques[nuevo_indice] + offset_dentro_de_bloque, data + (bytes_escritos * sizeof(char)), bytes_a_escribir);
+        memcpy(bloques[nuevo_indice] + offset_dentro_de_bloque, data + bytes_escritos, bytes_a_escribir);
+        char* a = string_new();
+        string_n_append(&a,bloques[nuevo_indice] + offset_dentro_de_bloque,bytes_a_escribir);
+        log_info(logger_fs, "Escribi en el bloque: %i - String escrito: %s", nuevo_indice, a);
         bytes_escritos += bytes_a_escribir;
         nuevo_indice ++;
         offset_dentro_de_bloque = 0;
@@ -823,13 +828,14 @@ void procesar_io_fs_read(t_buffer* buffer_kernel, uint32_t pid, int socket_kerne
                 int tamanio_a_escribir = min(configuracion.BLOCK_SIZE-puntero_archivo, tamanio_direcciones_a_escribir[i]);
                 int offset_memoria = 0;
                 void* data_a_escribir = malloc(tamanio_a_escribir);
-                memcpy(data_a_escribir,bloques[bloque_inicial_archivo+j]+puntero_archivo*sizeof(char)+offset_archivo*sizeof(char),tamanio_a_escribir);
+                memcpy(data_a_escribir,bloques[bloque_inicial_archivo+j]+puntero_archivo+offset_archivo,tamanio_a_escribir);
                 offset_archivo += tamanio_a_escribir;
                 if((configuracion.BLOCK_SIZE - puntero_archivo - offset_archivo) <= 0){
                     offset_archivo = 0;
                     j++;
                 }
                 puntero_archivo = 0;
+                char* sfad = (char*) data_a_escribir;
                 escribir_en_memoria(data_a_escribir,pid,direcciones_fisicas_memoria_a_escribir[i]+offset_memoria,tamanio_a_escribir ,socket_memoria);
                 free(data_a_escribir);
                 offset_memoria += tamanio_a_escribir;
