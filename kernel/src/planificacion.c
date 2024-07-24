@@ -10,6 +10,8 @@ pthread_t temporizador_quantum;
 bool pausar_plani;
 char* mensaje_ingreso_ready;
 int cont_salteo_signal;
+int multiprogramacion_actual;
+
 
 
 //colas de estado
@@ -49,13 +51,19 @@ void liberar_proceso(uint32_t pid){
     buffer_add_uint32(paquete->buffer,pid);
     enviar_paquete(paquete,sockets.socket_memoria);
     eliminar_pcb(string_from_format("%u", pid));
-
+/*
     if(cont_salteo_signal > 0){
         cont_salteo_signal--;
+        if(cont_salteo_signal == 0){
+            sem_post(&sem_pausar_ready);
+            pausar_ready = false;
+        }
     }
     else{
     sem_post(&sem_grado_multiprogramacion);
     }
+    */
+    sem_post(&sem_grado_multiprogramacion);
 }
 
 void crear_proceso(char* path){
@@ -85,6 +93,11 @@ void planificar_a_largo_plazo(){
         if(pausar_plani){
             sem_wait(&sem_pausa_planificacion_largo_plazo);
             reanudar_planificacion();
+        }
+        if(cont_salteo_signal>0){
+            sem_post(&hay_procesos_nuevos);
+            cont_salteo_signal--;
+            continue;
         }
         t_pcb* proceso_para_ready = queue_pop(cola_new);
         proceso_para_ready->estado = READY;

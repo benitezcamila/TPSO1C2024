@@ -27,6 +27,7 @@ extern t_queue *suspendido_bloqueado;
 extern t_queue *suspendido_listo; 
 extern t_temporal* temp_quantum;
 extern int cont_salteo_signal;
+extern int multiprogramacion_actual;
 
 void iniciar_colas();
 void iniciar_semaforos_planificacion();

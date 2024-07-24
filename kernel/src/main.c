@@ -45,10 +45,12 @@ void iniciar_estructuras(){
     dicc_IO = dictionary_create();
     crear_colas_bloqueo();
     iniciar_colas();
+    
 }
 
 void inicializar_variables(){
     current_pid = 0;
     cont_salteo_signal = 0;
     pausar_plani = false;
+    multiprogramacion_actual = configuracion.GRADO_MULTIPROGRAMACION;
 }

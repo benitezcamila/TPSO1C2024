@@ -116,15 +116,18 @@ void iniciar_planificacion() {
 }
 
 void modificar_multiprogramacion(int valor) {
-    if(valor > configuracion.GRADO_MULTIPROGRAMACION){
-        for(int i = 0; i < (valor - configuracion.GRADO_MULTIPROGRAMACION);i++){
+    int aux = multiprogramacion_actual;
+    multiprogramacion_actual = valor;
+    if(valor > aux){
+        for(int i = 0; i < (valor - aux);i++){
             sem_post(&sem_grado_multiprogramacion);
         }
         cont_salteo_signal = 0;
     }
-    else if(valor < configuracion.GRADO_MULTIPROGRAMACION){
-        cont_salteo_signal = configuracion.GRADO_MULTIPROGRAMACION - valor;
+    else if(valor < aux){
+        cont_salteo_signal += aux - valor;
     }
+    log_info(logger_kernel,"EL nuevo grado multiprogramacion es %i", valor);
 }
 
 
