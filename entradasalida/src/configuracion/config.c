@@ -235,7 +235,6 @@ void destruir_config(){
     free(configuracion.PATH_BASE_DIALFS);
     free(tipo_interfaz_string);
     free(path_indice);
-    free(bloques_memoria);
     free(indice);
     free(bloques);
 }
