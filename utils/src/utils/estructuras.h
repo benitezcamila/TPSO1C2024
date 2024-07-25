@@ -45,7 +45,8 @@ typedef enum {
     FALLO_OP, //para cpu
     PROCESO_CREADO,
     CONTEXTO_RECIBIDO,
-    OK_ESCRITURA
+    OK_ESCRITURA,
+    APAGAR
 } op_code;
 
 typedef enum {

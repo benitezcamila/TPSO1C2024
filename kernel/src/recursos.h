@@ -17,5 +17,7 @@ extern int cantidad_recursos;
 extern t_dictionary* recursos;
 
 void crear_colas_bloqueo();
+void eliminar_recuros(char*);
 void gestionar_recurso(str_recursos*);
+void eliminar_recurso(char*);
 #endif

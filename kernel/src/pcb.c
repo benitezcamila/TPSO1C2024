@@ -130,6 +130,9 @@ void recibir_contexto_exec(t_pcb* pcb){
             quantum_a_asignar = configuracion.QUANTUM;
         }
     }
+    if(apagando_sistema){
+        return;
+    }
     if(pausar_plani){
         sem_wait(&sem_detener_desalojo);
     }

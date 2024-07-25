@@ -22,10 +22,25 @@ void crear_colas_bloqueo(){
 
 }
 
+void eliminar_recurso(char* nom_recurso){
+    str_recursos* recurso = dictionary_remove(recursos, nom_recurso);
+    queue_clean(recurso->cola);
+    queue_destroy(recurso->cola);
+    free(recurso->nombre);
+    list_clean(recurso->procesos_okupas);
+    list_destroy(recurso->procesos_okupas);
+    sem_destroy(&(recurso->cantidad_recursos));
+    sem_destroy(&(recurso->recurso_solicitado));
+    free(recurso);
+}
+
 void gestionar_recurso(str_recursos* recurso) {
     while (1) {
         sem_wait(&(recurso->recurso_solicitado));
         sem_wait(&(recurso->cantidad_recursos));
+        if(apagando_sistema){
+            return;
+        }
         if (queue_size(recurso->cola) > 0) {
             t_pcb* pcb = queue_pop(recurso->cola);
             list_add(recurso->procesos_okupas, &pcb->pid);

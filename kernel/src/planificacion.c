@@ -90,6 +90,9 @@ void planificar_a_largo_plazo(){
     while(1){
         sem_wait(&hay_procesos_nuevos);
         sem_wait(&sem_grado_multiprogramacion);
+        if(apagando_sistema){
+            return;
+        }
         if(pausar_plani){
             sem_wait(&sem_pausa_planificacion_largo_plazo);
             reanudar_planificacion();
@@ -115,6 +118,9 @@ void planificar_a_corto_plazo_segun_algoritmo(){
     char *algoritmo_planificador = configuracion.ALGORITMO_PLANIFICACION;
     while(1){
         sem_wait(&sem_proceso_en_ready);
+        if(apagando_sistema){
+            return;
+        }
         if(pausar_plani){
                 sem_wait(&sem_pausa_planificacion_corto_plazo);
                 reanudar_planificacion();

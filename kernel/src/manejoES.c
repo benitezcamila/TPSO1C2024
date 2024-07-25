@@ -49,13 +49,15 @@ void destruir_dispositivo_IO(char* nombre_interfaz){
     for(int i = 0; i < queue_size(interfaz->cola);i++){
         proceso_en_cola* proceso = queue_pop(interfaz->cola);
         eliminar_paquete(proceso->paquete);
-        log_info(logger_kernel,"Finaliza el proceso %u - Motivo: INVALID_INTERFACE", proceso->proceso->pid);
+        log_info(logger_kernel,"Finaliza el proceso %u - Motivo: REMOVING_INTERFACE", proceso->proceso->pid);
         log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", proceso->proceso->pid);
         liberar_proceso(proceso->proceso->pid);
         free(proceso);
     }
     free(interfaz->nombre);
+    queue_destroy(interfaz->cola);
     sem_destroy(&(interfaz->esta_libre));
+    sem_destroy(&(interfaz->pidieron_interfaz));
     if(interfaz->proceso_okupa != NULL){
         liberar_proceso(interfaz->proceso_okupa->pid);
     }
@@ -364,6 +366,9 @@ void gestionar_interfaces(dispositivo_IO* interfaz){
     while(1){
         sem_wait(&interfaz->pidieron_interfaz);
         sem_wait(&interfaz->esta_libre);
+        if(apagando_sistema){
+            return;
+        }
         if(interfaz->socket == -1){
             destruir_dispositivo_IO(interfaz->nombre);
             break;

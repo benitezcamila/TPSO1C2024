@@ -22,5 +22,7 @@ extern pthread_t levantar_kernel, escuchar_conexiones,
 void iniciar_semaforos();
 void iniciar_estructuras();
 void inicializar_variables();
+void destruir_colas();
+void destruir_semaforos();
 
 #endif

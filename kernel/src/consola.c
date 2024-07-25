@@ -1,11 +1,5 @@
-#include <consola.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <readline/readline.h>
-#include <readline/history.h>
-#include "kernel_utils.h"
-#include "planificacion.h"
+#include "consola.h"
+
 
 char* mensaje_listado;
 
@@ -49,6 +43,9 @@ void ejecutar_comandos(char* input){
                 break;
             case PROCESO_ESTADO:
                 listar_procesos_por_estado();
+                break;
+            case APAGAR_SISTEMA:
+                apagar_sistema();
                 break;
             default:
                 printf("Comando no reconocido: %s\n", input);
@@ -148,6 +145,8 @@ int get_tipo_comando(const char *input) {
         return MULTIPROGRAMACION;
     } else if (strcmp(input, "PROCESO_ESTADO") == 0) {
         return PROCESO_ESTADO;
+    } else if (strcmp(input, "APAGAR") == 0) {
+        return APAGAR_SISTEMA;
     } else {
         return COMANDO_DESCONOCIDO;
     }
@@ -166,5 +165,40 @@ void listar_proceso(t_list* lista, char* estado){
     log_info(logger_kernel,"Los siguientes proceso estan en la cola %s: %s", estado, mensaje_listado);
     free(mensaje_listado);
     
+}
+
+void apagar_sistema(){
+    apagando_sistema = true;
+    op_code cod = APAGAR;
+    send(sockets.socket_memoria,&cod, sizeof(op_code),0);
+    send(sockets.socket_CPU_I,&cod, sizeof(op_code),0);
+    eliminar_interfaces();
+    eliminar_pcbs();
+    eliminar_recursos();
+    sem_post(&sem_apagar);
+}
+
+void eliminar_interfaces(){
+    op_code cod = APAGAR;
+    t_list* keys = dictionary_keys(dicc_IO);
+    for(int i = 0; i < list_size(keys); i++){
+       dispositivo_IO* interfaz =  dictionary_get(dicc_IO,list_get(keys,i));
+       send(interfaz->socket,&cod, sizeof(op_code),0);
+       destruir_dispositivo_IO(interfaz->nombre);
+    }
+}
+
+void eliminar_pcbs(){
+    t_list* keys = dictionary_keys(dicc_pcb);
+    for(int i = 0; i < list_size(keys); i++){
+        eliminar_pcb(list_get(keys,i));
+    }
+}
+
+void eliminar_recursos(){
+    t_list* keys = dictionary_keys(recursos);
+    for(int i = 0; i < list_size(keys); i++){
+        eliminar_recurso(list_get(keys,i));
+    }
 }
 

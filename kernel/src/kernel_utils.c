@@ -2,6 +2,7 @@
 
 str_sockets sockets;
 sem_t sem_escuchar;
+bool apagando_sistema;
 
 
 pthread_t conexion_CPU_I,conexion_CPU_D, conexion_memoria;
