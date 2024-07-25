@@ -438,26 +438,7 @@ void setear_bits(t_bitarray* bitmap, off_t bit_inicial, off_t bit_final) {
     }
     msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
 }
-/*
-void procesar_io_fs_delete_prueba(char* nombre_archivo){
-    char* path_archivo = string_new();
-    string_append(&path_archivo,configuracion.PATH_BASE_DIALFS);
-    string_append(&path_archivo,"/");
-    string_append(&path_archivo,nombre_archivo);
-    char* informar_eliminar_archivo = string_from_format("PID: %s - Eliminar Archivo: %s","prueba",nombre_archivo); 
-    log_info(logger_entrada_salida, informar_eliminar_archivo);
-    free(informar_eliminar_archivo);
-    int primer_bit_archivo = obtener_primer_bloque_de_archivo(nombre_archivo);
-    int ultimo_bit_archivo = obtener_ultimo_bloque_de_archivo(nombre_archivo);
-    if (remove(path_archivo) == 0) {
-        log_info(logger_entrada_salida, "Archivo eliminado");
-        limpiar_bits(bitmap,primer_bit_archivo,ultimo_bit_archivo);
-    } else {
-        log_info(logger_entrada_salida, "Error al eliminar el archivo");
-    }
-    free(path_archivo);
-}
-*/
+
 
 void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid, int socket_kernel, char* nombre){
     /*
@@ -524,8 +505,6 @@ bool hay_bits_ocupados(t_bitarray* bitmap, int inicio, int fin){
 
 
 
-
-
 int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque_inicial, int bloque_final, uint32_t pid) {
     /*
     DialFS - Inicio Compactación: “PID: <PID> - Inicio Compactación.” 
@@ -535,12 +514,18 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
     int indice_auxiliar = 0;
     int cantidad_a_mover = bloque_final - bloque_inicial +1;
     void **bloques_auxiliares = malloc(cantidad_a_mover * sizeof(void *));
-    
+    char* archivo_a_desplazar = string_new();
+    if(buscar_archivo_en_indice(bloque_inicial,archivo_a_desplazar)==-2) { 
+        log_error(log_error,"Archivo no encontrado en indices.dat");
+        free(archivo_a_desplazar);
+        return;
+    }
     //Guardo temporalmente los bloques que quiero dejar al final y marco como libre el bitmap en esas posiciones
     for (int j = 0; j < cantidad_a_mover; ++j) {
         int i = bloque_inicial+j;
         bloques_auxiliares[j] = malloc(configuracion.BLOCK_SIZE);
         memcpy(bloques_auxiliares[j], bloques[i], configuracion.BLOCK_SIZE);
+        
         bitarray_clean_bit(bitmap,i); 
 
     }
@@ -572,7 +557,10 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
         if (indice_auxiliar < configuracion.BLOCK_COUNT) {
             void *posicion_libre = bloques[indice_auxiliar];
             memcpy(posicion_libre, bloques_auxiliares[j], configuracion.BLOCK_SIZE);
-            modificar_bloque_inicial_indice(bloque_inicial,indice_auxiliar);
+            if(modificar_bloque_inicial_indice_por_nombre(archivo_a_desplazar,indice_auxiliar)==-1){
+                log_error(logger_errores,"Error al reemplazar bloque inicial en archivo de indices");
+                return -1;
+            }
             bitarray_set_bit(bitmap, indice_auxiliar);
             indice_auxiliar++;
         }
@@ -656,8 +644,51 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
     return -2;
  }
 
+int modificar_archivo_indices(int bloque_original, int nuevo_bloque) {
+    FILE* archivo_indices = fopen(path_indice, "r+");
+    if(archivo_indices == NULL){
+        log_error(logger_errores,"Error al abrir archivo de indices");
+        return -1;
+    }
+    t_indice indice_del_archivo;
+    while (fread(&indice_del_archivo,sizeof(t_indice),1,archivo_indices)==1){
+        if(indice_del_archivo.indice_de_bloques == bloque_original) {
+            indice_del_archivo.indice_de_bloques = nuevo_bloque;
+            fseek(archivo_indices, -sizeof(t_indice), SEEK_CUR);
+            fwrite(&indice_del_archivo, sizeof(t_indice), 1, archivo_indices);
+            fclose(archivo_indices);
+            return 0;
+        }
+    }
+    fclose(archivo_indices);
+    return -1;
+}
+
+int modificar_bloque_inicial_indice_por_nombre (char* nombre_archivo_a_cambiar, int nuevo_bloque) {
+    FILE* archivo_indices = fopen(path_indice, "r+");
+    if(archivo_indices == NULL){
+        log_error(logger_errores,"Error al abrir archivo de indices");
+        return -1;
+    }
+    t_indice indice_del_archivo;
+    while (fread(&indice_del_archivo,sizeof(t_indice),1,archivo_indices)==1){
+        if(strcmp(indice_del_archivo.nombre_archivo, nombre_archivo_a_cambiar) == 0) {
+            indice_del_archivo.indice_de_bloques = nuevo_bloque;
+            fseek(archivo_indices, -sizeof(t_indice), SEEK_CUR);
+            fwrite(&indice_del_archivo, sizeof(t_indice), 1, archivo_indices);
+            fclose(archivo_indices);
+            return 0;
+        }
+    }
+    fclose(archivo_indices);
+    return -1;
+
+}
+
+
  void modificar_bloque_inicial_indice (int bloque_inicial, int bloque_modificado) {
     char* nombre_del_archivo = string_new();
+
     if(buscar_archivo_en_indice(bloque_inicial,nombre_del_archivo)==-2) { //si el bit no corresponde a un bloque inicial de archivo, no hago nada
         free(nombre_del_archivo);
         return;
@@ -669,6 +700,9 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
     t_config* config_archivo = config_create(path_archivo);
     config_set_value(config_archivo,"BLOQUE_INICIAL",string_itoa(bloque_modificado));
     config_save(config_archivo);
+    if(modificar_archivo_indices(bloque_inicial, bloque_modificado) == -1) {
+        log_error(logger_errores,"Error al actualizar archivo de indices");
+    }
     config_destroy(config_archivo);
     free(nombre_del_archivo);
     free(path_archivo);
