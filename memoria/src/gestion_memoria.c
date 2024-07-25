@@ -139,7 +139,6 @@ void leer_espacio_usuario(uint32_t pid,uint32_t direc_fisica, uint32_t tamanio, 
     void* valor = malloc(tamanio);
     t_paquete* info_a_enviar = crear_paquete(RESPUESTA_LECTURA_MEMORIA, tamanio + sizeof(uint32_t));
     valor = leer_memoria (direc_fisica, tamanio);
-    char* asfads = (char*) valor;
     buffer_add_uint32(info_a_enviar->buffer, tamanio);
     buffer_add(info_a_enviar->buffer, valor, tamanio);
     enviar_paquete(info_a_enviar, cliente_socket);//lectura

@@ -5,6 +5,7 @@
 #include <commons/collections/list.h>
 #include <commons/log.h>
 #include <stdint.h>
+#include<stdlib.h>
 #include "utils/estructuras.h"
 
 typedef struct {
@@ -27,5 +28,6 @@ extern t_log* logger_conexiones;
 
 
 void iniciar_logger();
+void destruir_config();
 
 #endif

@@ -173,6 +173,11 @@ void recibir_instrucciones (int socket_kernel, int socket_memoria){
                 return;
             }
         if (cop != ENTRADASALIDA) {
+            if(cop == APAGAR){
+                sem_post(&sem_apagar);
+                free(nombre);
+                return;
+            }
             log_info(logger_conexiones, "OpCode recibido no corresponde con ENTRADASALIDA");
             return;
         }

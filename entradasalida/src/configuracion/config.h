@@ -63,6 +63,6 @@ void* mapear_archivo_bloques(int , uint32_t , uint32_t);
 int crear_indice(char*, uint32_t);
 void levantar_fs(char*, uint8_t, uint16_t);
 void inicializar_fs(char *, char*, char*, uint8_t, uint16_t );
-
+void destruir_config();
 
 #endif

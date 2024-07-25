@@ -146,6 +146,10 @@ void procesar_conexion(void* void_args) {
         case SOLICITUD_TAMANIO_PAGINA: //a cpu
             enviar_paquete(enviar_tam_memoria(), cliente_socket);
             break;
+        case APAGAR: //a cpu
+            sem_post(&sem_apagar);
+            return;
+            break;
         default:
             break;
         }

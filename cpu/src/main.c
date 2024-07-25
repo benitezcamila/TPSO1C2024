@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <main.h>
 
-
 int main(int argc, char* argv[]) {
     pthread_t levantar_server, conexion, escuchar_conexiones;
     iniciar_logger();
@@ -13,17 +12,13 @@ int main(int argc, char* argv[]) {
     pthread_create(&conexion, NULL, (void*)establecer_conexion_memoria, NULL);
     pthread_create(&escuchar_conexiones, NULL, (void*)atender_conexiones, NULL);
 
-    pthread_join(levantar_server, NULL);
-    pthread_join(conexion, NULL);
-    pthread_join(escuchar_conexiones, NULL);
+    pthread_detach(levantar_server);
+    pthread_detach(conexion);
+    pthread_detach(escuchar_conexiones);
 
-    sem_t semaforo;
-    sem_init(&semaforo, 0, 0);
-    sem_wait(&semaforo);
-
-    destruir_TLB();
-
-    log_info(logger_cpu, "Ooaa ooaa cierro C, P, U~");
+    sem_wait(&sem_apagar_cpu);
+    log_info(logger_cpu, "Ooaa ooaa apago C, P, U~");
+    destruir_estructuras();
 
     return 0;
 }

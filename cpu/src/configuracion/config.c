@@ -24,3 +24,13 @@ void iniciar_logger(){
     logger_conexiones = log_create(PATH_ABSOLUTO("cpu/logs/conexiones.log"),"Conexion",0,LOG_LEVEL_INFO);
     logger_tlb = log_create(PATH_ABSOLUTO("cpu/logs/tlb.log"),"TLB",0,LOG_LEVEL_INFO);
 }
+
+void destruir_config(){
+    log_destroy(logger_cpu);
+    log_destroy(logger_errores_cpu);
+    log_destroy(logger_conexiones);
+    log_destroy(logger_tlb);
+    config_destroy(config);
+    free(configuracion.ALGORITMO_TLB);
+    free(configuracion.IP_MEMORIA);
+}

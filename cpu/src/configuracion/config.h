@@ -1,6 +1,7 @@
 #ifndef _CPU_CONFIG_H
 #define _CPU_CONFIG_H
 
+#include<stdlib.h>
 #include <commons/config.h>
 #include <commons/collections/list.h>
 #include <commons/log.h>
@@ -31,5 +32,6 @@ extern t_log* logger_conexiones;
 extern t_log* logger_tlb;
 
 void iniciar_logger();
+void destruir_config();
 
 #endif

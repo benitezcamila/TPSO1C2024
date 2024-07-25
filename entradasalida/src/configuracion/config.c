@@ -222,3 +222,20 @@ int crear_indice(char* path_indice, uint32_t cantidad_bloques) {
     log_info(logger_fs, "Archivo indice.dat creado");
     return fd_indice;
 }
+
+void destruir_config(){
+    log_destroy(logger_entrada_salida);
+    log_destroy(logger_conexiones);
+    log_destroy(logger_salida);
+    log_destroy(logger_fs);
+    log_destroy(logger_errores);
+    config_destroy(config);
+    free(configuracion.IP_KERNEL);
+    free(configuracion.IP_MEMORIA);
+    free(configuracion.PATH_BASE_DIALFS);
+    free(tipo_interfaz_string);
+    free(path_indice);
+    free(bloques_memoria);
+    free(indice);
+    free(bloques);
+}

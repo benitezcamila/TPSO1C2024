@@ -9,6 +9,7 @@ int llego_interrupcion = 0;
 uint32_t tamanio_pagina;
 sem_t sem_inter;
 sem_t sem_contexto;
+sem_t sem_apagar_cpu;
 
 void iniciar_server_kernel(){
     pthread_t dispatch, interrupt;
@@ -70,10 +71,10 @@ void procesar_conexion(void* void_args) {
     free(args);
 
     op_code codigo_op;
-    if(strcmp(nombre_cliente,"KERNEL_I") == 0){
+    if(strcmp(nombre_cliente, "KERNEL_I") == 0){
         sockets.socket_kernel_I = cliente_socket;
     }
-    if(strcmp(nombre_cliente,"KERNEL_D") == 0){
+    if(strcmp(nombre_cliente, "KERNEL_D") == 0){
     sockets.socket_kernel_D = cliente_socket;
     }
     while (cliente_socket != -1) {
@@ -106,6 +107,10 @@ void procesar_conexion(void* void_args) {
             llego_interrupcion++;
             sem_post(&sem_inter);
             break;
+
+        case APAGAR:
+            sem_post(&sem_apagar_cpu);
+            break;
         
         default:
             log_info(logger_errores_cpu, "Se recibió un código de operación incorrecto de parte del Kernel. El mismo fue: %s", string_itoa(codigo_op));
@@ -137,9 +142,21 @@ void inicializar_estructuras(){
     longitud_linea_instruccion = malloc(sizeof(uint32_t));
     tlb = malloc(sizeof(t_TLB));
     inicializar_TLB(configuracion.CANTIDAD_ENTRADAS_TLB, configuracion.ALGORITMO_TLB);
-    sem_init(&sem_inter,0,1);
-    sem_init(&sem_contexto,0,1);
+    sem_init(&sem_apagar_cpu, 0, 0);
+    sem_init(&sem_inter, 0, 1);
+    sem_init(&sem_contexto, 0, 1);
     sem_init(&mutex_log, 0, 1);
+}
+
+void destruir_estructuras(){
+    free(contexto_registros);
+    free(longitud_linea_instruccion);
+    destruir_TLB();
+    destruir_config();
+    sem_destroy(&mutex_log);
+    sem_destroy(&sem_contexto);
+    sem_destroy(&sem_inter);
+    sem_destroy(&sem_apagar_cpu);
 }
 
 void enviar_contexto_a_kernel(motivo_desalojo motivo){

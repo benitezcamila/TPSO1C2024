@@ -10,6 +10,4 @@
 
 extern t_TLB* tlb;
 
-void iniciar_semaforos();
-
 #endif

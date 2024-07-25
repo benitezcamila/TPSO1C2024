@@ -96,8 +96,8 @@ void finalizar_proceso(char* pid) {
         enviar_paquete(paquete,sockets.socket_CPU_I);
     }
     else{
-    liberar_proceso((uint32_t)aux);
-    log_info(logger_kernel,"Finaliza el proceso %lu - Motivo: INTERRUPTED_BY_USER",aux);
+        liberar_proceso((uint32_t)aux);
+        log_info(logger_kernel,"Finaliza el proceso %lu - Motivo: INTERRUPTED_BY_USER",aux);
     }
 }
 
@@ -170,8 +170,8 @@ void listar_proceso(t_list* lista, char* estado){
 void apagar_sistema(){
     apagando_sistema = true;
     op_code cod = APAGAR;
-    send(sockets.socket_memoria,&cod, sizeof(op_code),0);
-    send(sockets.socket_CPU_I,&cod, sizeof(op_code),0);
+    send(sockets.socket_memoria, &cod, sizeof(op_code), 0);
+    send(sockets.socket_CPU_I, &cod, sizeof(op_code), 0);
     eliminar_interfaces();
     eliminar_pcbs();
     eliminar_recursos();

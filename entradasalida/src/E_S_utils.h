@@ -21,6 +21,7 @@ typedef struct {
 
 extern str_sockets sockets;
 extern sem_t mutex_conexion;
+extern sem_t sem_apagar;
 
 //void proceso_E_S();
 void establecer_conexiones();

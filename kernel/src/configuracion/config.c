@@ -39,3 +39,18 @@ void iniciar_logger(){
     logger_ingresos_ready = log_create(PATH_ABSOLUTO("kernel/logs/ingreso_ready.log"),"Ingreso a ready",0,LOG_LEVEL_INFO);
     logger_error = log_create(PATH_ABSOLUTO("kernel/logs/errores.log"),"Error",0,LOG_LEVEL_INFO);
 }
+
+void destruir_config(){
+    log_destroy(logger_kernel);
+    log_destroy(logger_conexiones);
+    log_destroy(logger_recurso_ES);
+    log_destroy(logger_ingresos_ready);
+    log_destroy(logger_error);
+    config_destroy(config);
+    list_destroy_and_destroy_elements(configuracion.INSTANCIAS_RECURSOS, (void(*)(void*))free);
+    list_destroy_and_destroy_elements(configuracion.RECURSOS, (void(*)(void*))free);
+    free(configuracion.ALGORITMO_PLANIFICACION);
+    free(configuracion.IP_CPU);
+    free(configuracion.IP_MEMORIA);
+    
+}

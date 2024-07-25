@@ -3,10 +3,11 @@
 #include "main.h"
 
 extern char* nombre_interfaz;
-
+sem_t sem_apagar;
 int main(int argc, char* argv[]) {
     
     sem_init(&mutex_conexion,0,1);
+    sem_init(&sem_apagar,0,0);
     int contador_argumentos=1;
     iniciar_logger();
     while (contador_argumentos < argc) {
@@ -20,8 +21,10 @@ int main(int argc, char* argv[]) {
         pthread_create(&conexion,NULL,(void*)establecer_conexiones,NULL);
         pthread_detach(conexion);
     }
-    sem_t semaforo;
-    sem_init(&semaforo,0,0);
-    sem_wait(&semaforo);
+    
+    sem_wait(&sem_apagar);
+    sem_destroy(&sem_apagar);
+    sem_destroy(&mutex_conexion);
+    destruir_config();
     return 0;
 }

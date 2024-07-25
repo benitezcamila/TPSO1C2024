@@ -123,15 +123,15 @@ void crear_paquete_contexto_exec(t_pcb* pcb){
 
 void recibir_contexto_exec(t_pcb* pcb){
     int quantum_a_asignar = configuracion.QUANTUM;
+    if(apagando_sistema){
+        return;
+    }
     if(strcmp(configuracion.ALGORITMO_PLANIFICACION, "VRR") == 0 || strcmp(configuracion.ALGORITMO_PLANIFICACION, "RR") == 0){
         quantum_a_asignar = (int)pcb->quantum - temporal_gettime(temp_quantum);
         temporal_destroy(temp_quantum);
         if(quantum_a_asignar < 10){
             quantum_a_asignar = configuracion.QUANTUM;
         }
-    }
-    if(apagando_sistema){
-        return;
     }
     if(pausar_plani){
         sem_wait(&sem_detener_desalojo);
