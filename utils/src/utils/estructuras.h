@@ -1,7 +1,7 @@
 #ifndef ESTRUCTURAS_H_
 #define ESTRUCTURAS_H_
 
-#define BASE_DIR "/home/utnso/Desktop/tp-2024-1c-Chiripiorca/"
+#define BASE_DIR "/home/utnso/tp-2024-1c-Chiripiorca/"
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 #define PATH_ABSOLUTO(path) BASE_DIR path
