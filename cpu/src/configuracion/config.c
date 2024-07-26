@@ -19,10 +19,10 @@ void obtener_config(){
 }
 
 void iniciar_logger(){
-    logger_cpu = log_create("../cpu/logs/cpu.log","cpu",0,LOG_LEVEL_INFO);
-    logger_errores_cpu = log_create("../cpu/logs/cpu_errores.log","errores_cpu",0,LOG_LEVEL_INFO);
-    logger_conexiones = log_create("../cpu/logs/conexiones.log","Conexion",0,LOG_LEVEL_INFO);
-    logger_tlb = log_create("../cpu/logs/tlb.log","TLB",0,LOG_LEVEL_INFO);
+    logger_cpu = log_create("../logs/cpu.log","cpu",0,LOG_LEVEL_INFO);
+    logger_errores_cpu = log_create("../logs/cpu_errores.log","errores_cpu",0,LOG_LEVEL_INFO);
+    logger_conexiones = log_create("../logs/conexiones.log","Conexion",0,LOG_LEVEL_INFO);
+    logger_tlb = log_create("../logs/tlb.log","TLB",0,LOG_LEVEL_INFO);
 }
 
 void destruir_config(){
