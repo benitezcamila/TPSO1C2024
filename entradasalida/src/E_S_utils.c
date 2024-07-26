@@ -398,9 +398,6 @@ int obtener_ultimo_bloque_de_archivo (char * nombre_archivo){
     int bloque_inicial = config_get_int_value(config_achivo,"BLOQUE_INICIAL");
     int tamanio_archivo = config_get_int_value(config_achivo,"TAMANIO_ARCHIVO");
     int bloque_final = tamanio_archivo / configuracion.BLOCK_SIZE;
-    if (tamanio_archivo%configuracion.BLOCK_SIZE!=0) {
-        bloque_final+=1;
-    }
     bloque_final+=bloque_inicial;
     config_destroy(config_achivo);
     free(path_archivo);
@@ -423,7 +420,7 @@ void procesar_io_fs_delete(t_buffer* buffer_kernel, uint32_t pid, int socket_ker
     int primer_bit_archivo = obtener_primer_bloque_de_archivo(nombre_archivo);
     int ultimo_bit_archivo = obtener_ultimo_bloque_de_archivo(nombre_archivo);
     if (remove(path_archivo) == 0) {
-        log_info(logger_fs, "Archivo eliminado");
+        log_info(logger_fs, "Archivo %s eliminado",nombre_archivo);
         limpiar_bits(bitmap,primer_bit_archivo,ultimo_bit_archivo);
     } else {
         log_error(logger_errores, "Error al eliminar el archivo");
@@ -444,7 +441,7 @@ int calcular_cantidad_de_bloques (int tamanio){
 
 
 void limpiar_bits(t_bitarray* bitmap, off_t bit_inicial, off_t bit_final) {
-    for (off_t i=bit_inicial;i<bit_final;i++){
+    for (off_t i=bit_inicial;i<=bit_final;i++){
         bitarray_clean_bit(bitmap,i);
         log_info(logger_fs, "Bit %li eliminado",i);
     }
@@ -488,12 +485,12 @@ void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid, int socket_k
             setear_bits(bitmap,bloque_inicial_archivo,post_bloque_final_archivo);
         } else{
             //si tenemos bloques suficientes, compactar, sino devolver error
-            if(contar_bloques_libres(bitmap)>calcular_cantidad_de_bloques(tamanio_nuevo)) { 
+            if((contar_bloques_libres(bitmap)+(pre_bloque_final_archivo-bloque_inicial_archivo)+1)>=calcular_cantidad_de_bloques(tamanio_nuevo)) { 
                 int nuevo_bloque_inicial = compactar_y_acomodar_al_final(bloques,bitmap,bloque_inicial_archivo,pre_bloque_final_archivo,pid);
                 //actualizar_valores
                 bloque_inicial_archivo = nuevo_bloque_inicial;
                 post_bloque_final_archivo = obtener_nuevo_bloque_final_compactado (tamanio_nuevo,bloque_inicial_archivo);
-                setear_bits(bitmap,bloque_inicial_archivo,post_bloque_final_archivo);
+                setear_bits(bitmap,bloque_inicial_archivo+1,post_bloque_final_archivo);
             } else {
                 log_error(logger_errores, "Error al truncar: no hay suficiente espacio libre en FS");
                 return;
@@ -615,7 +612,7 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
  }
 
  void eliminar_archivo_de_indice(char* nombre_archivo) {
-    FILE* archivo_indice = fopen(path_indice, "a");
+    FILE* archivo_indice = fopen(path_indice, "r");
     if(archivo_indice==NULL) {
         log_error(logger_errores,"Error al abrir archivo de indices 2");
         return;
@@ -633,10 +630,10 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
         close(fd_archivo_temporal);
         return;
     }
-    t_indice indice_auxiliar;
-    while(fread(&indice_auxiliar,sizeof(t_indice),1,archivo_indice)) { //recorro archivo de indices
-        if(strcmp(indice_auxiliar.nombre_archivo,nombre_archivo)!=0) { //si el indice no coincide, lo grabo en el archivo temporal
-            fwrite(&indice_auxiliar,sizeof(indice_auxiliar),1,archivo_temporal);
+    t_indice indice_aux;
+    while(fread(&indice_aux,sizeof(t_indice),1,archivo_indice)==1) { //recorro archivo de indices
+        if(strcmp(indice_aux.nombre_archivo,nombre_archivo)!=0) { //si el indice no coincide, lo grabo en el archivo temporal
+            fwrite(&indice_aux,sizeof(t_indice),1,archivo_temporal);
         }
     }
     fclose(archivo_indice);
