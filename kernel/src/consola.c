@@ -20,9 +20,7 @@ void ejecutar_comandos(char* input){
     int tipo_comando = get_tipo_comando(input);
         switch (tipo_comando) {
             case EJECUTAR_SCRIPT:{
-                char* path = construir_ruta(input + 16);
-                ejecutar_script(path);
-                free(path);
+                ejecutar_script(input + 16); 
             }
                 break; 
             case INICIAR_PROCESO_CONSOLA:{

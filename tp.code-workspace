@@ -37,9 +37,6 @@
 		},
 		{
 			"path": "utils"
-		},
-		{
-			"path": "c-comenta-pruebas"
 		}
 	]
 }
