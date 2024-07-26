@@ -310,7 +310,7 @@ void procesar_io_fs_create(t_buffer* buffer_kernel, uint32_t pid, int socket_ker
         config_set_value(config_archivo,"TAMANIO_ARCHIVO","0");
         config_save(config_archivo);
         bitarray_set_bit(bitmap,bloque_asignado);
-        log_info(logger_fs, "Bit %li seteado",bloque_asignado);
+        log_info(logger_fs, "Bit %i seteado",bloque_asignado);
         log_info(logger_fs, "Bits libres: %i",contar_bloques_libres(bitmap));
         msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
         agregar_archivo_a_indice(nombre_archivo ,bloque_asignado);
@@ -533,9 +533,9 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
     void **bloques_auxiliares = malloc(cantidad_a_mover * sizeof(void *));
     char* archivo_a_desplazar = string_new();
     if(buscar_archivo_en_indice(bloque_inicial,archivo_a_desplazar)==-2) { 
-        log_error(log_error,"Archivo no encontrado en indices.dat");
+        log_error(logger_errores,"Archivo no encontrado en indices.dat");
         free(archivo_a_desplazar);
-        return;
+        return -1;
     }
     //Guardo temporalmente los bloques que quiero dejar al final y marco como libre el bitmap en esas posiciones
     for (int j = 0; j < cantidad_a_mover; ++j) {
@@ -543,7 +543,7 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
         bloques_auxiliares[j] = malloc(configuracion.BLOCK_SIZE);
         memcpy(bloques_auxiliares[j], bloques[i], configuracion.BLOCK_SIZE);
         bitarray_clean_bit(bitmap,i); 
-        log_info(logger_fs, "Bit %li liberado",i);
+        log_info(logger_fs, "Bit %i liberado",i);
     }
     msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
 
@@ -555,9 +555,9 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
                 void *posicion_libre = bloques[indice_auxiliar];
                 memcpy(posicion_libre, bloque_desplazado, configuracion.BLOCK_SIZE);
                 bitarray_set_bit(bitmap, indice_auxiliar);
-                log_info(logger_fs, "Bit %li seteado",indice_auxiliar);
+                log_info(logger_fs, "Bit %i seteado",indice_auxiliar);
                 bitarray_clean_bit(bitmap, i);
-                log_info(logger_fs, "Bit %li liberado",i);
+                log_info(logger_fs, "Bit %i liberado",i);
                 //MODIFICO CONFIG DE ARCHIVO USANDO ARCHIVO DE INDICE
                 modificar_bloque_inicial_indice(i,indice_auxiliar);
             }
@@ -577,7 +577,7 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
             void *posicion_libre = bloques[indice_auxiliar];
             memcpy(posicion_libre, bloques_auxiliares[j], configuracion.BLOCK_SIZE);
             bitarray_set_bit(bitmap, indice_auxiliar);
-            log_info(logger_fs, "Bit %li seteado",indice_auxiliar);
+            log_info(logger_fs, "Bit %i seteado",indice_auxiliar);
             indice_auxiliar++;
         }
         free(bloques_auxiliares[j]); 
@@ -888,7 +888,6 @@ void procesar_io_fs_read(t_buffer* buffer_kernel, uint32_t pid, int socket_kerne
                     j++;
                 }
                 puntero_archivo = 0;
-                char* sfad = (char*) data_a_escribir;
                 escribir_en_memoria(data_a_escribir,pid,direcciones_fisicas_memoria_a_escribir[i]+offset_memoria,tamanio_a_escribir ,socket_memoria);
                 free(data_a_escribir);
                 offset_memoria += tamanio_a_escribir;

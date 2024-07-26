@@ -57,5 +57,7 @@ int compactar_y_acomodar_al_final(void **, t_bitarray *, int, int, uint32_t);
 void modificar_bloque_inicial_indice (int, int);
 int obtener_ultimo_bloque_de_archivo (char *);
 void escribir_en_fs (int , uint32_t , uint32_t , void* );
+int buscar_archivo_en_indice(int , char* );
+int modificar_bloque_inicial_indice_por_nombre (char* , int );
 
 #endif

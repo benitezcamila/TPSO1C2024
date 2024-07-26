@@ -100,6 +100,7 @@ void eliminar_pcb(char* pid){
     free(pcb->registros);
     free(pcb->pathOperaciones);
     free(pcb);
+    pcb = NULL;
 }
 
 

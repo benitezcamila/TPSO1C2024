@@ -59,7 +59,9 @@ void destruir_dispositivo_IO(char* nombre_interfaz){
     sem_destroy(&(interfaz->esta_libre));
     sem_destroy(&(interfaz->pidieron_interfaz));
     if(interfaz->proceso_okupa != NULL){
-        liberar_proceso(interfaz->proceso_okupa->pid);
+        if(dictionary_has_key(dicc_pcb,string_from_format("%u",interfaz->proceso_okupa->pid))){
+            liberar_proceso(interfaz->proceso_okupa->pid);
+        }
     }
     free(interfaz);
 }
