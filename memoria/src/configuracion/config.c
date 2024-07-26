@@ -6,7 +6,7 @@ t_log* logger_memoria;
 t_log* logger_conexiones;
 
 void obtener_config(){
-    config = config_create("cfg/memoria.config");
+    config = config_create("../cfg/memoria.config");
     configuracion.PUERTO_ESCUCHA = config_get_int_value(config,"PUERTO_ESCUCHA");
     configuracion.TAM_MEMORIA = config_get_int_value(config,"TAM_MEMORIA");
     configuracion.TAM_PAGINA = config_get_int_value(config,"TAM_PAGINA");

@@ -8,7 +8,7 @@ t_log* logger_conexiones;
 t_log* logger_tlb;
 
 void obtener_config(){
-    config = config_create("cfg/cpu.config");    
+    config = config_create("../cfg/cpu.config");    
     configuracion.IP_MEMORIA = config_get_string_value(config,"IP_MEMORIA");
     configuracion.PUERTO_MEMORIA = config_get_int_value(config,"PUERTO_MEMORIA");
     configuracion.PUERTO_ESCUCHA_DISPATCH = config_get_int_value(config,"PUERTO_ESCUCHA_DISPATCH");

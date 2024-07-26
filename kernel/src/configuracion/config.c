@@ -9,7 +9,7 @@ t_log* logger_ingresos_ready;
 t_log* logger_error;
 
 void obtener_config(){
-    config = config_create("cfg/kernel.config");
+    config = config_create("../cfg/kernel.config");
     configuracion.IP_MEMORIA = config_get_string_value(config,"IP_MEMORIA");
     configuracion.IP_CPU = config_get_string_value(config,"IP_CPU");
     configuracion.PUERTO_MEMORIA = config_get_int_value(config,"PUERTO_MEMORIA");
