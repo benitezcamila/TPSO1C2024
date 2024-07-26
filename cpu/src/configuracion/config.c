@@ -31,6 +31,4 @@ void destruir_config(){
     log_destroy(logger_conexiones);
     log_destroy(logger_tlb);
     config_destroy(config);
-    free(configuracion.ALGORITMO_TLB);
-    free(configuracion.IP_MEMORIA);
 }

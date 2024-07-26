@@ -19,6 +19,8 @@ int main(int argc, char* argv[]) {
     sem_wait(&sem_apagar_cpu);
     log_info(logger_cpu, "Ooaa ooaa apago C, P, U~");
     destruir_estructuras();
-
+    sleep(1);
+    destruir_config();
+    sleep(1);
     return 0;
 }

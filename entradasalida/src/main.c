@@ -10,6 +10,7 @@ int main(int argc, char* argv[]) {
     sem_init(&sem_apagar,0,0);
     int contador_argumentos=1;
     iniciar_logger();
+    config_list = list_create();
     while (contador_argumentos < argc) {
         sem_wait(&mutex_conexion);
         char* path_config = argv[contador_argumentos];
@@ -25,6 +26,8 @@ int main(int argc, char* argv[]) {
     sem_wait(&sem_apagar);
     sem_destroy(&sem_apagar);
     sem_destroy(&mutex_conexion);
+    sleep(1);
     destruir_config();
+    sleep(1);
     return 0;
 }

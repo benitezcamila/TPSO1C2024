@@ -5,6 +5,7 @@
 
 t_cfg configuracion;
 t_config* config;
+t_list* config_list;
 t_log* logger_entrada_salida;
 t_log* logger_conexiones;
 t_log* logger_salida;
@@ -45,6 +46,7 @@ t_interfaz config_string_a_enum(char* str){
 }
 
 void obtener_config(char* path_config){
+
     config = config_create(path_config);
     tipo_interfaz_string = config_get_string_value(config,"TIPO_INTERFAZ");
     configuracion.TIPO_INTERFAZ = config_string_a_enum(tipo_interfaz_string);
@@ -82,6 +84,7 @@ void obtener_config(char* path_config){
             levantar_fs(configuracion.PATH_BASE_DIALFS,configuracion.BLOCK_SIZE,configuracion.BLOCK_COUNT);           
             break;
     }
+    list_add(config_list,config);
 }
 
 void iniciar_logger(){
@@ -229,10 +232,7 @@ void destruir_config(){
     log_destroy(logger_salida);
     log_destroy(logger_fs);
     log_destroy(logger_errores);
-    config_destroy(config);
-    free(configuracion.IP_KERNEL);
-    free(configuracion.IP_MEMORIA);
-    free(configuracion.PATH_BASE_DIALFS);
+    list_destroy_and_destroy_elements(config_list, (void*)config_destroy);
     free(tipo_interfaz_string);
     free(path_indice);
     free(indice);

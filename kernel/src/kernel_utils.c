@@ -17,6 +17,9 @@ void establecer_conexion_memoria()
 void atender_escuchas(){
     while(1){
     sem_wait(&sem_escuchar);
+    if(apagando_sistema){
+        return;
+    }
     pthread_t escuchar;
     pthread_create(&escuchar,NULL,(void*)server_escuchar,NULL);
     pthread_join(escuchar,NULL);
@@ -70,12 +73,15 @@ void procesar_conexion(void* void_args) {
     int cliente_socket = args->fd;
     char* nombre_cliente = args->cliente_name;
     free(args);
-
+    dispositivo_IO* interfaz;
     op_code cop;
     while (cliente_socket != -1) {
 
         if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
             log_info(logger_conexiones, "%s DISCONNECT!", nombre_cliente);
+            if(strcmp("ENTRADASALIDA",nombre_cliente)==0){
+                destruir_dispositivo_IO(interfaz->nombre);
+            }
             free(nombre_cliente);
             return;
         }
@@ -84,7 +90,7 @@ void procesar_conexion(void* void_args) {
 
         case ENTRADASALIDA:{
             t_buffer* buffer = recibir_todo_elbuffer(cliente_socket);
-            recibir_info_io(cliente_socket,buffer);
+            interfaz = recibir_info_io(cliente_socket,buffer);
             break;
         }
 
@@ -108,12 +114,13 @@ void procesar_conexion(void* void_args) {
                 queue_push(cola_ready,interfaz->proceso_okupa);
                 mensaje_ingreso_ready = string_new();
                 list_iterate(cola_ready->elements,agregar_PID_ready);
-                log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Cola Ready: %s", interfaz->proceso_okupa->pid, mensaje_ingreso_ready);
+                log_info(logger_ingresos_ready,"Proceso %u ingreso a READY - Cola Ready: %s", interfaz->proceso_okupa->pid, mensaje_ingreso_ready);         
                 sem_post(&sem_proceso_en_ready);
                 free(mensaje_ingreso_ready);
             }
 
             log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", interfaz->proceso_okupa->pid);
+            interfaz->proceso_okupa = NULL;
             sem_post(&interfaz->esta_libre);
             free(io);
             buffer_destroy(buffer);
@@ -125,6 +132,9 @@ void procesar_conexion(void* void_args) {
             log_info(logger_conexiones,"no estas mandando nada");
             break;
         }
+    }
+    if(apagando_sistema){
+        sem_post(&sem_escuchar);
     }
     free(nombre_cliente);
 }

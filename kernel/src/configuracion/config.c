@@ -47,10 +47,6 @@ void destruir_config(){
     log_destroy(logger_ingresos_ready);
     log_destroy(logger_error);
     config_destroy(config);
-    list_destroy_and_destroy_elements(configuracion.INSTANCIAS_RECURSOS, (void(*)(void*))free);
-    list_destroy_and_destroy_elements(configuracion.RECURSOS, (void(*)(void*))free);
-    free(configuracion.ALGORITMO_PLANIFICACION);
-    free(configuracion.IP_CPU);
-    free(configuracion.IP_MEMORIA);
+    list_destroy_and_destroy_elements(configuracion.INSTANCIAS_RECURSOS, (void*)free);
     
 }

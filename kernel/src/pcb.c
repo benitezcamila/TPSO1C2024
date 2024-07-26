@@ -47,7 +47,7 @@ t_pcb* crear_pcb(char* path){
     pcb_creado->pathOperaciones = malloc(string_length(path)+1);
     strcpy(pcb_creado->pathOperaciones,path);
 
-    dictionary_put(dicc_pcb, string_itoa(pcb_creado->pid), pcb_creado);
+    dictionary_put(dicc_pcb, string_from_format("%u",pcb_creado->pid), pcb_creado);
     return pcb_creado;
 }
 
@@ -150,7 +150,7 @@ void recibir_contexto_exec(t_pcb* pcb){
     switch (mot_desalojo){
     case PROCESS_EXIT:
         log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", pcb->pid);
-        log_info(logger_kernel, "Finaliza el proceso %u - Motivo: SUCESS", pcb->pid);
+        log_info(logger_kernel, "Finaliza el proceso %u - Motivo: SUCCESS", pcb->pid);
         liberar_proceso(pcb->pid);
         break;
     

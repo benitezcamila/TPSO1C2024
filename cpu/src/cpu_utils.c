@@ -152,7 +152,6 @@ void destruir_estructuras(){
     free(contexto_registros);
     free(longitud_linea_instruccion);
     destruir_TLB();
-    destruir_config();
     sem_destroy(&mutex_log);
     sem_destroy(&sem_contexto);
     sem_destroy(&sem_inter);

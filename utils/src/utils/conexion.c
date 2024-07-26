@@ -122,7 +122,7 @@ int crear_conexion(char *ip, char* puerto,t_log* log_conexiones,char* nom_client
 		}
 	}
 
-	int bytes_enviados = enviar_hanshake(socket_cliente,nom_cliente);
+	int bytes_enviados = enviar_handshake(socket_cliente,nom_cliente);
 	cod_handshake* msg_recibido = malloc(sizeof(cod_handshake));
 	recv(socket_cliente,msg_recibido,sizeof(cod_handshake),MSG_WAITALL);
 	
@@ -148,17 +148,15 @@ void liberar_conexion(int socket_cliente){
 	close(socket_cliente);
 }
 
-int enviar_hanshake(int socket,char* nom_cliente){
+int enviar_handshake(int socket,char* nom_cliente){
 	cod_handshake* codigo = malloc(sizeof(cod_handshake));
 	*codigo = CODIGO;
 	uint32_t len_cliente = string_length(nom_cliente)+1;
 	t_paquete* paquete = crear_paquete(HANDSHAKE,sizeof(uint32_t)+len_cliente+sizeof(cod_handshake));
-    paquete->buffer = buffer_create(sizeof(cod_handshake) + sizeof(uint32_t) + len_cliente);
 	buffer_add_string(paquete->buffer, len_cliente, nom_cliente);
 	buffer_add(paquete->buffer, codigo, sizeof(cod_handshake));
 	enviar_paquete(paquete, socket);
 	free(codigo);
-	
 	
 	return 1;
 }

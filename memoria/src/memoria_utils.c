@@ -90,13 +90,13 @@ void procesar_conexion(void* void_args) {
         {
         case SOLICITUD_INSTRUCCION:           buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
             enviar_instrucciones_cpu(buffer_de_cpu,cliente_socket);
-            log_info(logger_memoria, "Inicio envio de instrucciones");
+            //log_info(logger_memoria, "Inicio envio de instrucciones");
             buffer_destroy(buffer_de_cpu);
             break;
         case INICIAR_PROCESO:
             buffer_de_kernel = recibir_todo_elbuffer(cliente_socket);
             iniciar_proceso(buffer_de_kernel);
-            log_info(logger_memoria, "Inicio proceso");
+            // log_info(logger_memoria, "Inicio proceso");
             op_code cod = PROCESO_CREADO;
             send(cliente_socket, &cod, sizeof(op_code), 0);
             buffer_destroy( buffer_de_kernel);
@@ -104,7 +104,7 @@ void procesar_conexion(void* void_args) {
         case AJUSTAR_TAMANIO:
             buffer_de_cpu = recibir_todo_elbuffer(cliente_socket);
             ajustar_tam_proceso(buffer_de_cpu);
-            log_info(logger_memoria, "Ajusto tamanio proceso");
+           // log_info(logger_memoria, "Ajusto tamanio proceso");
             buffer_destroy(buffer_de_cpu);
             break;
 
@@ -167,16 +167,12 @@ void procesar_conexion(void* void_args) {
 // leer las instrucciones del path
 t_list* leer_instrucciones_del_path(char* rutaKernel) {
    
-   
-    // Concatenar la ruta de configuracion.PATH_INSTRUCCIONES
-    char *archivo = strdup(configuracion.PATH_INSTRUCCIONES);
-    string_append(&archivo, rutaKernel);
-    // Abrir el archivo
 
-    FILE* archivo_instrucciones = fopen(archivo, "rb");
+    FILE* archivo_instrucciones = fopen(rutaKernel, "rb");
    
     if (archivo_instrucciones == NULL) {
         perror("No pude abrir el archivo");
+        log_error(logger_memoria,"No se pudo abrir el archivo de instrucciones");
         exit(EXIT_FAILURE);
     }
     char aux [256];
@@ -202,7 +198,7 @@ t_list* leer_instrucciones_del_path(char* rutaKernel) {
         // Añadir a la lista
         list_add(instruccionesParaCPu, a_guardar);
     }
-    
+
     fclose(archivo_instrucciones);
    
     return instruccionesParaCPu;   

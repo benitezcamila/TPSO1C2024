@@ -36,8 +36,9 @@ int main(int argc, char* argv[]) {
     dictionary_destroy(dicc_IO);
     dictionary_destroy(dicc_pcb);
     dictionary_destroy(recursos);
+    sleep(1);
     destruir_config();
-
+    sleep(1);
     return 0;
 }
 

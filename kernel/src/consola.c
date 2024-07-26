@@ -184,6 +184,7 @@ void eliminar_interfaces(){
        send(interfaz->socket,&cod, sizeof(op_code),0);
        destruir_dispositivo_IO(interfaz->nombre);
     }
+    free(keys);
 }
 
 void eliminar_pcbs(){
@@ -191,6 +192,7 @@ void eliminar_pcbs(){
     for(int i = 0; i < list_size(keys); i++){
         eliminar_pcb(list_get(keys,i));
     }
+    free(keys);
 }
 
 void eliminar_recursos(){
@@ -198,5 +200,6 @@ void eliminar_recursos(){
     for(int i = 0; i < list_size(keys); i++){
         eliminar_recurso(list_get(keys,i));
     }
+    free(keys);
 }
 

@@ -24,6 +24,5 @@ void destruir_config(){
     log_destroy(logger_conexiones);
     log_destroy(logger_memoria);
     config_destroy(config);
-    free(configuracion.PATH_INSTRUCCIONES);
 
 }

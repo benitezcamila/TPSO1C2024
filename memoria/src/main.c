@@ -21,9 +21,12 @@ int main(int argc, char* argv[]) {
     pthread_detach(escuchar);
     
     sem_wait(&sem_apagar);
+    sleep(1);
     destruir_semaforos();
     list_destroy(listaDeProcesos);
     destruir_estructuras();
+    destruir_config();
+    sleep(1);
 
     return 0;
 }

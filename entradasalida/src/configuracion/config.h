@@ -36,6 +36,7 @@ typedef struct {
 
 extern t_cfg configuracion;
 extern t_config* config;
+extern t_list* config_list;
 extern t_log* logger_entrada_salida;
 extern t_log* logger_conexiones;
 extern t_log* logger_salida;

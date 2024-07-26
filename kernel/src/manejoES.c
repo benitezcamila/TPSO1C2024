@@ -2,7 +2,7 @@
 
 t_dictionary* dicc_IO;
 
-void recibir_info_io(int cliente_socket, t_buffer* buffer){
+dispositivo_IO* recibir_info_io(int cliente_socket, t_buffer* buffer){
     //log_info(logger_conexiones,"me mandaste la info de entradasalida");
     /*serializo*/
     t_interfaz tipo_interfaz;
@@ -23,7 +23,7 @@ void recibir_info_io(int cliente_socket, t_buffer* buffer){
     //libero estructuras
     //free(nombre_interfaz);
     buffer_destroy(buffer);
-    
+    return interfaz;
     
 }
 
@@ -36,22 +36,25 @@ dispositivo_IO* crear_dispositivo_IO(int cliente_socket, t_interfaz tipo_interfa
     sem_init(&interfaz->pidieron_interfaz,0,0);
     interfaz->proceso_okupa = NULL;
     interfaz->cola = queue_create();
-    struct pollfd fds[1];
-    fds[0].fd = cliente_socket;
-    fds[0].events = POLLIN | POLLHUP;
-    interfaz->fds = fds;
+    interfaz->inactiva = false;
     dictionary_put(dicc_IO,nombre, interfaz);
     return interfaz;
 }
 
 void destruir_dispositivo_IO(char* nombre_interfaz){
     dispositivo_IO* interfaz = dictionary_remove(dicc_IO, nombre_interfaz);
+    interfaz->inactiva = true;
+    sem_post(&(interfaz->esta_libre));
+    sem_post(&(interfaz->pidieron_interfaz));
+    usleep(200);
     for(int i = 0; i < queue_size(interfaz->cola);i++){
         proceso_en_cola* proceso = queue_pop(interfaz->cola);
         eliminar_paquete(proceso->paquete);
         log_info(logger_kernel,"Finaliza el proceso %u - Motivo: REMOVING_INTERFACE", proceso->proceso->pid);
         log_info(logger_kernel, "PID: %u - Estado Anterior: EXEC - Estado Actual: EXIT", proceso->proceso->pid);
-        liberar_proceso(proceso->proceso->pid);
+        if(proceso->proceso != NULL){
+            liberar_proceso(proceso->proceso->pid);
+        }
         free(proceso);
     }
     free(interfaz->nombre);
@@ -359,21 +362,12 @@ void procesar_peticion_IO(char* io, t_instruccion* tipo_instruccion, uint32_t pi
 }
 
 void gestionar_interfaces(dispositivo_IO* interfaz){
-    pthread_t hilo;
-    if (pthread_create(&hilo, NULL, (void*)monitor_desconexion, (void*)interfaz) != 0) {
-        perror("Failed to create thread");
-        return;
-    }
-    pthread_detach(hilo);
+   
     while(1){
         sem_wait(&interfaz->pidieron_interfaz);
         sem_wait(&interfaz->esta_libre);
-        if(apagando_sistema){
+        if(apagando_sistema || interfaz->inactiva){
             return;
-        }
-        if(interfaz->socket == -1){
-            destruir_dispositivo_IO(interfaz->nombre);
-            break;
         }
         proceso_en_cola* proceso = queue_pop(interfaz->cola);
         enviar_paquete(proceso->paquete, interfaz->socket);
@@ -386,22 +380,3 @@ void gestionar_interfaces(dispositivo_IO* interfaz){
 }
 
 
-void monitor_desconexion(dispositivo_IO* interfaz){
-        while (1) {
-        int ret = poll((interfaz->fds), 1, -1); // Espera indefinida
-
-        if (ret == -1) {
-            break;
-        }
-
-        if (interfaz->fds->revents & POLLHUP) {
-            log_info(logger_conexiones, "Se desconecto la interfaz %s", interfaz->nombre);
-            break;
-        }
-
-    }
-
-    interfaz->socket = -1;
-    sem_post(&interfaz->esta_libre); // Liberar el semáforo para indicar que la interfaz está libre
-    return ;
-}
