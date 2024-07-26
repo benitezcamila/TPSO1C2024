@@ -310,6 +310,8 @@ void procesar_io_fs_create(t_buffer* buffer_kernel, uint32_t pid, int socket_ker
         config_set_value(config_archivo,"TAMANIO_ARCHIVO","0");
         config_save(config_archivo);
         bitarray_set_bit(bitmap,bloque_asignado);
+        log_info(logger_fs, "Bit %li seteado",bloque_asignado);
+        log_info(logger_fs, "Bits libres: %i",contar_bloques_libres(bitmap));
         msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
         agregar_archivo_a_indice(nombre_archivo ,bloque_asignado);
         enviar_fin_de_instruccion(socket_kernel,nombre);
@@ -359,7 +361,7 @@ int obtener_tamanio_de_archivo (char * nombre_archivo){
     free(path_archivo);
     return tamanio_archivo;
 }
-
+//devuelve nuevo bloque final segun bloque inicial actual en archivo de indice
 int obtener_nuevo_bloque_final (char * nombre_archivo, uint32_t tamanio_nuevo){
     int bloque_inicial = obtener_primer_bloque_de_archivo(nombre_archivo);
     int nuevo_bloque_final = (tamanio_nuevo / configuracion.BLOCK_SIZE)-1;
@@ -367,6 +369,19 @@ int obtener_nuevo_bloque_final (char * nombre_archivo, uint32_t tamanio_nuevo){
         nuevo_bloque_final+=1;
     }
     nuevo_bloque_final+=bloque_inicial;
+    if(nuevo_bloque_final>configuracion.BLOCK_COUNT){
+        log_error(logger_errores, "Error: el bloque final supera el limite del FS");
+        return -1;
+    }
+    return nuevo_bloque_final;
+}
+
+int obtener_nuevo_bloque_final_compactado (uint32_t tamanio_nuevo, int bloque_inicial_nuevo){
+    int nuevo_bloque_final = (tamanio_nuevo / configuracion.BLOCK_SIZE)-1;
+    if (tamanio_nuevo%configuracion.BLOCK_SIZE!=0) {
+        nuevo_bloque_final+=1;
+    }
+    nuevo_bloque_final+=bloque_inicial_nuevo;
     if(nuevo_bloque_final>configuracion.BLOCK_COUNT){
         log_error(logger_errores, "Error: el bloque final supera el limite del FS");
         return -1;
@@ -437,7 +452,7 @@ void limpiar_bits(t_bitarray* bitmap, off_t bit_inicial, off_t bit_final) {
 }
 
 void setear_bits(t_bitarray* bitmap, off_t bit_inicial, off_t bit_final) {
-    for (off_t i=bit_inicial;i<bit_final;i++){
+    for (off_t i=bit_inicial;i<=bit_final;i++){
         bitarray_set_bit(bitmap,i);
         log_info(logger_fs, "Bit %li seteado",i);
     }
@@ -477,7 +492,7 @@ void procesar_io_fs_truncate(t_buffer* buffer_kernel, uint32_t pid, int socket_k
                 int nuevo_bloque_inicial = compactar_y_acomodar_al_final(bloques,bitmap,bloque_inicial_archivo,pre_bloque_final_archivo,pid);
                 //actualizar_valores
                 bloque_inicial_archivo = nuevo_bloque_inicial;
-                post_bloque_final_archivo = obtener_nuevo_bloque_final (nombre_archivo,tamanio_nuevo);
+                post_bloque_final_archivo = obtener_nuevo_bloque_final_compactado (tamanio_nuevo,bloque_inicial_archivo);
                 setear_bits(bitmap,bloque_inicial_archivo,post_bloque_final_archivo);
             } else {
                 log_error(logger_errores, "Error al truncar: no hay suficiente espacio libre en FS");
@@ -530,23 +545,22 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
         int i = bloque_inicial+j;
         bloques_auxiliares[j] = malloc(configuracion.BLOCK_SIZE);
         memcpy(bloques_auxiliares[j], bloques[i], configuracion.BLOCK_SIZE);
-        
         bitarray_clean_bit(bitmap,i); 
-
+        log_info(logger_fs, "Bit %li liberado",i);
     }
     msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
 
     // Muevo todos los bloques ocupados a las primeras posiciones libres
     for (int i = 0; i < configuracion.BLOCK_COUNT; ++i) {
-        
         if (bitarray_test_bit(bitmap, i)) {
             if (i != indice_auxiliar) { //si el bit no se encuentra en la primer posicion libre (indice auxiliar comienza en 0)
-                
                 void *bloque_desplazado = bloques[i];
                 void *posicion_libre = bloques[indice_auxiliar];
                 memcpy(posicion_libre, bloque_desplazado, configuracion.BLOCK_SIZE);
                 bitarray_set_bit(bitmap, indice_auxiliar);
+                log_info(logger_fs, "Bit %li seteado",indice_auxiliar);
                 bitarray_clean_bit(bitmap, i);
+                log_info(logger_fs, "Bit %li liberado",i);
                 //MODIFICO CONFIG DE ARCHIVO USANDO ARCHIVO DE INDICE
                 modificar_bloque_inicial_indice(i,indice_auxiliar);
             }
@@ -556,17 +570,17 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
     msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
     msync(bloques,tamanio_memoria_bloques,MS_SYNC);
     int nueva_posicion_inicial = indice_auxiliar;
+    if(modificar_bloque_inicial_indice_por_nombre(archivo_a_desplazar,indice_auxiliar)==-1){
+                log_error(logger_errores,"Error al reemplazar bloque inicial en archivo de indices");
+                return -1;
+    }
     // Muevo los bloques almacenados temporalmente a las últimas posiciones libres
     for (size_t j = 0; j < cantidad_a_mover; ++j) {
-        
         if (indice_auxiliar < configuracion.BLOCK_COUNT) {
             void *posicion_libre = bloques[indice_auxiliar];
             memcpy(posicion_libre, bloques_auxiliares[j], configuracion.BLOCK_SIZE);
-            if(modificar_bloque_inicial_indice_por_nombre(archivo_a_desplazar,indice_auxiliar)==-1){
-                log_error(logger_errores,"Error al reemplazar bloque inicial en archivo de indices");
-                return -1;
-            }
             bitarray_set_bit(bitmap, indice_auxiliar);
+            log_info(logger_fs, "Bit %li seteado",indice_auxiliar);
             indice_auxiliar++;
         }
         free(bloques_auxiliares[j]); 
@@ -574,10 +588,13 @@ int compactar_y_acomodar_al_final(void **bloques, t_bitarray *bitmap, int bloque
     free(bloques_auxiliares);
     msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
     msync(bloques,tamanio_memoria_bloques,MS_SYNC);
+    /* NO ES NECESARIO
     // Limpio los bloques que quedan al final de la compactacion (si hubiere)
     for (size_t i = indice_auxiliar; i < configuracion.BLOCK_COUNT; ++i) {
         bitarray_clean_bit(bitmap, i);
+        log_info(logger_fs, "Bit %li liberado",i);
     }
+    */
     msync(bitmap,bitarray_get_max_bit(bitmap),MS_SYNC);
     usleep(configuracion.RETRASO_COMPACTACION);
     log_info(logger_fs,"PID: %u - Fin Compactación",pid);
