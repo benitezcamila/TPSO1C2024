@@ -13,7 +13,12 @@ int iniciar_servidor(char* puerto){
 
 	// Creamos el socket de escucha del servidor
 	socket_servidor = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
-
+	int optval = 1;
+	if (setsockopt(socket_servidor, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
+    	perror("Error al configurar SO_REUSEADDR");
+    	close(socket_servidor);
+    	exit(EXIT_FAILURE);
+	}
 	// Asociamos el socket a un puerto
 	bind(socket_servidor, servinfo->ai_addr, servinfo->ai_addrlen);
 
@@ -111,7 +116,12 @@ int crear_conexion(char *ip, char* puerto,t_log* log_conexiones,char* nom_client
 
 	// Ahora vamos a crear el socket.
 	int socket_cliente = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
-
+	int optval = 1;
+	if (setsockopt(socket_cliente, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
+    	perror("Error al configurar SO_REUSEADDR");
+    	close(socket_cliente);
+    	exit(EXIT_FAILURE);
+	}
 	// Ahora que tenemos el socket, vamos a conectarlo
 	while(1){
 		if(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == 0){
