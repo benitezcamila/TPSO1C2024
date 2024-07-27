@@ -9,16 +9,16 @@ sem_t mutex_conexion;
 
 void establecer_conexion_kernel(int* socket_kernel){
     //motivo_desalojo instruccion_a_procesar;
-    *socket_kernel = crear_conexion(configuracion.IP_KERNEL ,string_itoa(configuracion.PUERTO_KERNEL),logger_entrada_salida,"Entrada Salida");
-    log_info(logger_entrada_salida, "Conectado Entrada/Salida-Kernel");
+    *socket_kernel = crear_conexion(configuracion.IP_KERNEL ,string_itoa(configuracion.PUERTO_KERNEL),logger_conexiones,"Entrada Salida");
+    log_info(logger_conexiones, "Conectado Entrada/Salida-Kernel");
     enviar_info_io_a_kernel(*socket_kernel);
     
-    log_info(logger_entrada_salida, "Info enviada");
+    log_info(logger_conexiones, "Info enviada");
     
 }
 void establecer_conexion_memoria(int* socket_memoria){
-    *socket_memoria = crear_conexion(configuracion.IP_MEMORIA ,string_itoa(configuracion.PUERTO_MEMORIA),logger_entrada_salida,"Entrada Salida");
-    log_info(logger_entrada_salida, "Conectado Entrada/Salida-Memoria");
+    *socket_memoria = crear_conexion(configuracion.IP_MEMORIA ,string_itoa(configuracion.PUERTO_MEMORIA),logger_conexiones,"Entrada Salida");
+    log_info(logger_conexiones, "Conectado Entrada/Salida-Memoria");
 }
 
 void establecer_conexiones(){
